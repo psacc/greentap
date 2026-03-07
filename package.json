@@ -1,0 +1,16 @@
+{
+  "name": "greentap",
+  "version": "0.1.0",
+  "description": "CLI driver for WhatsApp Web via Playwright",
+  "main": "greentap.js",
+  "bin": {
+    "greentap": "./greentap.js"
+  },
+  "scripts": {
+    "test": "node --test 'test/**/*.test.js'"
+  },
+  "type": "module",
+  "dependencies": {
+    "playwright": "^1.58.2"
+  }
+}

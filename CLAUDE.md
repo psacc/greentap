@@ -1,45 +1,58 @@
 # greentap
 
-macOS CLI driver that reads and sends messages from a popular green messaging desktop app
-via the macOS Accessibility API. Zero network calls, zero reverse engineering, zero ban risk.
+CLI driver for WhatsApp Web via Playwright aria snapshots.
+Migrating from Swift/AX (legacy, in `Sources/`) to Node.js/Playwright.
 
-## How it works
+## Tech stack
 
-- Uses `ApplicationServices` framework to walk the AX UI tree of the desktop app
-- Reads chat list entries (AXButton elements inside "List of chats" group)
-- Reads messages from the currently visible chat viewport (AXStaticText elements inside "Messages in chat" group)
-- Sends by setting the compose text area value and simulating Enter keypress
+- Node.js (ESM), Playwright (Chromium)
+- Persistent browser context at `~/.greentap/browser-data/`
+- Pure parsing logic in `lib/parser.js`, browser automation in `greentap.js`
+- Legacy: Swift + macOS Accessibility API (deprecated, Phase 4 removal)
 
-## Build & install
+## Commands (current — Phase 0 spike)
 
+```bash
+node greentap.js login               # Open browser for QR scan
+node greentap.js logout              # Clear session data
+node greentap.js snapshot [SCOPE]    # Dump aria snapshot (full|chats|messages|compose)
 ```
-swift build -c release
-make install          # copies to ~/bin
-```
 
-## Commands
+## Testing
 
-```
-greentap chats [--json]         # list visible chats with last message
-greentap unread [--json]        # only chats with unread messages
-greentap read [CHAT] [--json]   # read messages from current or named chat
-greentap send CHAT MESSAGE      # send a message to a chat
+```bash
+npm test                             # Run all unit tests (node:test)
 ```
 
 ## Architecture
 
-| File | Purpose |
+| Path | Purpose |
 |------|---------|
-| `Sources/main.swift` | CLI argument parsing and dispatch |
-| `Sources/AXHelper.swift` | Low-level Accessibility API wrappers |
-| `Sources/Models.swift` | Data structs (ChatEntry, Message, ChatDetail) |
-| `Sources/Parsers.swift` | Parse AX description/value strings into models |
-| `Sources/Commands.swift` | Command implementations (chats, read, send) |
+| `greentap.js` | CLI entrypoint — arg parsing + command dispatch |
+| `lib/parser.js` | Pure parsing of aria snapshot text |
+| `test/parser.test.js` | Fixture-based unit tests |
+| `test/fixtures/` | Recorded aria snapshots from live sessions |
+| `openspec/` | Specs, change proposals, workflow |
+| `Sources/` | Legacy Swift/AX code (deprecated) |
+
+## openspec workflow
+
+See `openspec/WORKFLOW.md` for the full lifecycle.
+
+Changes follow: `proposal → design → tasks → implement → review → commit → archive`
+
+Commands:
+- `/opsx:propose` — create a new change with all artifacts
+- `/opsx:apply` — implement tasks from a change
+- `/opsx:archive` — archive a completed change
+- `/opsx:explore` — think through ideas without implementing
+- `/review-code` — code review before commit (blockers + advisory)
+- `/review-security` — security review before commit (blockers + advisory)
+
+Before committing a completed feature, run both `/review-code` and `/review-security`.
 
 ## Constraints
 
-- Only reads messages **visible in the viewport** — no scrolling
-- Requires Accessibility permission for the calling process (Terminal/iTerm)
-- AX tree structure may change with app updates — parsers may need adjustment
-- Send briefly brings the app to focus
-- Chat matching is case-insensitive substring match on chat name
+- Aria snapshot structure is locale-dependent and may change with WhatsApp Web updates
+- Low volume personal use only — minimize automation fingerprint
+- No CI yet — tests run locally

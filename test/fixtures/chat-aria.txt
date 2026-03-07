@@ -1,0 +1,446 @@
+- document:
+  - banner:
+    - button "Chat" [pressed]: "1"
+    - button "Aggiornamenti nello stato"
+    - button "Canali"
+    - button "Community"
+    - button "File multimediali"
+    - button "Impostazioni"
+    - button "Profilo":
+      - img
+  - banner:
+    - banner:
+      - heading "WhatsApp" [level=2]:
+        - img "wa-wordmark-refreshed"
+      - button "Nuova chat"
+      - button "Menu"
+  - textbox "Cerca o avvia una nuova chat"
+  - tablist "chat-list-filters":
+    - tab "Tutte"
+    - tab "‎Non lette 4"
+    - tab "‎Preferiti"
+    - tab
+  - grid "Lista delle chat":
+    - 'row "Futsal Group 17:36 Piero R. : Ok a dopo ciao cari 1 messaggio non letto"':
+      - 'gridcell "Futsal Group 17:36 Piero R. : Ok a dopo ciao cari 1 messaggio non letto"':
+        - img
+        - gridcell "Futsal Group 17:36"
+        - text: "Piero R. : Ok a dopo ciao cari"
+        - gridcell "1 messaggio non letto": "1"
+    - 'row "Sport Club 17:28 Forse Max : Il principino al Robaldo.. ⚪ ️ ⚫ ️ Chat silenziata messaggio con menzione 61 messaggi non letti"':
+      - 'gridcell "Sport Club 17:28 Forse Max : Il principino al Robaldo.. ⚪ ️ ⚫ ️ Chat silenziata messaggio con menzione 61 messaggi non letti"':
+        - img
+        - gridcell "Sport Club 17:28"
+        - text: "~ Max : Il principino al Robaldo.."
+        - img "⚪"
+        - text: ️
+        - img "⚫"
+        - text: ️
+        - gridcell "Chat silenziata messaggio con menzione 61 messaggi non letti": "61"
+    - 'row "Football Team 16:58 +33 6 00 00 00 01 : Hello, Avec Camille on a une équipe complète, si ça vous dit on peut essayer de s''organiser un match contre vous sur un de ces créneaux où sur un autre 😊"':
+      - 'gridcell "Football Team 16:58 +33 6 00 00 00 01 : Hello, Avec Camille on a une équipe complète, si ça vous dit on peut essayer de s''organiser un match contre vous sur un de ces créneaux où sur un autre 😊"':
+        - img
+        - gridcell "Football Team 16:58"
+        - text: "+33 6 00 00 00 01 : Hello, Avec Camille on a une équipe complète, si ça vous dit on peut essayer de s'organiser un match contre vous sur un de ces créneaux où sur un autre"
+        - img "😊"
+        - gridcell
+    - 'row "Wine Tasting Group 16:36 Forse Francesco Longo : https://example.com/profile/123 Chat silenziata"':
+      - 'gridcell "Wine Tasting Group 16:36 Forse Francesco Longo : https://example.com/profile/123 Chat silenziata"':
+        - img
+        - gridcell "Wine Tasting Group 16:36"
+        - text: "~ Francesco Longo : https://example.com/profile/123"
+        - gridcell "Chat silenziata"
+    - row "Ahmad Karam 16:19 Est dans le groupe":
+      - gridcell "Ahmad Karam 16:19 Est dans le groupe":
+        - img
+        - gridcell "Ahmad Karam 16:19"
+        - text: Est dans le groupe
+        - gridcell
+    - 'row "Futsal Orga 15:20 Piero R. : Per tutte le date l''orario é il solito 21h30 22h30. Il 29 non so ancora se ci saró...se uno di voi é sicuro di esserci si puó occupare della prenotazione per favore!"':
+      - 'gridcell "Futsal Orga 15:20 Piero R. : Per tutte le date l''orario é il solito 21h30 22h30. Il 29 non so ancora se ci saró...se uno di voi é sicuro di esserci si puó occupare della prenotazione per favore!"':
+        - gridcell "Futsal Orga 15:20"
+        - text: "Piero R. : Per tutte le date l'orario é il solito 21h30 22h30. Il 29 non so ancora se ci saró...se uno di voi é sicuro di esserci si puó occupare della prenotazione per favore!"
+        - gridcell
+    - row "Marco Bianchi 14:28 Eh infatti per questo mi è venuto il dubbio visto che me lo diceva ieri Dani.":
+      - gridcell "Marco Bianchi 14:28 Eh infatti per questo mi è venuto il dubbio visto che me lo diceva ieri Dani.":
+        - img
+        - gridcell "Marco Bianchi 14:28"
+        - text: Eh infatti per questo mi è venuto il dubbio visto che me lo diceva ieri Dani.
+        - gridcell
+    - 'row "Family Group 14:12 Franco ha reagito con 👍🏻 a: \" Sto solo facendo test per un tool che permette di usare WhatsApp a uno dei miei assistenti.\""':
+      - 'gridcell "Family Group 14:12 Franco ha reagito con 👍🏻 a: \" Sto solo facendo test per un tool che permette di usare WhatsApp a uno dei miei assistenti.\""':
+        - img
+        - gridcell "Family Group 14:12"
+        - text: Franco ha reagito con
+        - img "👍🏻"
+        - text: "a: \" Sto solo facendo test per un tool che permette di usare WhatsApp a uno dei miei assistenti.\""
+        - gridcell:
+          - button
+    - 'row "Bike Race Group 13:08 Alfredo M. : ..chiedo Chat silenziata 11 messaggi non letti"':
+      - 'gridcell "Bike Race Group 13:08 Alfredo M. : ..chiedo Chat silenziata 11 messaggi non letti"':
+        - img
+        - gridcell "Bike Race Group 13:08"
+        - text: "Alfredo M. : ..chiedo"
+        - gridcell "Chat silenziata 11 messaggi non letti": "11"
+    - row "Food and Wine 17:44 I membri del gruppo sono cambiati. Clicca per visualizzare.":
+      - gridcell "Food and Wine 17:44 I membri del gruppo sono cambiati. Clicca per visualizzare.":
+        - img
+        - gridcell "Food and Wine 17:44"
+        - text: I membri del gruppo sono cambiati. Clicca per visualizzare.
+        - gridcell
+    - 'row "Story Time Group 😅 Ieri Andrea F. : non si colpiscono più i pozzi di petrolio come una volta"':
+      - 'gridcell "Story Time Group 😅 Ieri Andrea F. : non si colpiscono più i pozzi di petrolio come una volta"':
+        - img
+        - gridcell "Story Time Group 😅 Ieri":
+          - text: Story Time Group
+          - img "😅"
+          - text: Ieri
+        - text: "Andrea F. : non si colpiscono più i pozzi di petrolio come una volta"
+        - gridcell
+    - 'row "Football Teamball Restart giovedì Ahmad : Bon rétablissement 🙏 ❤️"':
+      - 'gridcell "Football Teamball Restart giovedì Ahmad : Bon rétablissement 🙏 ❤️"':
+        - img
+        - gridcell "Football Teamball Restart giovedì"
+        - text: "Ahmad : Bon rétablissement"
+        - img "🙏"
+        - img "❤️"
+        - gridcell
+    - 'row "Bus Stop Group giovedì Forse Carlos : Bus arrivé à Jean Macé !"':
+      - 'gridcell "Bus Stop Group giovedì Forse Carlos : Bus arrivé à Jean Macé !"':
+        - gridcell "Bus Stop Group giovedì"
+        - text: "~ Carlos : Bus arrivé à Jean Macé !"
+        - gridcell
+    - 'row "Bus Line 972 giovedì +33 7 00 00 00 02 : Bonjour le bus aura du retard à jean Macé ?"':
+      - 'gridcell "Bus Line 972 giovedì +33 7 00 00 00 02 : Bonjour le bus aura du retard à jean Macé ?"':
+        - img
+        - gridcell "Bus Line 972 giovedì"
+        - text: "+33 7 00 00 00 02 : Bonjour le bus aura du retard à jean Macé ?"
+        - gridcell
+    - row "Silvio Rossi mercoledì Scusa, ora non posso parlare":
+      - gridcell "Silvio Rossi mercoledì Scusa, ora non posso parlare":
+        - img
+        - gridcell "Silvio Rossi mercoledì"
+        - text: Scusa, ora non posso parlare
+        - gridcell
+    - 'row "Board Game Night mercoledì Giada T. ha reagito con 👍 a: \" Perfetto\""':
+      - 'gridcell "Board Game Night mercoledì Giada T. ha reagito con 👍 a: \" Perfetto\""':
+        - img
+        - gridcell "Board Game Night mercoledì"
+        - text: Giada T. ha reagito con
+        - img "👍"
+        - text: "a: \" Perfetto\""
+        - gridcell
+    - 'row "Friends Group lunedì Amanda L. : Hello mi tolgo"':
+      - 'gridcell "Friends Group lunedì Amanda L. : Hello mi tolgo"':
+        - gridcell "Friends Group lunedì"
+        - text: "Amanda L. : Hello mi tolgo"
+        - gridcell
+    - row "Gabriele Verdi lunedì Weila come sei messo?":
+      - gridcell "Gabriele Verdi lunedì Weila come sei messo?":
+        - img
+        - gridcell "Gabriele Verdi lunedì"
+        - text: Weila come sei messo?
+        - gridcell
+    - 'row "Carnival Committee lunedì Forse Nicoletta B. : Insieme alle frappe (da noi si chiamano così) diamo qualche mandarino e diventiamo subito più salutari ;-) Chat silenziata 67 messaggi non letti"':
+      - 'gridcell "Carnival Committee lunedì Forse Nicoletta B. : Insieme alle frappe (da noi si chiamano così) diamo qualche mandarino e diventiamo subito più salutari ;-) Chat silenziata 67 messaggi non letti"':
+        - img
+        - gridcell "Carnival Committee lunedì"
+        - text: "~ Nicoletta B. : Insieme alle frappe (da noi si chiamano così) diamo qualche mandarino e diventiamo subito più salutari ;-)"
+        - gridcell "Chat silenziata 67 messaggi non letti": "67"
+    - 'row "Birthday Matteo lunedì +33 6 00 00 00 03 : Les garçons étaient ravis . merci encore . Bonne semaine a tous"':
+      - 'gridcell "Birthday Matteo lunedì +33 6 00 00 00 03 : Les garçons étaient ravis . merci encore . Bonne semaine a tous"':
+        - img
+        - gridcell "Birthday Matteo lunedì"
+        - text: "+33 6 00 00 00 03 : Les garçons étaient ravis . merci encore . Bonne semaine a tous"
+        - gridcell
+    - 'row "Luca Ferretti domenica Hai reagito con 🙏 a: \" Ciao Paolo, io personalmente no, passavo ore e ore a guardarmi tutte le agenzie e gli annunci ma conosco una persona di fiducia che potrebbe consigliarmi…sento anche Mélanie se conosce qualcuno di fiducia\""':
+      - 'gridcell "Luca Ferretti domenica Hai reagito con 🙏 a: \" Ciao Paolo, io personalmente no, passavo ore e ore a guardarmi tutte le agenzie e gli annunci ma conosco una persona di fiducia che potrebbe consigliarmi…sento anche Mélanie se conosce qualcuno di fiducia\""':
+        - img
+        - gridcell "Luca Ferretti domenica"
+        - text: Hai reagito con
+        - img "🙏"
+        - text: "a: \" Ciao Paolo, io personalmente no, passavo ore e ore a guardarmi tutte le agenzie e gli annunci ma conosco una persona di fiducia che potrebbe consigliarmi…sento anche Mélanie se conosce qualcuno di fiducia\""
+        - gridcell
+    - row "Mattia Neri domenica 🙂":
+      - gridcell "Mattia Neri domenica 🙂":
+        - gridcell "Mattia Neri domenica"
+        - img "🙂"
+        - gridcell
+    - 'row "Francesco Marino 28/02/2026 Hai reagito con ❤️ a: \" Ecco, tu qui ti divertiresti a fare foto\""':
+      - 'gridcell "Francesco Marino 28/02/2026 Hai reagito con ❤️ a: \" Ecco, tu qui ti divertiresti a fare foto\""':
+        - img
+        - gridcell "Francesco Marino 28/02/2026"
+        - text: Hai reagito con
+        - img "❤️"
+        - text: "a: \" Ecco, tu qui ti divertiresti a fare foto\""
+        - gridcell
+    - 'row "Weekend Trip 2025 25/02/2026 Forse Giulia S. : (basta smetto)"':
+      - 'gridcell "Weekend Trip 2025 25/02/2026 Forse Giulia S. : (basta smetto)"':
+        - img
+        - gridcell "Weekend Trip 2025 25/02/2026"
+        - text: "~ Giulia S. : (basta smetto)"
+        - gridcell
+    - 'row "Summer Party 23/02/2026 Max : Si Chat silenziata"':
+      - 'gridcell "Summer Party 23/02/2026 Max : Si Chat silenziata"':
+        - img
+        - gridcell "Summer Party 23/02/2026"
+        - text: "Max : Si"
+        - gridcell "Chat silenziata"
+    - row "All For Football Teamball 🤸 ⚽ 🏃 16/02/2026 +33 6 00 00 00 05 ha aggiunto +33 7 00 00 00 06 .":
+      - gridcell "All For Football Teamball 🤸 ⚽ 🏃 16/02/2026 +33 6 00 00 00 05 ha aggiunto +33 7 00 00 00 06 .":
+        - img
+        - gridcell "All For Football Teamball 🤸 ⚽ 🏃 16/02/2026":
+          - text: All For Football Teamball
+          - img "🤸"
+          - img "⚽"
+          - img "🏃"
+          - text: 16/02/2026
+        - text: +33 6 00 00 00 05 ha aggiunto +33 7 00 00 00 06 .
+        - gridcell
+    - 'row "Uncles Group 03/02/2026 Valerio M. : O Mattia..."':
+      - 'gridcell "Uncles Group 03/02/2026 Valerio M. : O Mattia..."':
+        - gridcell "Uncles Group 03/02/2026"
+        - text: "Valerio M. : O Mattia..."
+        - gridcell
+    - 'row "Wine Tasting 14/01/2026 Jean R. : Non facciamo arrabbiare Orban"':
+      - 'gridcell "Wine Tasting 14/01/2026 Jean R. : Non facciamo arrabbiare Orban"':
+        - gridcell "Wine Tasting 14/01/2026"
+        - text: "Jean R. : Non facciamo arrabbiare Orban"
+        - gridcell
+    - row "Mountain Trip 2025 17:44 I membri del gruppo sono cambiati. Clicca per visualizzare.":
+      - gridcell "Mountain Trip 2025 17:44 I membri del gruppo sono cambiati. Clicca per visualizzare.":
+        - img
+        - gridcell "Mountain Trip 2025 17:44"
+        - text: I membri del gruppo sono cambiati. Clicca per visualizzare.
+        - gridcell
+    - 'row "Pizza Group 10/01/2026 Forse Eli B. : A me piace la brasserie Ovest"':
+      - 'gridcell "Pizza Group 10/01/2026 Forse Eli B. : A me piace la brasserie Ovest"':
+        - img
+        - gridcell "Pizza Group 10/01/2026"
+        - text: "~ Eli B. : A me piace la brasserie Ovest"
+        - gridcell
+    - row "Andrea F. Gialli 07/01/2026 Ok":
+      - gridcell "Andrea F. Gialli 07/01/2026 Ok":
+        - img
+        - gridcell "Andrea F. Gialli 07/01/2026"
+        - text: Ok
+        - gridcell
+    - row "Luisa Colombo 30/12/2025 Foto":
+      - gridcell "Luisa Colombo 30/12/2025 Foto":
+        - img
+        - gridcell "Luisa Colombo 30/12/2025"
+        - text: Foto
+        - gridcell
+    - row "+39 02 0000 00000 29/12/2025 Scrivi un commento per aiutarci a migliorare 😉":
+      - gridcell "+39 02 0000 00000 29/12/2025 Scrivi un commento per aiutarci a migliorare 😉":
+        - img
+        - gridcell "+39 02 0000 00000 29/12/2025"
+        - text: Scrivi un commento per aiutarci a migliorare
+        - img "😉"
+        - gridcell
+    - row "Franco Parisi 26/12/2025 Regali sotto l'albero":
+      - gridcell "Franco Parisi 26/12/2025 Regali sotto l'albero":
+        - img
+        - gridcell "Franco Parisi 26/12/2025"
+        - text: Regali sotto l'albero
+        - gridcell
+    - row "Daniele Conti 19/12/2025 chiedi a Costa":
+      - gridcell "Daniele Conti 19/12/2025 chiedi a Costa":
+        - img
+        - gridcell "Daniele Conti 19/12/2025"
+        - text: chiedi a Costa
+        - gridcell
+    - row "Estevan T. Testa 19/12/2025 ah mi spiace, ripigliati!":
+      - gridcell "Estevan T. Testa 19/12/2025 ah mi spiace, ripigliati!":
+        - gridcell "Estevan T. Testa 19/12/2025"
+        - text: ah mi spiace, ripigliati!
+        - gridcell
+    - row "Billiards 16/12/2025 Hai cambiato l'immagine del gruppo.":
+      - gridcell "Billiards 16/12/2025 Hai cambiato l'immagine del gruppo.":
+        - img
+        - gridcell "Billiards 16/12/2025"
+        - text: Hai cambiato l'immagine del gruppo.
+        - gridcell
+    - 'row "Party Group 13/12/2025 Hai reagito con ❤️ a: \" Questo é il vostro cane Vostro!! Bellissimo\""':
+      - 'gridcell "Party Group 13/12/2025 Hai reagito con ❤️ a: \" Questo é il vostro cane Vostro!! Bellissimo\""':
+        - img
+        - gridcell "Party Group 13/12/2025"
+        - text: Hai reagito con
+        - img "❤️"
+        - text: "a: \" Questo é il vostro cane Vostro!! Bellissimo\""
+        - gridcell
+    - 'row "+33 6 00 00 00 04 13/12/2025 Bonjour, Nous avons créé un groupe WhatsApp et une cagnotte afin de remercier Mehdi, le chauffeur de bus qui accompagne nos enfants chaque jour à l’école 🚌 Depuis ces premiers mois, il fait preuve de patience, de professionnalisme et d’une grande bienveillance envers les enfants. Nous souhaitions marquer le coup et le remercier collectivement 🎁 👉 Lien pour rejoindre le groupe WhatsApp du cadeau : https://chat.whatsapp.com/REDACTED 👉 Lien pour participer à la cagnotte en ligne : https://example.com/fundraiser/REDACTED ⏰ Attention : participation possible jusqu’au mercredi 17 décembre, afin de pouvoir lui remettre la carte cadeau le vendredi 19 décembre, avec le nom de tous les enfants participants. Pensez bien à indiquer le prénom de votre enfant lors de votre participation. Merci beaucoup par avance pour lui."':
+      - 'gridcell "+33 6 00 00 00 04 13/12/2025 Bonjour, Nous avons créé un groupe WhatsApp et une cagnotte afin de remercier Mehdi, le chauffeur de bus qui accompagne nos enfants chaque jour à l’école 🚌 Depuis ces premiers mois, il fait preuve de patience, de professionnalisme et d’une grande bienveillance envers les enfants. Nous souhaitions marquer le coup et le remercier collectivement 🎁 👉 Lien pour rejoindre le groupe WhatsApp du cadeau : https://chat.whatsapp.com/REDACTED 👉 Lien pour participer à la cagnotte en ligne : https://example.com/fundraiser/REDACTED ⏰ Attention : participation possible jusqu’au mercredi 17 décembre, afin de pouvoir lui remettre la carte cadeau le vendredi 19 décembre, avec le nom de tous les enfants participants. Pensez bien à indiquer le prénom de votre enfant lors de votre participation. Merci beaucoup par avance pour lui."':
+        - img
+        - gridcell "+33 6 00 00 00 04 13/12/2025"
+        - text: Bonjour, Nous avons créé un groupe WhatsApp et une cagnotte afin de remercier Mehdi, le chauffeur de bus qui accompagne nos enfants chaque jour à l’école
+        - img "🚌"
+        - text: Depuis ces premiers mois, il fait preuve de patience, de professionnalisme et d’une grande bienveillance envers les enfants. Nous souhaitions marquer le coup et le remercier collectivement
+        - img "🎁"
+        - img "👉"
+        - text: "Lien pour rejoindre le groupe WhatsApp du cadeau : https://chat.whatsapp.com/REDACTED"
+        - img "👉"
+        - text: "Lien pour participer à la cagnotte en ligne : https://example.com/fundraiser/REDACTED"
+        - img "⏰"
+        - text: "Attention : participation possible jusqu’au mercredi 17 décembre, afin de pouvoir lui remettre la carte cadeau le vendredi 19 décembre, avec le nom de tous les enfants participants. Pensez bien à indiquer le prénom de votre enfant lors de votre participation. Merci beaucoup par avance pour lui."
+        - gridcell
+    - row "Andrea F. Fontana 11/12/2025 Sì dai, tu dicci per tempo quando potresti scendere così ci organizziamo! Dai un po' di opzioni così forse riusciamo anche con il veneto e il friulano 😂":
+      - gridcell "Andrea F. Fontana 11/12/2025 Sì dai, tu dicci per tempo quando potresti scendere così ci organizziamo! Dai un po' di opzioni così forse riusciamo anche con il veneto e il friulano 😂":
+        - img
+        - gridcell "Andrea F. Fontana 11/12/2025"
+        - text: Sì dai, tu dicci per tempo quando potresti scendere così ci organizziamo! Dai un po' di opzioni così forse riusciamo anche con il veneto e il friulano
+        - img "😂"
+        - gridcell
+    - 'row "Mountain Hikes 04/11/2025 Estevan T. : Azz, domenica 16 c''é aita ma non sono ancora sicuro d''andarci. Scelte difficili..."':
+      - 'gridcell "Mountain Hikes 04/11/2025 Estevan T. : Azz, domenica 16 c''é aita ma non sono ancora sicuro d''andarci. Scelte difficili..."':
+        - gridcell "Mountain Hikes 04/11/2025"
+        - text: "Estevan T. : Azz, domenica 16 c'é aita ma non sono ancora sicuro d'andarci. Scelte difficili..."
+        - gridcell
+    - 'row "Escape Room 28/09/2025 Amanda L. : Anche in settimana secondo la disponibilità di tutti"':
+      - 'gridcell "Escape Room 28/09/2025 Amanda L. : Anche in settimana secondo la disponibilità di tutti"':
+        - img
+        - gridcell "Escape Room 28/09/2025"
+        - text: "Amanda L. : Anche in settimana secondo la disponibilità di tutti"
+        - gridcell
+    - 'row "Futsal Dates 25/09/2025 Giovanni P. : Foto"':
+      - 'gridcell "Futsal Dates 25/09/2025 Giovanni P. : Foto"':
+        - gridcell "Futsal Dates 25/09/2025"
+        - text: "Giovanni P. : Foto"
+        - gridcell
+    - row "⚽ Italian Football Teamball Tournament 🇮🇹 17:44 I membri del gruppo sono cambiati. Clicca per visualizzare.":
+      - gridcell "⚽ Italian Football Teamball Tournament 🇮🇹 17:44 I membri del gruppo sono cambiati. Clicca per visualizzare.":
+        - img
+        - gridcell "⚽ Italian Football Teamball Tournament 🇮🇹 17:44":
+          - img "⚽"
+          - text: Italian Football Teamball Tournament
+          - img "🇮🇹"
+          - text: 17:44
+        - text: I membri del gruppo sono cambiati. Clicca per visualizzare.
+        - gridcell
+    - 'row "Padel all''italiana 10/09/2025 Piero R. : Bella idea"':
+      - 'gridcell "Padel all''italiana 10/09/2025 Piero R. : Bella idea"':
+        - img
+        - gridcell "Italian Padel 10/09/2025"
+        - text: "Piero R. : Bella idea"
+        - gridcell
+    - row "Pietro Grandi 18/08/2025 😀":
+      - gridcell "Pietro Grandi 18/08/2025 😀":
+        - img
+        - gridcell "Pietro Grandi 18/08/2025"
+        - img "😀"
+        - gridcell
+  - text: I tuoi messaggi personali sono
+  - button "crittografati end-to-end"
+  - text: .
+  - button "Usa WhatsApp per Mac"
+  - banner:
+    - button "Dettagli profilo":
+      - img
+    - button "Family Group clicca qui per info gruppo"
+    - button "Videochiamata di gruppo": Chiama
+    - button "Cerca"
+    - button "Menu"
+  - text: giovedì
+  - button "Sincronizzazione dei messaggi precedenti in corso. Clicca per visualizzare lo stato del processo."
+  - text: domenica
+  - 'row "Tu: Fatto il gruppo e invitato @Franco Parisi 13:04 Letto reazione 👍. Visualizza reazioni"':
+    - text: Fatto il gruppo e invitato
+    - button "@Franco Parisi"
+    - text: 13:04
+    - img "msg-dblcheck"
+    - button "reazione 👍. Visualizza reazioni":
+      - img "👍🏻"
+  - button "Apri dettagli chat di Maria Colombo":
+    - img
+  - 'row "Maria Colombo Ce la farai Ce la farai, Lago (Italia). Mi piace: 998.908 · 87.018 persone ne parlano. Respira a fondo e continua www.facebook.com https://example.com/share/abc/ 14:31 Inoltra media"':
+    - text: "Maria Colombo Ce la farai Ce la farai, Lago (Italia). Mi piace: 998.908 · 87.018 persone ne parlano. Respira a fondo e continua www.facebook.com"
+    - link "https://example.com/share/abc/":
+      - /url: https://example.com/share/abc/
+    - text: 14:31
+    - button "Inoltra media"
+  - text: lunedì
+  - button "Apri dettagli chat di Franco Parisi":
+    - img
+  - row "Franco Parisi Apri immagine Apri immagine Apri immagine Apri immagine Buongiorno ☀️ 🐾 🐾 06:41":
+    - text: Franco Parisi
+    - button "Apri immagine":
+      - img "Buongiorno ☀️🐾🐾"
+      - img "Buongiorno ☀️🐾🐾"
+      - img "Buongiorno ☀️🐾🐾"
+      - img "Buongiorno ☀️🐾🐾"
+    - button "Apri immagine":
+      - img
+      - img
+      - img
+      - img
+    - button "Apri immagine":
+      - img
+      - img
+      - img
+      - img
+    - button "Apri immagine":
+      - img
+      - img
+      - img
+      - img
+      - img
+    - text: Buongiorno
+    - img "☀️"
+    - img "🐾"
+    - img "🐾"
+    - text: 06:41
+  - text: mercoledì
+  - button "Apri dettagli chat di Maria Colombo":
+    - img
+  - row "Maria Colombo Apri immagine 13:38 Inoltra media":
+    - text: Maria Colombo
+    - button "Apri immagine":
+      - img
+      - img
+    - text: 13:38
+    - button "Inoltra media"
+  - text: giovedì
+  - button "Apri dettagli chat di Maria Colombo":
+    - img
+  - row "Maria Colombo Inoltrato Apri immagine 09:19 Inoltra media":
+    - text: Maria Colombo Inoltrato
+    - button "Apri immagine":
+      - img
+      - img
+    - text: 09:19
+    - button "Inoltra media"
+  - text: Oggi
+  - 'row "Tu: [TEST AUTOMATICO #2] Secondo test — verifico che il messaggio arrivi nella chat giusta anche quando la chat è già aperta. Scusate il disturbo! 🤖 [TEST AUTOMATICO #3] Test con invio tramite clipboard + tasto Invio. Scusate! 🤖 cli[TEST AUTOMATICO] Messaggio di test inviato da AI (Claude). Paolo sta testando, ignorate! 🤖 14:06 Letto"':
+    - text: "[TEST AUTOMATICO #2] Secondo test — verifico che il messaggio arrivi nella chat giusta anche quando la chat è già aperta. Scusate il disturbo!"
+    - img "🤖"
+    - text: "[TEST AUTOMATICO #3] Test con invio tramite clipboard + tasto Invio. Scusate!"
+    - img "🤖"
+    - text: cli[TEST AUTOMATICO] Messaggio di test inviato da AI (Claude). Paolo sta testando, ignorate!
+    - img "🤖"
+    - text: 14:06
+    - img "msg-dblcheck"
+  - row "Ora stiamo pranzando. E usiamo signal per piacere. 14:08 Letto":
+    - text: Ora stiamo pranzando. E usiamo signal per piacere. 14:08
+    - img "msg-dblcheck"
+  - row "Sto solo facendo test per un tool che permette di usare WhatsApp a uno dei miei assistenti. 14:09 Consegnato reazione 👍. Visualizza reazioni":
+    - text: Sto solo facendo test per un tool che permette di usare WhatsApp a uno dei miei assistenti. 14:09
+    - img "msg-dblcheck"
+    - button "reazione 👍. Visualizza reazioni":
+      - img "👍🏻"
+  - 'row "[TEST AI #11] Test con Send button 🤖 14:11 Consegnato"':
+    - text: "[TEST AI #11] Test con Send button"
+    - img "🤖"
+    - text: 14:11
+    - img "msg-dblcheck"
+  - 'row "Tu: [TEST AI] Ultimo test — invio funzionante tramite pulsante Send. Scusate il disturbo! 🤖 14:12 Consegnato"':
+    - text: "[TEST AI] Ultimo test — invio funzionante tramite pulsante Send. Scusate il disturbo!"
+    - img "🤖"
+    - text: 14:12
+    - img "msg-dblcheck"
+  - contentinfo:
+    - button "Allega"
+    - button "Emoji, GIF, Sticker"
+    - textbox "Scrivi al gruppo Family Group":
+      - paragraph
+    - button "Messaggio vocale":
+      - button "Messaggio vocale"
