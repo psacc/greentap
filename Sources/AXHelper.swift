@@ -156,6 +156,7 @@ struct AXHelper {
         apps.first?.activate()
     }
 
+
     static func press(_ el: AXUIElement) {
         AXUIElementPerformAction(el, kAXPressAction as CFString)
     }
