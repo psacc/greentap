@@ -1,0 +1,39 @@
+- document:
+  - banner:
+    - button "Chat" [pressed]
+    - button "Aggiornamenti nello stato"
+    - button "Canali"
+    - button "Community"
+    - button "File multimediali"
+    - button "Impostazioni"
+    - button "Profilo":
+      - img
+  - banner:
+    - banner:
+      - heading "WhatsApp" [level=2]:
+        - img "wa-wordmark-refreshed"
+      - button "Nuova chat"
+      - button "Menu"
+  - textbox: Mamma
+  - button "End icon button"
+  - tablist "chat-list-filters":
+    - tab "Tutte"
+    - tab "‎Non lette 2"
+    - tab "‎Preferiti"
+    - tab
+  - grid "Risultati della ricerca.":
+    - row "Chat"
+    - 'row "Mamma Papà Paolo 14:12 Tu : Test message"':
+      - 'gridcell "Mamma Papà Paolo 14:12 Tu : Test message"':
+        - img
+        - gridcell "Mamma Papà Paolo 14:12"
+        - text: "Tu : Test message"
+        - gridcell
+    - 'row "Mamma Rosa 16:30 Ciao come stai? 2 messaggi non letti"':
+      - 'gridcell "Mamma Rosa 16:30 Ciao come stai? 2 messaggi non letti"':
+        - img
+        - gridcell "Mamma Rosa 16:30"
+        - text: Ciao come stai?
+        - gridcell "2 messaggi non letti": "2"
+  - text: I tuoi messaggi personali sono
+  - button "crittografati end-to-end"

@@ -49,11 +49,11 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [x] Element-based waits (replaced fixed timeouts)
 - [x] Own-message attribution fix (msg-dblcheck detection)
 
-### Phase 2 — Actions
-- [ ] `greentap send <chat> <message>` — compose + send
-- [ ] `greentap search <query>` — search chats
-- [ ] Post-send verification (message appears in chat)
-- [ ] Human-like delays (random jitter between actions)
+### Phase 2 — Actions ✓
+- [x] `greentap send <chat> <message>` — compose + send with chat verification
+- [x] `greentap search <query> [--json]` — search chats (reuses chat list parser)
+- [x] Post-send verification (compose empty + message in snapshot)
+- [x] Human-like delays (random jitter between actions)
 
 ### Phase 3 — Performance
 - [ ] Browser daemon (`chromium.launchServer()` + WebSocket connect)

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { parseChatList, printChats, parseMessages, printMessages } from "../lib/parser.js";
+import { parseChatList, printChats, parseMessages, printMessages, parseSearchResults } from "../lib/parser.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURES = join(__dirname, "fixtures");
@@ -192,5 +192,33 @@ describe("printMessages", () => {
     assert.ok(output[0].includes("[14:00]"));
     assert.ok(output[0].includes("Alice:"));
     assert.ok(output[0].includes("hello"));
+  });
+});
+
+describe("parseSearchResults", () => {
+  it("parses search results fixture", () => {
+    const aria = loadFixture("search-aria.txt");
+    const results = parseSearchResults(aria);
+
+    assert.ok(results.length >= 1, "should parse at least one result");
+    const mamma = results.find((r) => r.name.includes("Mamma Papà Paolo"));
+    assert.ok(mamma, "should find Mamma Papà Paolo");
+  });
+
+  it("detects unread in search results", () => {
+    const aria = loadFixture("search-aria.txt");
+    const results = parseSearchResults(aria);
+
+    const unread = results.filter((r) => r.unread);
+    assert.ok(unread.length >= 1, "should have at least 1 unread result");
+    assert.ok(unread[0].unreadCount > 0);
+  });
+
+  it("returns empty array for empty input", () => {
+    assert.deepEqual(parseSearchResults(""), []);
+  });
+
+  it("returns empty array for aria without search grid", () => {
+    assert.deepEqual(parseSearchResults('- document:\n  - heading "Nothing" [level=1]'), []);
   });
 });
