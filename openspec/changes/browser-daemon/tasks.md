@@ -5,7 +5,7 @@
 
 ## 2. Daemon process
 
-- [ ] 2.1 Create `lib/daemon.js` — launches `launchPersistentContext` with `--remote-debugging-port=0`, writes port + PID files atomically, navigates to WA, waits for chat list
+- [ ] 2.1 Create `lib/daemon.js` — launches `launchPersistentContext` with `--remote-debugging-port=19222`, writes port + PID files atomically, navigates to WA, waits for chat list
 - [ ] 2.2 Ensure `~/.greentap/` dir is `0700`, port/PID files are `0600`
 - [ ] 2.3 Implement idle timer (15min) — reset on CDP client connect/disconnect events, clean shutdown on expiry
 - [ ] 2.4 Handle browser `disconnected` event — clean up files and exit

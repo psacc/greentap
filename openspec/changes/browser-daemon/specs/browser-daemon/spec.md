@@ -8,9 +8,9 @@ persistent browser context with Chrome DevTools Protocol exposed on localhost.
 #### Scenario: Daemon starts and exposes CDP
 
 - **WHEN** the daemon process starts
-- **THEN** it SHALL launch Chrome with `launchPersistentContext` and `--remote-debugging-port=0`
+- **THEN** it SHALL launch Chrome with `launchPersistentContext` and `--remote-debugging-port=19222`
 - **AND** ensure `~/.greentap/` directory is mode `0700`
-- **AND** write the allocated port to `~/.greentap/daemon.port` atomically (mode `0600`)
+- **AND** write the port (`19222`) to `~/.greentap/daemon.port` atomically (mode `0600`)
 - **AND** write its PID to `~/.greentap/daemon.pid` atomically (mode `0600`)
 - **AND** navigate to `web.whatsapp.com`
 - **AND** wait for the chat list grid to appear
