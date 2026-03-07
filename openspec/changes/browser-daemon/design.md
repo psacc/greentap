@@ -88,8 +88,8 @@ Daemon starts
   ├─ Wait for chat list grid
   ├─ Start idle timer (15 min)
   │
-  ├─ Idle timer reset: touch daemon.port mtime on each client connect
-  │   (client touches file after connecting, daemon watches mtime)
+  ├─ Idle timer reset: daemon detects CDP client connect/disconnect events
+  │   (Chrome emits Target.attachedToTarget / detachedFromTarget)
   │
   └─ On idle timeout OR SIGTERM:
       ├─ Close browser context (kills Chrome)
@@ -112,7 +112,7 @@ executing, which implicitly waits for any prior navigation to complete.
 - `~/.greentap/` directory: `0700`
 - `daemon.port`: `0600`, written atomically
 - `daemon.pid`: `0600`, written atomically
-- `daemon.lock`: exclusive lock via `fs.open()` with `O_EXCL` to prevent startup races
+- `daemon.lock`: exclusive lock via `flock()` (auto-releases on crash) to prevent startup races
 
 ## Risks / Trade-offs
 

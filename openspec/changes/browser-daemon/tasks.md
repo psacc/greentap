@@ -7,14 +7,14 @@
 
 - [ ] 2.1 Create `lib/daemon.js` — launches `launchPersistentContext` with `--remote-debugging-port=0`, writes port + PID files atomically, navigates to WA, waits for chat list
 - [ ] 2.2 Ensure `~/.greentap/` dir is `0700`, port/PID files are `0600`
-- [ ] 2.3 Implement idle timer (15min) — reset when `daemon.port` mtime changes, clean shutdown on expiry
+- [ ] 2.3 Implement idle timer (15min) — reset on CDP client connect/disconnect events, clean shutdown on expiry
 - [ ] 2.4 Handle browser `disconnected` event — clean up files and exit
 - [ ] 2.5 Handle SIGTERM — clean shutdown
 
 ## 3. CLI client
 
 - [ ] 3.1 Create `lib/client.js` — read `daemon.port`, `connectOverCDP`, return `{ browser, context, page }`; on disconnect call `browser.close()` (doesn't kill Chrome)
-- [ ] 3.2 Implement lazy start with exclusive lock: acquire `daemon.lock`, fork `lib/daemon.js` detached with `stdio: 'ignore'`, poll for `daemon.port` (max 15s), release lock
+- [ ] 3.2 Implement lazy start with exclusive lock: acquire `daemon.lock` via `flock()`, fork `lib/daemon.js` detached with `stdio: 'ignore'`, poll for `daemon.port` (max 15s), release lock
 - [ ] 3.3 Handle stale port file: if `connectOverCDP` fails, clean up files, start fresh daemon (under lock)
 - [ ] 3.4 Guard: skip daemon auto-start if `~/.greentap/browser-data/` is empty — print "Run greentap login first"
 - [ ] 3.5 Page state check: after connecting, verify chat list grid visible; try Escape → reload → goto as escalation
