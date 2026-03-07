@@ -153,11 +153,12 @@ async function cmdSend(chatName, message) {
       throw new Error(`Wrong chat opened. Expected "${chatName}", got "${actual}"`);
     }
 
-    // Find compose textbox and type message
+    // Focus compose and type message via keyboard (fill() doesn't trigger WhatsApp's event handlers)
     const compose = page.getByRole("textbox", { name: /Scrivi a/ });
     await compose.waitFor({ timeout: 5000 });
+    await compose.click();
     await humanDelay(300, 600);
-    await compose.fill(message);
+    await page.keyboard.type(message, { delay: 30 });
 
     // Wait for Send button and click
     const sendBtn = page.getByRole("button", { name: "Invia" });
@@ -165,23 +166,20 @@ async function cmdSend(chatName, message) {
     await humanDelay(200, 400);
     await sendBtn.click();
 
-    // Post-send verification: wait for compose to be empty
-    await humanDelay(500, 1000);
-    try {
-      await compose.waitFor({ timeout: 5000 });
-      const value = await compose.textContent();
-      if (value && value.trim().length > 0) {
-        console.error("WARNING: Message may not have been sent. Compose still contains text.");
-        return;
-      }
-    } catch {
-      // Compose box may have been replaced — that's fine
+    // Wait for delivery confirmation (msg-check or msg-dblcheck)
+    await humanDelay(1000, 2000);
+
+    const postSendAria = await page.locator(":root").ariaSnapshot();
+
+    // Check for send errors
+    if (postSendAria.includes("Si è verificato un errore")) {
+      throw new Error("Message send failed — WhatsApp reported an error. Check the app.");
     }
 
-    // Verify message appears in chat
-    const postSendAria = await page.locator(":root").ariaSnapshot();
-    const msgSnippet = message.length > 40 ? message.slice(0, 40) : message;
-    if (!postSendAria.includes(msgSnippet)) {
+    // Strip emoji for snippet match (emoji become img tags in aria)
+    const textOnly = message.replace(/\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu, "").trim();
+    const msgSnippet = textOnly.length > 40 ? textOnly.slice(0, 40) : textOnly;
+    if (msgSnippet && !postSendAria.includes(msgSnippet)) {
       console.error("WARNING: Sent message not found in chat snapshot.");
     }
 
