@@ -1,0 +1,29 @@
+- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+    - button "Marco Bianchi clicca qui per info contatto"
+    - button "Videochiamata": Chiama
+    - button "Cerca"
+    - button "Menu"
+  - text: Oggi
+  - button "Apri dettagli chat di Marco Bianchi":
+    - img
+  - row "Marco Bianchi Ciao, come stai? 14:00":
+    - text: Marco Bianchi Ciao, come stai? 14:00
+  - 'row "Tu: Tutto bene grazie! 14:01 Letto"':
+    - text: Tutto bene grazie! 14:01
+    - img "msg-dblcheck"
+  - row "Ci vediamo stasera? 14:02 Consegnato":
+    - text: Ci vediamo stasera? 14:02
+    - img "msg-dblcheck"
+  - button "Apri dettagli chat di Marco Bianchi":
+    - img
+  - row "Marco Bianchi Si perfetto! 14:03":
+    - text: Marco Bianchi Si perfetto! 14:03
+  - row "A che ora? 14:04 Letto":
+    - text: A che ora? 14:04
+    - img "msg-dblcheck"
+  - contentinfo:
+    - textbox "Scrivi a Marco Bianchi":
+      - paragraph

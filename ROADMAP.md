@@ -31,21 +31,23 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 
 ## Phases
 
-### Phase 0 — Spike
-- [ ] `launchPersistentContext` + `headless: false` for QR login
-- [ ] Explore WhatsApp Web aria snapshot (chat list, messages, compose)
-- [ ] Validate aria selectors work reliably
-- [ ] Record fixtures (`test/fixtures/`)
-- [ ] Assess scroll behavior for message history
+### Phase 0 — Spike ✓
+- [x] `launchPersistentContext` + `headless: false` for QR login
+- [x] Explore WhatsApp Web aria snapshot (chat list, messages, compose)
+- [x] Validate aria selectors work reliably
+- [x] Record fixtures (`test/fixtures/`)
+- [x] Assess scroll behavior for message history
 
-### Phase 1 — Read-only CLI
-- [ ] `greentap login` — headed browser for manual QR scan
-- [ ] `greentap logout` — clear `~/.greentap/browser-data/`
-- [ ] `greentap chats [--json]` — list chats from aria snapshot
-- [ ] `greentap unread [--json]` — only unread chats
-- [ ] `greentap read <chat> [--json]` — messages with scroll support
-- [ ] Pure parser in `lib/parser.js` with unit tests
-- [ ] Fixture-based tests (aria snapshots + HAR)
+### Phase 1 — Read-only CLI ✓
+- [x] `greentap login` — headed browser for manual QR scan
+- [x] `greentap logout` — clear `~/.greentap/browser-data/`
+- [x] `greentap chats [--json]` — list chats from aria snapshot
+- [x] `greentap unread [--json]` — only unread chats
+- [x] `greentap read <chat> [--json]` — messages (visible only, no scroll yet)
+- [x] Pure parser in `lib/parser.js` with unit tests
+- [x] Fixture-based tests (aria snapshots)
+- [x] Element-based waits (replaced fixed timeouts)
+- [x] Own-message attribution fix (msg-dblcheck detection)
 
 ### Phase 2 — Actions
 - [ ] `greentap send <chat> <message>` — compose + send
