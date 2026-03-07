@@ -8,9 +8,9 @@ falling back to direct browser launch for `login` command only.
 #### Scenario: Command uses daemon when available
 
 - **WHEN** any command except `login` executes
-- **THEN** it SHALL attempt to connect to the daemon via Unix socket
+- **THEN** it SHALL attempt to connect to the daemon via `chromium.connectOverCDP`
 - **AND** if daemon is not running, auto-start it
-- **AND** execute the command via daemon IPC
+- **AND** execute the command on the connected page
 
 #### Scenario: Login command bypasses daemon
 

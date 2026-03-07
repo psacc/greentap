@@ -56,7 +56,7 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [x] Human-like delays (random jitter between actions)
 
 ### Phase 3 — Performance
-- [ ] Browser daemon (forked Node process + Unix socket IPC + JSON-RPC)
+- [ ] Browser daemon (forked Node process + CDP via `connectOverCDP`)
 - [ ] Startup reduction: 3-5s -> ~200ms per invocation
 - [ ] Lazy start: first command auto-launches daemon
 - [ ] Auto-shutdown after 15min idle
