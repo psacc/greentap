@@ -50,10 +50,17 @@ struct Commands {
     static func read(chatName: String?, asJSON: Bool) throws {
         try AXHelper.ensurePermission()
         let app = try AXHelper.appElement()
-        let win = try AXHelper.mainWindow(app)
+        var win = try AXHelper.mainWindow(app)
 
         // If a chat name is provided, open it first
         if let chatName = chatName {
+            // Dismiss any stuck overlays (e.g. archived chat panels)
+            AXHelper.activateApp()
+            Thread.sleep(forTimeInterval: 0.2)
+            dismissOverlays()
+            Thread.sleep(forTimeInterval: 0.3)
+            win = try AXHelper.mainWindow(app)
+
             guard let chatList = AXHelper.findByDesc(win, "List of chats") else {
                 throw AXError.noChatOpen
             }
@@ -125,6 +132,163 @@ struct Commands {
                 print("  \(sender): \(m.text)\(fwd)  \(m.timestamp)")
             }
         }
+    }
+
+    /// Activate search, paste query, return (searchResults, window) for callers to use.
+    private static func activateSearch(query: String) throws -> (results: AXUIElement?, win: AXUIElement) {
+        let app = try AXHelper.appElement()
+        let win = try AXHelper.mainWindow(app)
+
+        AXHelper.activateApp()
+        Thread.sleep(forTimeInterval: 0.3)
+
+        // Press the Search AXButton (not the AXStaticText label)
+        guard let searchBtn = AXHelper.findByDesc(win, "Search", role: "AXButton") else {
+            throw AXError.noChatOpen
+        }
+        AXHelper.press(searchBtn)
+        Thread.sleep(forTimeInterval: 0.3)
+
+        // Paste query via clipboard (Catalyst app has no AXTextField for search)
+        let pb = NSPasteboard.general
+        let savedContents = pb.string(forType: .string)
+        pb.clearContents()
+        pb.setString(query, forType: .string)
+        pasteCmd()
+        Thread.sleep(forTimeInterval: 1.2)
+
+        // Re-fetch window state after search
+        let freshWin = try AXHelper.mainWindow(app)
+
+        // Restore clipboard
+        pb.clearContents()
+        if let saved = savedContents { pb.setString(saved, forType: .string) }
+
+        let results = AXHelper.findByDesc(freshWin, "Search results")
+        return (results, freshWin)
+    }
+
+    /// Search for a chat using the app's search bar.
+    static func search(query: String, andOpen: Bool, asJSON: Bool) throws {
+        try AXHelper.ensurePermission()
+        let (resultsGroup, _) = try activateSearch(query: query)
+
+        guard let resultsGroup = resultsGroup else {
+            clearSearch()
+            fputs("No search results for: \(query)\n", stderr)
+            exit(1)
+        }
+
+        let children = AXHelper.getChildren(resultsGroup)
+        var entries: [ChatEntry] = []
+
+        // Search results contain AXButton elements with chat info
+        for child in children {
+            let role = AXHelper.getAttr(child, kAXRoleAttribute as String)
+            guard role == "AXButton" else { continue }
+            let desc = AXHelper.getAttr(child, kAXDescriptionAttribute as String)
+            let value = AXHelper.getAttr(child, kAXValueAttribute as String)
+            guard !desc.isEmpty else { continue }
+            if let entry = Parsers.parseChatEntry(desc: desc, value: value) {
+                entries.append(entry)
+            }
+        }
+
+        if andOpen {
+            // Open the first AXButton result
+            for child in children {
+                let role = AXHelper.getAttr(child, kAXRoleAttribute as String)
+                if role == "AXButton" {
+                    AXHelper.press(child)
+                    Thread.sleep(forTimeInterval: 0.5)
+                    break
+                }
+            }
+            clearSearch()
+        } else {
+            if asJSON {
+                let data = try JSONEncoder.pretty.encode(entries)
+                print(String(data: data, encoding: .utf8)!)
+            } else {
+                for e in entries {
+                    let unreadTag = e.unread > 0 ? " [\(e.unread)]" : ""
+                    print("\(e.name)\(unreadTag)")
+                    if !e.sender.isEmpty {
+                        print("  \(e.sender): \(e.lastMessage)  \(e.timestamp)")
+                    } else if !e.lastMessage.isEmpty {
+                        print("  \(e.lastMessage)  \(e.timestamp)")
+                    }
+                }
+            }
+            clearSearch()
+        }
+    }
+
+    private static func pasteCmd() {
+        let src = CGEventSource(stateID: CGEventSourceStateID(rawValue: 1)!)
+        let vDown = CGEvent(keyboardEventSource: src, virtualKey: 0x09, keyDown: true)
+        vDown?.flags = .maskCommand
+        let vUp = CGEvent(keyboardEventSource: src, virtualKey: 0x09, keyDown: false)
+        vUp?.flags = .maskCommand
+        vDown?.post(tap: CGEventTapLocation.cghidEventTap)
+        vUp?.post(tap: CGEventTapLocation.cghidEventTap)
+    }
+
+    private static func pressEscape() {
+        let src = CGEventSource(stateID: CGEventSourceStateID(rawValue: 1)!)
+        let keyDown = CGEvent(keyboardEventSource: src, virtualKey: 0x35, keyDown: true)
+        let keyUp = CGEvent(keyboardEventSource: src, virtualKey: 0x35, keyDown: false)
+        keyDown?.post(tap: CGEventTapLocation.cghidEventTap)
+        keyUp?.post(tap: CGEventTapLocation.cghidEventTap)
+    }
+
+    private static func clearSearch() {
+        // Press Escape twice (once to clear search text, once to exit search mode)
+        for _ in 0..<2 {
+            pressEscape()
+            Thread.sleep(forTimeInterval: 0.2)
+        }
+    }
+
+    private static func dismissOverlays() {
+        // Press Escape to dismiss any stuck overlays (e.g. archived chat panels)
+        for _ in 0..<3 {
+            pressEscape()
+            Thread.sleep(forTimeInterval: 0.15)
+        }
+    }
+
+    /// Open a chat by searching for it (works for chats not in viewport), then read messages.
+    static func readBySearch(query: String, asJSON: Bool) throws {
+        try AXHelper.ensurePermission()
+        let (resultsGroup, _) = try activateSearch(query: query)
+
+        guard let resultsGroup = resultsGroup else {
+            clearSearch()
+            throw AXError.chatNotFound(query)
+        }
+
+        // Open the first AXButton result
+        let children = AXHelper.getChildren(resultsGroup)
+        var opened = false
+        for child in children {
+            let role = AXHelper.getAttr(child, kAXRoleAttribute as String)
+            if role == "AXButton" {
+                AXHelper.press(child)
+                opened = true
+                break
+            }
+        }
+        if !opened {
+            clearSearch()
+            throw AXError.chatNotFound(query)
+        }
+
+        Thread.sleep(forTimeInterval: 0.5)
+        clearSearch()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        try read(chatName: nil, asJSON: asJSON)
     }
 
     static func send(chatName: String, message: String) throws {
