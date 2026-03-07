@@ -134,6 +134,41 @@ describe("parseMessages", () => {
   it("returns empty array for aria without messages", () => {
     assert.deepEqual(parseMessages('- document:\n  - heading "Nothing" [level=1]'), []);
   });
+
+  it("attributes own messages with Tu: prefix", () => {
+    const aria = loadFixture("chat-own-messages-aria.txt");
+    const messages = parseMessages(aria);
+
+    const withTuPrefix = messages.find((m) => m.text.includes("Tutto bene"));
+    assert.ok(withTuPrefix, "should find 'Tutto bene' message");
+    assert.equal(withTuPrefix.sender, "Tu");
+  });
+
+  it("attributes own messages without Tu: prefix via msg-dblcheck", () => {
+    const aria = loadFixture("chat-own-messages-aria.txt");
+    const messages = parseMessages(aria);
+
+    const noPrefix = messages.find((m) => m.text.includes("Ci vediamo stasera"));
+    assert.ok(noPrefix, "should find 'Ci vediamo stasera' message");
+    assert.equal(noPrefix.sender, "Tu", "own message without Tu: prefix should be attributed to Tu");
+
+    const noPrefix2 = messages.find((m) => m.text.includes("A che ora"));
+    assert.ok(noPrefix2, "should find 'A che ora' message");
+    assert.equal(noPrefix2.sender, "Tu", "own message without Tu: prefix should be attributed to Tu");
+  });
+
+  it("attributes other person messages correctly", () => {
+    const aria = loadFixture("chat-own-messages-aria.txt");
+    const messages = parseMessages(aria);
+
+    const other = messages.find((m) => m.text.includes("come stai"));
+    assert.ok(other, "should find 'come stai' message");
+    assert.equal(other.sender, "Luca Santini");
+
+    const other2 = messages.find((m) => m.text.includes("perfetto"));
+    assert.ok(other2, "should find 'perfetto' message");
+    assert.equal(other2.sender, "Luca Santini");
+  });
 });
 
 describe("printMessages", () => {

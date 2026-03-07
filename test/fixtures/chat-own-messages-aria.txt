@@ -1,0 +1,29 @@
+- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+    - button "Luca Santini clicca qui per info contatto"
+    - button "Videochiamata": Chiama
+    - button "Cerca"
+    - button "Menu"
+  - text: Oggi
+  - button "Apri dettagli chat di Luca Santini":
+    - img
+  - row "Luca Santini Ciao, come stai? 14:00":
+    - text: Luca Santini Ciao, come stai? 14:00
+  - 'row "Tu: Tutto bene grazie! 14:01 Letto"':
+    - text: Tutto bene grazie! 14:01
+    - img "msg-dblcheck"
+  - row "Ci vediamo stasera? 14:02 Consegnato":
+    - text: Ci vediamo stasera? 14:02
+    - img "msg-dblcheck"
+  - button "Apri dettagli chat di Luca Santini":
+    - img
+  - row "Luca Santini Si perfetto! 14:03":
+    - text: Luca Santini Si perfetto! 14:03
+  - row "A che ora? 14:04 Letto":
+    - text: A che ora? 14:04
+    - img "msg-dblcheck"
+  - contentinfo:
+    - textbox "Scrivi a Luca Santini":
+      - paragraph
