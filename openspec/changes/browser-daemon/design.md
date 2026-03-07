@@ -32,15 +32,36 @@ framing, no message serialization to build.
 
 Client `browser.close()` only disconnects the client — Chrome stays alive.
 
+**Alternative rejected:** `browserType.launchServer()` + `connect()` — Playwright's native
+server mode has full-fidelity WS protocol, but explicitly blocks `--user-data-dir`. We need
+persistent context for the WhatsApp session. Tested: Playwright throws
+`"Pass userDataDir to launchPersistentContext instead"` when args include `--user-data-dir`.
+
 **Alternative rejected:** Custom Unix socket + JSON-RPC — unnecessary complexity
 now that we confirmed CDP works with persistent contexts.
+
+**Fidelity note:** Playwright docs warn that `connectOverCDP` offers "significantly lower
+fidelity" than the native protocol. Tested in practice: `ariaSnapshot`, `locator`,
+`getByRole`, `keyboard.type`, `evaluate`, `waitForSelector` all work correctly over CDP.
+The warning applies to edge cases irrelevant to our use case.
+
+### CDP port: fixed at 19222
+
+**Why:** `--remote-debugging-port=0` auto-assigns a port, but discovering it requires
+`lsof` or process scanning — fragile and platform-specific. A fixed port (19222) is
+simpler: daemon writes it to `daemon.port` for consistency, client reads it, done.
+Single-user localhost tool, port conflicts are unlikely. If 19222 is taken, daemon
+fails fast with a clear error.
+
+**Alternative rejected:** Port 0 + discovery via `lsof -p PID` — unnecessary complexity
+for a personal single-instance tool.
 
 ### Daemon: forked Node process
 
 **Why:** `child_process.fork()` with `detached: true`, `unref()`, and `stdio: 'ignore'`.
 The daemon script (`lib/daemon.js`):
-1. Launches `launchPersistentContext` with `--remote-debugging-port=0` (auto-assign)
-2. Writes allocated port to `~/.greentap/daemon.port`
+1. Launches `launchPersistentContext` with `--remote-debugging-port=19222`
+2. Writes port to `~/.greentap/daemon.port`
 3. Writes PID to `~/.greentap/daemon.pid`
 4. Navigates to WhatsApp Web, waits for chat list
 5. Starts idle timer
@@ -79,10 +100,9 @@ Daemon starts
   │
   ├─ Ensure ~/.greentap/ is mode 0700
   ├─ Launch Chrome: launchPersistentContext(browser-data, {
-  │     args: ['--remote-debugging-port=0']
+  │     args: ['--remote-debugging-port=19222']
   │   })
-  ├─ Get allocated port from Chrome
-  ├─ Write port to ~/.greentap/daemon.port (atomic: .tmp + rename)
+  ├─ Write 19222 to ~/.greentap/daemon.port (atomic: .tmp + rename)
   ├─ Write PID to ~/.greentap/daemon.pid (atomic: .tmp + rename)
   ├─ Navigate to web.whatsapp.com
   ├─ Wait for chat list grid
