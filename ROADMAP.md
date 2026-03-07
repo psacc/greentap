@@ -56,9 +56,11 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [x] Human-like delays (random jitter between actions)
 
 ### Phase 3 — Performance
-- [ ] Browser daemon (`chromium.launchServer()` + WebSocket connect)
+- [ ] Browser daemon (forked Node process + Unix socket IPC + JSON-RPC)
 - [ ] Startup reduction: 3-5s -> ~200ms per invocation
-- [ ] `greentap status` — check if daemon is running
+- [ ] Lazy start: first command auto-launches daemon
+- [ ] Auto-shutdown after 15min idle
+- [ ] `greentap status` / `greentap daemon stop`
 
 ### Phase 4 — Deprecate AX
 - [ ] Remove Swift codebase

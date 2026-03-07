@@ -4,9 +4,9 @@ Currently every greentap command calls `withBrowser()` which runs
 `chromium.launchPersistentContext()` → work → `context.close()`. This takes 3-5s per
 invocation, mostly Chrome startup + WhatsApp Web load.
 
-Playwright's `launchPersistentContext()` returns a `BrowserContext` (not `Browser`),
-so `chromium.launchServer()` + `connectOverCDP()` won't work directly — the daemon
-must hold the context itself and expose commands over IPC.
+Key discovery: `launchPersistentContext` with `--remote-debugging-port` exposes
+a CDP endpoint. Clients can then use `chromium.connectOverCDP()` to get the same
+context and pages — full Playwright API, no custom IPC needed.
 
 ## Goals / Non-Goals
 
@@ -14,53 +14,60 @@ must hold the context itself and expose commands over IPC.
 - Per-command latency < 500ms when daemon is running
 - Zero-config: first command auto-starts daemon, idle timeout auto-stops it
 - Explicit `daemon stop` and `status` commands
-- Clean shutdown: PID file, socket cleanup, no orphan Chrome processes
+- Clean shutdown: PID file, port file cleanup, no orphan Chrome processes
 
 **Non-Goals:**
 - Multi-user / multi-session support
 - Remote access (daemon is localhost only)
-- Keeping WhatsApp Web page navigated to a specific chat between commands
+- Custom IPC protocol (use Playwright's native CDP transport)
 
 ## Decisions
 
-### IPC: Unix domain socket with JSON-RPC
+### IPC: Chrome DevTools Protocol via Playwright
 
-**Why:** Simple, fast, no extra dependencies. Node `net` module handles it natively.
-Named pipes are cross-platform but we only need macOS. HTTP would work but adds
-overhead and complexity.
+**Why:** `launchPersistentContext` with `--remote-debugging-port=PORT` exposes a CDP
+endpoint. Clients connect with `chromium.connectOverCDP('http://localhost:PORT')` and
+get the full Playwright API — same context, same pages. No JSON-RPC, no socket
+framing, no message serialization to build.
 
-**Alternative considered:** WebSocket via `launchServer()` — can't use because
-`launchPersistentContext` doesn't support server mode.
+Client `browser.close()` only disconnects the client — Chrome stays alive.
+
+**Alternative rejected:** Custom Unix socket + JSON-RPC — unnecessary complexity
+now that we confirmed CDP works with persistent contexts.
 
 ### Daemon: forked Node process
 
-**Why:** `child_process.fork()` with `detached: true` + `unref()`. The daemon is a
-standalone Node script (`lib/daemon.js`) that holds the browser context and listens
-on the socket. CLI commands send JSON-RPC messages and receive results.
-
-**Alternative considered:** Background shell process (`&`) — harder to manage lifecycle,
-no clean IPC.
+**Why:** `child_process.fork()` with `detached: true`, `unref()`, and `stdio: 'ignore'`.
+The daemon script (`lib/daemon.js`):
+1. Launches `launchPersistentContext` with `--remote-debugging-port=0` (auto-assign)
+2. Writes allocated port to `~/.greentap/daemon.port`
+3. Writes PID to `~/.greentap/daemon.pid`
+4. Navigates to WhatsApp Web, waits for chat list
+5. Starts idle timer
 
 ### Idle timeout: 15 minutes
 
-**Why:** Covers typical interactive sessions (check → read → send: 2-5 min) with margin.
-Long enough to not restart mid-workflow, short enough to not waste RAM overnight.
-Timer resets on each command.
-
-**Alternative considered:** Configurable via env var — YAGNI for personal use.
-Can add later if needed.
+**Why:** Covers typical interactive sessions with margin. Timer resets each time
+a client connects (daemon can detect connections via CDP events or a simple
+heartbeat file touch).
 
 ### Connection flow
 
 ```
 CLI command (e.g. greentap chats)
   │
-  ├─ Try connect to ~/.greentap/daemon.sock
-  │   ├─ Success → send command → receive result
-  │   └─ Fail (ECONNREFUSED / ENOENT)
+  ├─ Read ~/.greentap/daemon.port
+  │   ├─ Exists → connectOverCDP(http://localhost:PORT)
+  │   │   ├─ Success → get page → execute command → disconnect
+  │   │   └─ Fail → stale file, clean up, fall through
+  │   └─ Missing
+  │       ├─ Check browser-data/ exists (has session?)
+  │       │   └─ No → "Run greentap login first"
+  │       ├─ Acquire exclusive lock (~/.greentap/daemon.lock)
   │       ├─ Fork daemon process
-  │       ├─ Wait for socket to appear (poll, max 10s)
-  │       └─ Connect → send command → receive result
+  │       ├─ Wait for daemon.port file to appear (poll, max 15s)
+  │       ├─ Release lock
+  │       └─ connectOverCDP → execute command → disconnect
   │
   └─ Print result / exit
 ```
@@ -70,47 +77,63 @@ CLI command (e.g. greentap chats)
 ```
 Daemon starts
   │
-  ├─ Write PID to ~/.greentap/daemon.pid
-  ├─ Launch Chrome with launchPersistentContext()
+  ├─ Ensure ~/.greentap/ is mode 0700
+  ├─ Launch Chrome: launchPersistentContext(browser-data, {
+  │     args: ['--remote-debugging-port=0']
+  │   })
+  ├─ Get allocated port from Chrome
+  ├─ Write port to ~/.greentap/daemon.port (atomic: .tmp + rename)
+  ├─ Write PID to ~/.greentap/daemon.pid (atomic: .tmp + rename)
   ├─ Navigate to web.whatsapp.com
   ├─ Wait for chat list grid
-  ├─ Create Unix socket server at ~/.greentap/daemon.sock
   ├─ Start idle timer (15 min)
   │
-  ├─ On client connection:
-  │   ├─ Reset idle timer
-  │   ├─ Execute command on the existing page
-  │   └─ Return JSON result
+  ├─ Idle timer reset: touch daemon.port mtime on each client connect
+  │   (client touches file after connecting, daemon watches mtime)
   │
   └─ On idle timeout OR SIGTERM:
-      ├─ Close browser context
-      ├─ Remove PID file
-      ├─ Remove socket file
+      ├─ Close browser context (kills Chrome)
+      ├─ Remove port file, PID file, lock file
       └─ Exit
 ```
 
-### Command protocol (JSON-RPC over socket)
+### Command serialization
 
-Request: `{ "method": "chats", "params": { "json": true } }`
-Response: `{ "result": [...] }` or `{ "error": "message" }`
+Playwright's CDP transport handles one command at a time per page. Since each
+CLI invocation connects, uses the page, and disconnects, and typical CLI usage
+is sequential, we don't need an explicit queue. If two clients connect
+simultaneously, Playwright's internal protocol handles ordering.
 
-Each command maps to the existing `cmd*` functions, but operating on the
-daemon's persistent page instead of launching a new browser.
+For safety: each command should verify page state (chat list visible) before
+executing, which implicitly waits for any prior navigation to complete.
+
+### File permissions
+
+- `~/.greentap/` directory: `0700`
+- `daemon.port`: `0600`, written atomically
+- `daemon.pid`: `0600`, written atomically
+- `daemon.lock`: exclusive lock via `fs.open()` with `O_EXCL` to prevent startup races
 
 ## Risks / Trade-offs
 
-- **WhatsApp Web disconnects after long idle** → Daemon should detect "use your phone"
-  overlay and re-navigate. If session expired, report error and suggest `greentap login`.
+- **CDP port exposed on localhost** → Only accessible to local processes with
+  same user permissions (port bound to 127.0.0.1 by default). Combined with
+  `~/.greentap/` dir at `0700`, port number is not discoverable by other users.
 
-- **Chrome crash / OOM** → Daemon should catch browser disconnect event, clean up
-  PID/socket, and exit. Next CLI invocation will auto-start a fresh daemon.
+- **WhatsApp Web disconnects after long idle** → Daemon should detect failure
+  on client connect (page in bad state). Try `page.reload()`; if session expired,
+  return error suggesting `greentap login`.
 
-- **Stale PID file after crash** → On startup, check if PID is alive before connecting.
-  If PID file exists but process is dead, clean up and start fresh.
+- **Chrome crash / OOM** → Daemon catches browser `disconnected` event, cleans
+  up files, and exits. Next CLI invocation auto-starts fresh.
 
-- **RAM usage (~200-400MB)** → Acceptable for personal Mac use. Auto-shutdown at 15min
-  limits exposure.
+- **Stale port file after crash** → Client reads port, tries `connectOverCDP`,
+  gets connection refused. Cleans up stale files and starts fresh daemon (under lock).
 
-- **Page state between commands** → Each command should ensure the page is in a known
-  state (main chat list view) before executing. Navigate to WA_URL if needed, or at
-  minimum wait for chat list grid.
+- **RAM usage (~200-400MB)** → Acceptable for personal Mac. Auto-shutdown limits exposure.
+
+- **Page state between commands** → Each command checks chat list grid. Try
+  Escape (dismiss overlays) → `page.reload()` → `page.goto(WA_URL)` as escalation.
+
+- **Lazy start with no session** → If `browser-data/` is empty, skip daemon
+  auto-start; tell user to run `greentap login` first.

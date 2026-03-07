@@ -23,3 +23,9 @@ falling back to direct browser launch for `login` command only.
 - **WHEN** user runs `greentap logout`
 - **THEN** it SHALL stop the daemon if running
 - **AND** then clear `~/.greentap/browser-data/`
+
+#### Scenario: No session exists
+
+- **WHEN** any command executes and `~/.greentap/browser-data/` is empty or missing
+- **THEN** it SHALL NOT auto-start the daemon
+- **AND** print "No session. Run `greentap login` first."

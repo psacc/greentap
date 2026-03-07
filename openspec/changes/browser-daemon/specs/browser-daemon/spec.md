@@ -3,43 +3,37 @@
 ### Requirement: Persistent browser via daemon process
 
 The system SHALL maintain a background Node process that holds a Playwright
-persistent browser context with WhatsApp Web loaded, accessible via Unix socket
-at `~/.greentap/daemon.sock`.
+persistent browser context with Chrome DevTools Protocol exposed on localhost.
 
-#### Scenario: Daemon starts and accepts connections
+#### Scenario: Daemon starts and exposes CDP
 
 - **WHEN** the daemon process starts
-- **THEN** it SHALL launch Chrome with `launchPersistentContext`
+- **THEN** it SHALL launch Chrome with `launchPersistentContext` and `--remote-debugging-port=0`
+- **AND** ensure `~/.greentap/` directory is mode `0700`
+- **AND** write the allocated port to `~/.greentap/daemon.port` atomically (mode `0600`)
+- **AND** write its PID to `~/.greentap/daemon.pid` atomically (mode `0600`)
 - **AND** navigate to `web.whatsapp.com`
 - **AND** wait for the chat list grid to appear
-- **AND** create a Unix socket server at `~/.greentap/daemon.sock`
-- **AND** write its PID to `~/.greentap/daemon.pid`
 
-#### Scenario: CLI command connects to running daemon
+#### Scenario: CLI command connects via CDP
 
-- **WHEN** a CLI command executes and `~/.greentap/daemon.sock` exists and is connectable
-- **THEN** the command SHALL send a JSON-RPC request over the socket
-- **AND** receive the result without launching a new browser
+- **WHEN** a CLI command executes and `~/.greentap/daemon.port` exists
+- **THEN** the command SHALL read the port and call `chromium.connectOverCDP`
+- **AND** get the persistent context and page via Playwright's native API
+- **AND** execute the command directly on the page
+- **AND** disconnect (without closing Chrome)
 
 #### Scenario: Lazy start when no daemon running
 
-- **WHEN** a CLI command executes and no daemon is running (socket doesn't exist or connection refused)
-- **THEN** the CLI SHALL fork a new daemon process (detached)
-- **AND** wait for the socket to become connectable (max 15s)
-- **AND** then send the command
+- **WHEN** a CLI command executes and no daemon is running (port file missing or connection refused)
+- **THEN** the CLI SHALL acquire an exclusive lock on `~/.greentap/daemon.lock`
+- **AND** fork a new daemon process (detached, `stdio: 'ignore'`)
+- **AND** wait for `daemon.port` file to appear (max 15s)
+- **AND** release the lock
+- **AND** connect via CDP and execute the command
 
-### Requirement: JSON-RPC command protocol
+#### Scenario: Stale port file
 
-The daemon SHALL accept JSON-RPC messages over the Unix socket.
-
-#### Scenario: Command request and response
-
-- **WHEN** a client sends `{ "method": "<command>", "params": { ... } }`
-- **THEN** the daemon SHALL execute the command on its persistent page
-- **AND** return `{ "result": <data> }` on success
-- **OR** return `{ "error": "<message>" }` on failure
-
-#### Scenario: Supported methods
-
-- **WHEN** the method is one of: `chats`, `unread`, `read`, `send`, `search`, `snapshot`
-- **THEN** the daemon SHALL execute the corresponding command logic
+- **WHEN** a CLI command reads `daemon.port` but `connectOverCDP` fails
+- **THEN** it SHALL remove the stale port and PID files
+- **AND** start a fresh daemon (under lock)
