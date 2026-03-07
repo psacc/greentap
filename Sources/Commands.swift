@@ -57,7 +57,7 @@ struct Commands {
             // Dismiss any stuck overlays (e.g. archived chat panels)
             AXHelper.activateApp()
             Thread.sleep(forTimeInterval: 0.2)
-            dismissOverlays()
+            try dismissOverlays()
             Thread.sleep(forTimeInterval: 0.3)
             win = try AXHelper.mainWindow(app)
 
@@ -250,11 +250,28 @@ struct Commands {
         }
     }
 
-    private static func dismissOverlays() {
-        // Press Escape to dismiss any stuck overlays (e.g. archived chat panels)
-        for _ in 0..<3 {
-            pressEscape()
-            Thread.sleep(forTimeInterval: 0.15)
+    private static func dismissOverlays() throws {
+        // Only press Escape if an archived/overlay chat is open that doesn't match the chat list.
+        // Check if "Messages in chat" exists but the chat isn't in the visible list (= overlay).
+        let app = try AXHelper.appElement()
+        let win = try AXHelper.mainWindow(app)
+        if let msgGroup = AXHelper.findByDesc(win, "Messages in chat") {
+            let chatName = AXHelper.getAttr(msgGroup, kAXDescriptionAttribute as String)
+                .replacingOccurrences(of: "\u{200E}", with: "")
+                .replacingOccurrences(of: "Messages in chat with ", with: "")
+            // Check if this chat is in the visible list
+            if let chatList = AXHelper.findByDesc(win, "List of chats") {
+                let inList = AXHelper.getChildren(chatList).contains { child in
+                    AXHelper.getAttr(child, kAXDescriptionAttribute as String)
+                        .replacingOccurrences(of: "\u{200E}", with: "")
+                        .contains(chatName)
+                }
+                if !inList {
+                    // This is an overlay (archived chat) — dismiss it
+                    pressEscape()
+                    Thread.sleep(forTimeInterval: 0.3)
+                }
+            }
         }
     }
 
@@ -291,31 +308,66 @@ struct Commands {
         try read(chatName: nil, asJSON: asJSON)
     }
 
-    static func send(chatName: String, message: String) throws {
+    /// Open a chat by name — tries visible list first, falls back to search.
+    private static func openChat(_ chatName: String) throws -> AXUIElement {
         try AXHelper.ensurePermission()
         let app = try AXHelper.appElement()
-        let win = try AXHelper.mainWindow(app)
 
-        // Find and open the chat
-        guard let chatList = AXHelper.findByDesc(win, "List of chats") else {
-            throw AXError.noChatOpen
+        // Dismiss overlays first
+        AXHelper.activateApp()
+        Thread.sleep(forTimeInterval: 0.2)
+        try dismissOverlays()
+        Thread.sleep(forTimeInterval: 0.3)
+
+        var win = try AXHelper.mainWindow(app)
+
+        // Try visible chat list
+        if let chatList = AXHelper.findByDesc(win, "List of chats") {
+            let target = chatName.lowercased()
+            for child in AXHelper.getChildren(chatList) {
+                let desc = AXHelper.getAttr(child, kAXDescriptionAttribute as String)
+                    .replacingOccurrences(of: "\u{200E}", with: "")
+                if desc.lowercased().contains(target) {
+                    AXHelper.press(child)
+                    Thread.sleep(forTimeInterval: 0.5)
+                    win = try AXHelper.mainWindow(app)
+                    return win
+                }
+            }
         }
-        let children = AXHelper.getChildren(chatList)
-        let target = chatName.lowercased()
-        var found = false
-        for child in children {
-            let desc = AXHelper.getAttr(child, kAXDescriptionAttribute as String)
-                .replacingOccurrences(of: "\u{200E}", with: "")
-            if desc.lowercased().contains(target) {
+
+        // Fall back to search
+        let (resultsGroup, _) = try activateSearch(query: chatName)
+        guard let resultsGroup = resultsGroup else {
+            clearSearch()
+            throw AXError.chatNotFound(chatName)
+        }
+
+        var opened = false
+        for child in AXHelper.getChildren(resultsGroup) {
+            if AXHelper.getAttr(child, kAXRoleAttribute as String) == "AXButton" {
                 AXHelper.press(child)
-                found = true
-                Thread.sleep(forTimeInterval: 0.5)
+                opened = true
                 break
             }
         }
-        if !found { throw AXError.chatNotFound(chatName) }
+        if !opened {
+            clearSearch()
+            throw AXError.chatNotFound(chatName)
+        }
 
-        // Find the compose text area and type
+        Thread.sleep(forTimeInterval: 0.5)
+        clearSearch()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        win = try AXHelper.mainWindow(app)
+        return win
+    }
+
+    static func send(chatName: String, message: String) throws {
+        let win = try openChat(chatName)
+
+        // Find the compose text area
         guard let textArea = AXHelper.findByDesc(win, "Compose message") else {
             fputs("ERROR: Can't find compose area\n", stderr)
             exit(1)
@@ -329,7 +381,7 @@ struct Commands {
         Thread.sleep(forTimeInterval: 0.2)
 
         // Simulate Enter key
-        let src = CGEventSource(stateID: CGEventSourceStateID(rawValue: 1)!) // hidEventState
+        let src = CGEventSource(stateID: CGEventSourceStateID(rawValue: 1)!)
         let keyDown = CGEvent(keyboardEventSource: src, virtualKey: 0x24, keyDown: true)
         let keyUp = CGEvent(keyboardEventSource: src, virtualKey: 0x24, keyDown: false)
         keyDown?.post(tap: CGEventTapLocation.cghidEventTap)

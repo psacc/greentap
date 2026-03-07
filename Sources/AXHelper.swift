@@ -46,7 +46,64 @@ struct AXHelper {
         guard let windows = ref as? [AXUIElement], let win = windows.first else {
             throw AXError.noWindow
         }
+
+        // Check if the window has content (Catalyst app may need recovery)
+        let children = getChildren(win)
+        let hasContent = children.contains { child in
+            let role = getAttr(child, kAXRoleAttribute as String)
+            return role == "AXGroup" || role == "AXWindow"
+        }
+
+        if !hasContent {
+            // Recover by clicking Window > app name in the menu bar
+            recoverWindow(app)
+            Thread.sleep(forTimeInterval: 2.0)
+            // Re-fetch
+            AXUIElementCopyAttributeValue(app, kAXWindowsAttribute as CFString, &ref)
+            if let newWindows = ref as? [AXUIElement], let newWin = newWindows.first {
+                return newWin
+            }
+        }
+
         return win
+    }
+
+    private static func recoverWindow(_ app: AXUIElement) {
+        // Activate the app
+        let runningApps = NSWorkspace.shared.runningApplications.filter { $0.bundleIdentifier == bundleID }
+        runningApps.first?.activate()
+
+        // AXRaise the window
+        var ref: CFTypeRef?
+        AXUIElementCopyAttributeValue(app, kAXWindowsAttribute as CFString, &ref)
+        if let windows = ref as? [AXUIElement] {
+            for w in windows {
+                AXUIElementPerformAction(w, kAXRaiseAction as CFString)
+            }
+        }
+
+        Thread.sleep(forTimeInterval: 0.5)
+
+        // Click Window > WhatsApp in the menu bar
+        var menuRef: CFTypeRef?
+        AXUIElementCopyAttributeValue(app, kAXMenuBarAttribute as CFString, &menuRef)
+        guard menuRef != nil else { return }
+        let menuBar = menuRef as! AXUIElement
+        for item in getChildren(menuBar) {
+            if getAttr(item, kAXTitleAttribute as String) == "Window" {
+                AXUIElementPerformAction(item, kAXPressAction as CFString)
+                Thread.sleep(forTimeInterval: 0.3)
+                for mc in getChildren(item) {
+                    for si in getChildren(mc) {
+                        if getAttr(si, kAXTitleAttribute as String).contains("WhatsApp") {
+                            AXUIElementPerformAction(si, kAXPressAction as CFString)
+                            return
+                        }
+                    }
+                }
+                break
+            }
+        }
     }
 
     static func getAttr(_ el: AXUIElement, _ attr: String) -> String {
