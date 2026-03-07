@@ -149,9 +149,11 @@ struct Commands {
         AXHelper.press(searchBtn)
         Thread.sleep(forTimeInterval: 0.3)
 
-        // Paste query via clipboard (Catalyst app has no AXTextField for search)
+        // Clear existing search text (Cmd+A) then paste query via clipboard
         let pb = NSPasteboard.general
         let savedContents = pb.string(forType: .string)
+        selectAllCmd()
+        Thread.sleep(forTimeInterval: 0.1)
         pb.clearContents()
         pb.setString(query, forType: .string)
         pasteCmd()
@@ -234,6 +236,17 @@ struct Commands {
         vUp?.post(tap: CGEventTapLocation.cghidEventTap)
     }
 
+    private static func selectAllCmd() {
+        let src = CGEventSource(stateID: CGEventSourceStateID(rawValue: 1)!)
+        let aDown = CGEvent(keyboardEventSource: src, virtualKey: 0x00, keyDown: true)
+        aDown?.flags = .maskCommand
+        let aUp = CGEvent(keyboardEventSource: src, virtualKey: 0x00, keyDown: false)
+        aUp?.flags = .maskCommand
+        aDown?.post(tap: CGEventTapLocation.cghidEventTap)
+        aUp?.post(tap: CGEventTapLocation.cghidEventTap)
+    }
+
+
     private static func pressEscape() {
         let src = CGEventSource(stateID: CGEventSourceStateID(rawValue: 1)!)
         let keyDown = CGEvent(keyboardEventSource: src, virtualKey: 0x35, keyDown: true)
@@ -308,6 +321,15 @@ struct Commands {
         try read(chatName: nil, asJSON: asJSON)
     }
 
+    /// Check if the currently open chat matches the target name.
+    private static func currentChatMatches(_ win: AXUIElement, _ target: String) -> Bool {
+        guard let msgGroup = AXHelper.findByDesc(win, "Messages in chat") else { return false }
+        let heading = AXHelper.getAttr(msgGroup, kAXDescriptionAttribute as String)
+            .replacingOccurrences(of: "\u{200E}", with: "")
+            .lowercased()
+        return heading.contains(target.lowercased())
+    }
+
     /// Open a chat by name — tries visible list first, falls back to search.
     private static func openChat(_ chatName: String) throws -> AXUIElement {
         try AXHelper.ensurePermission()
@@ -321,6 +343,11 @@ struct Commands {
 
         var win = try AXHelper.mainWindow(app)
 
+        // If the target chat is already open, skip navigation
+        if currentChatMatches(win, chatName) {
+            return win
+        }
+
         // Try visible chat list
         if let chatList = AXHelper.findByDesc(win, "List of chats") {
             let target = chatName.lowercased()
@@ -331,7 +358,12 @@ struct Commands {
                     AXHelper.press(child)
                     Thread.sleep(forTimeInterval: 0.5)
                     win = try AXHelper.mainWindow(app)
-                    return win
+                    // Verify the correct chat opened
+                    if currentChatMatches(win, chatName) {
+                        return win
+                    }
+                    // Press didn't work (already selected as AXStaticText) — fall through to search
+                    break
                 }
             }
         }
@@ -361,6 +393,12 @@ struct Commands {
         Thread.sleep(forTimeInterval: 0.5)
 
         win = try AXHelper.mainWindow(app)
+
+        // Final verification
+        if !currentChatMatches(win, chatName) {
+            throw AXError.chatNotFound(chatName)
+        }
+
         return win
     }
 
@@ -373,22 +411,30 @@ struct Commands {
             exit(1)
         }
 
-        // Set the value
+        // Clear any existing text, then set the message via AX
+        AXUIElementSetAttributeValue(textArea, kAXValueAttribute as CFString, "" as CFTypeRef)
+        Thread.sleep(forTimeInterval: 0.1)
         AXUIElementSetAttributeValue(textArea, kAXValueAttribute as CFString, message as CFTypeRef)
+        Thread.sleep(forTimeInterval: 0.3)
 
-        // Focus it and press Enter
-        AXUIElementSetAttributeValue(textArea, kAXFocusedAttribute as CFString, true as CFTypeRef)
-        Thread.sleep(forTimeInterval: 0.2)
+        // Find and press the Send button
+        let freshWin = try AXHelper.mainWindow(try AXHelper.appElement())
+        guard let sendBtn = AXHelper.findByDesc(freshWin, "Send", role: "AXButton") else {
+            fputs("ERROR: Can't find Send button\n", stderr)
+            exit(1)
+        }
+        AXHelper.press(sendBtn)
+        Thread.sleep(forTimeInterval: 0.5)
 
-        // Simulate Enter key
-        let src = CGEventSource(stateID: CGEventSourceStateID(rawValue: 1)!)
-        let keyDown = CGEvent(keyboardEventSource: src, virtualKey: 0x24, keyDown: true)
-        let keyUp = CGEvent(keyboardEventSource: src, virtualKey: 0x24, keyDown: false)
-        keyDown?.post(tap: CGEventTapLocation.cghidEventTap)
-        keyUp?.post(tap: CGEventTapLocation.cghidEventTap)
-
-        print("Sent to \(chatName).")
+        // Verify compose is empty
+        let afterValue = AXHelper.getAttr(textArea, kAXValueAttribute as String)
+        if !afterValue.isEmpty && afterValue != "\n" {
+            fputs("WARNING: Message may not have been sent. Compose still contains: \(afterValue)\n", stderr)
+        } else {
+            print("Sent to \(chatName).")
+        }
     }
+
 }
 
 extension JSONEncoder {
