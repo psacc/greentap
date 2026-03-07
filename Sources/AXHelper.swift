@@ -61,20 +61,42 @@ struct AXHelper {
         return ref as? [AXUIElement] ?? []
     }
 
-    static func findByDesc(_ root: AXUIElement, _ target: String, maxDepth: Int = 10) -> AXUIElement? {
-        findByDesc(root, target, depth: 0, maxDepth: maxDepth)
+    static func findByDesc(_ root: AXUIElement, _ target: String, role: String? = nil, maxDepth: Int = 10) -> AXUIElement? {
+        findByDesc(root, target, role: role, depth: 0, maxDepth: maxDepth)
     }
 
-    private static func findByDesc(_ el: AXUIElement, _ target: String, depth: Int, maxDepth: Int) -> AXUIElement? {
+    private static func findByDesc(_ el: AXUIElement, _ target: String, role: String?, depth: Int, maxDepth: Int) -> AXUIElement? {
         let desc = getAttr(el, kAXDescriptionAttribute as String)
-        if desc.contains(target) { return el }
+        let elRole = getAttr(el, kAXRoleAttribute as String)
+        if desc.contains(target) && (role == nil || elRole == role) { return el }
         if depth >= maxDepth { return nil }
         for child in getChildren(el) {
-            if let found = findByDesc(child, target, depth: depth + 1, maxDepth: maxDepth) {
+            if let found = findByDesc(child, target, role: role, depth: depth + 1, maxDepth: maxDepth) {
                 return found
             }
         }
         return nil
+    }
+
+    static func findFirstByRole(_ root: AXUIElement, role target: String, maxDepth: Int = 10) -> AXUIElement? {
+        findFirstByRole(root, role: target, depth: 0, maxDepth: maxDepth)
+    }
+
+    private static func findFirstByRole(_ el: AXUIElement, role target: String, depth: Int, maxDepth: Int) -> AXUIElement? {
+        let role = getAttr(el, kAXRoleAttribute as String)
+        if role == target { return el }
+        if depth >= maxDepth { return nil }
+        for child in getChildren(el) {
+            if let found = findFirstByRole(child, role: target, depth: depth + 1, maxDepth: maxDepth) {
+                return found
+            }
+        }
+        return nil
+    }
+
+    static func activateApp() {
+        let apps = NSWorkspace.shared.runningApplications.filter { $0.bundleIdentifier == bundleID }
+        apps.first?.activate()
     }
 
     static func press(_ el: AXUIElement) {
