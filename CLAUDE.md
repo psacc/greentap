@@ -1,21 +1,27 @@
 # greentap
 
 CLI driver for WhatsApp Web via Playwright aria snapshots.
-Migrating from Swift/AX (legacy, in `Sources/`) to Node.js/Playwright.
 
 ## Tech stack
 
-- Node.js (ESM), Playwright (Chromium)
+- Node.js (ESM), Playwright (system Chrome via CDP)
+- Daemon-backed: persistent Chrome on port 19222, lazy start, 15min idle shutdown
 - Persistent browser context at `~/.greentap/browser-data/`
-- Pure parsing logic in `lib/parser.js`, browser automation in `greentap.js`
-- Legacy: Swift + macOS Accessibility API (deprecated, Phase 4 removal)
+- Pure parsing logic in `lib/parser.js`, browser automation in `lib/commands.js`
 
-## Commands (current — Phase 0 spike)
+## Commands
 
 ```bash
 node greentap.js login               # Open browser for QR scan
 node greentap.js logout              # Clear session data
+node greentap.js chats [--json]      # List all chats
+node greentap.js unread [--json]     # List unread chats
+node greentap.js read <chat> [--json] # Read messages from a chat
+node greentap.js send <chat> <msg>   # Send a message
+node greentap.js search <q> [--json] # Search chats
 node greentap.js snapshot [SCOPE]    # Dump aria snapshot (full|chats|messages|compose)
+node greentap.js status              # Show daemon status
+node greentap.js daemon stop         # Stop the daemon
 ```
 
 ## Testing
@@ -29,11 +35,14 @@ npm test                             # Run all unit tests (node:test)
 | Path | Purpose |
 |------|---------|
 | `greentap.js` | CLI entrypoint — arg parsing + command dispatch |
+| `lib/commands.js` | Pure command logic (accepts `page`, returns data) |
 | `lib/parser.js` | Pure parsing of aria snapshot text |
-| `test/parser.test.js` | Fixture-based unit tests |
+| `lib/daemon.js` | Background Chrome process management |
+| `lib/client.js` | CDP connection, lazy start, lockfile, recovery |
+| `test/parser.test.js` | Fixture-based parser unit tests |
+| `test/cli.test.js` | JSON contract + arg parsing tests |
 | `test/fixtures/` | Recorded aria snapshots from live sessions |
 | `openspec/` | Specs, change proposals, workflow |
-| `Sources/` | Legacy Swift/AX code (deprecated) |
 
 ## openspec workflow
 
