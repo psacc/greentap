@@ -1,46 +1,107 @@
 # greentap
 
-macOS CLI that drives a popular green messaging desktop app via the Accessibility API.
+CLI for WhatsApp Web via Playwright aria snapshots. Reads chats, sends messages, searches contacts — all from the terminal.
 
-No reverse engineering, no unofficial protocols, no ban risk. Just reads and writes
-to the native macOS app's UI tree.
+Uses structural ARIA selectors and runtime locale detection, so it works with any WhatsApp UI language.
+
+> **Disclaimer**: This project is unofficial and not affiliated with, endorsed by, or connected to WhatsApp or Meta in any way. Using automation tools with WhatsApp may violate their [Terms of Service](https://www.whatsapp.com/legal/terms-of-service). There is a risk of account suspension or ban. **Use at your own risk, for personal use only, at low volume.**
+
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) (v18+)
+- [Google Chrome](https://www.google.com/chrome/) (system install, not Chromium)
+- [Playwright](https://playwright.dev/) (`npm install` handles this)
 
 ## Install
 
 ```sh
-git clone git@github.com:psacc/greentap.git
+git clone https://github.com/psacc/greentap.git
 cd greentap
-make install   # builds with SwiftPM, copies to ~/bin
+npm install
 ```
 
-Requires: macOS 13+, Xcode CLI tools, Accessibility permission for your terminal.
+First run — scan the QR code to link your WhatsApp account:
+
+```sh
+node greentap.js login
+```
+
+This opens a headed Chrome window. Scan the QR code with your phone, then close the browser. Session data is stored in `~/.greentap/browser-data/`.
 
 ## Usage
 
 ```sh
-greentap chats              # list visible chats
-greentap unread             # only unread chats
-greentap read "Family"       # open & read a chat (substring match)
-greentap send "Family" "Hi"  # send a message
+# List all visible chats
+node greentap.js chats
+node greentap.js chats --json
 
-# JSON output for machine consumption
-greentap unread --json
-greentap read "Family" --json
+# List only unread chats
+node greentap.js unread --json
+
+# Read messages from a chat (substring match on name)
+node greentap.js read "Family" --json
+
+# Read full chat history (scrolls up, deduplicates)
+node greentap.js read "Family" --scroll --json
+
+# Send a message
+node greentap.js send "Family" "Hello from the terminal"
+
+# Search for a contact or group (finds archived chats too)
+node greentap.js search "John" --json
+
+# Dump raw aria snapshot (for debugging)
+node greentap.js snapshot full
+node greentap.js snapshot messages --chat "Family"
+
+# Daemon management
+node greentap.js status
+node greentap.js daemon stop
+
+# Clear session and log out
+node greentap.js logout
 ```
 
 ## How it works
 
-Walks the AX (Accessibility) UI tree of the desktop app via `ApplicationServices` framework.
-Chat list entries, message text, sender, timestamps, and unread counts are all exposed
-as AX element attributes. Sending works by setting the compose area value and simulating Enter.
+greentap drives WhatsApp Web through Playwright's CDP connection to a persistent Chrome instance.
 
-## Limitations
+1. **Browser daemon**: The first command auto-launches a headless Chrome instance on CDP port 19222. It stays alive for 15 minutes of idle time, so subsequent commands are fast (~500ms).
 
-- Reads only messages **visible in the viewport** (no scroll)
-- AX tree structure may change with app updates
-- Send briefly brings the app to foreground
-- Chat lookup is case-insensitive substring match
+2. **Aria snapshots**: Instead of fragile CSS selectors (WhatsApp obfuscates classes and changes them frequently), greentap reads the page's accessibility tree. Chat lists, messages, compose boxes, and buttons are identified by ARIA roles and structural position.
+
+3. **Locale detection**: WhatsApp syncs its UI language from your phone, ignoring the browser locale. greentap probes the actual UI content against 35 locale candidates to detect day names, date formats, and relative dates at runtime.
+
+4. **Human-like interaction**: All typing uses `keyboard.type()` with random delays. No clipboard, no `fill()`, no programmatic shortcuts that WhatsApp's event handlers would reject.
+
+## Architecture
+
+```
+greentap.js          CLI entrypoint — arg parsing + command dispatch
+lib/commands.js      Command logic (accepts Playwright page, returns data)
+lib/parser.js        Pure parsing of aria snapshot text
+lib/locale.js        Runtime locale detection via Intl API
+lib/daemon.js        Background Chrome process management
+lib/client.js        CDP connection, lazy start, lockfile, recovery
+```
+
+## Important notes
+
+- **`read` marks messages as read** in WhatsApp. This cannot be prevented.
+- **Chat matching** is case-insensitive substring. Use enough of the name to be unambiguous.
+- **`send` verifies** the correct chat opened and the message appeared after sending.
+- The daemon runs headless by default. Use `login` for the initial QR scan (headed mode).
+
+## Testing
+
+```sh
+npm test    # 53 unit tests (node:test), fixture-based
+```
+
+## Contributing
+
+Issues and PRs welcome. This is a personal tool shared as-is — expect rough edges.
 
 ## License
 
-Private. Not affiliated with or endorsed by any messaging platform.
+[MIT](LICENSE)
