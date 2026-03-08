@@ -14,7 +14,7 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 
 - **Playwright + `launchPersistentContext`** (same as hey-cli)
 - **Aria snapshots** as primary data source (not CSS selectors — those are obfuscated and change weekly)
-- **Node.js ESM** — single-invocation CLI, no daemon (Phase 3 adds daemon)
+- **Node.js ESM** — daemon-backed CLI via CDP (persistent Chrome on port 19222, lazy start, 15min idle shutdown)
 - **Session persistence** via `~/.greentap/browser-data/`
 - **Low volume personal use** — minimize ban risk
 - **`--disable-blink-features=AutomationControlled`** to reduce automation fingerprint
@@ -26,8 +26,11 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 | CSS selectors break on WA updates | High | Use aria snapshots + roles, not CSS classes |
 | Account ban (ToS violation) | Medium | Low volume, human-like delays, personal account |
 | Session expires (14-day inactivity) | Low | Keep sessions active, `greentap login` to re-auth |
-| Aria labels are locale-dependent | Medium | Detect locale or use role-based selectors |
-| WhatsApp detects headless browser | Low | `--disable-blink-features`, headed mode fallback |
+| Aria labels are locale-dependent | Medium | Hardcoded Italian; locale detection planned for Phase 6 |
+| WhatsApp rejects bundled Chromium | Medium | Use system Chrome (`channel: "chrome"`), headed mode |
+| Aria tree restructuring (WA updates) | Medium | Two row formats already handled; parser may need updates |
+
+**Current: Phase 4**
 
 ## Phases
 
@@ -66,16 +69,18 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [x] `button "Invia"` exact match fix
 
 ### Phase 4 — Deprecate AX + Skill Migration
-- [ ] Feature parity audit: compare Swift skill (`~/.claude/skills/greentap/SKILL.md`) vs Node.js CLI
+- [ ] Feature parity audit — verify Node.js CLI covers all Swift skill commands:
+  - `chats [--json]`, `unread [--json]`, `read <chat> [--json]`, `search <query> [--json]`, `send <chat> <message>`
+  - Behavior: chat matching (case-insensitive substring), search fallback for archived chats, `--json` output
+  - Guidelines: never send without user confirmation, use `--json` for parsing
 - [ ] Ensure all commands tested with `node greentap.js` equivalents
-- [ ] Update Claude Code greentap skill to use `node greentap.js` instead of `~/bin/greentap`
-- [ ] Remove Swift codebase (`Sources/`)
+- [ ] Update Claude Code greentap skill (`~/.claude/skills/greentap/SKILL.md`) to use `node greentap.js`
+- [ ] Remove Swift codebase (`Sources/`) — git history preserves it
 - [ ] Remove `~/bin/greentap` binary
 - [ ] Update CLAUDE.md
 
 ### Phase 5 — Scroll + Robustness
 - [ ] **Message scroll** (read history beyond viewport) — priority
-- [ ] Media support (send/receive images)
 - [ ] Retry logic for transient WA errors
 - [ ] ~~Locale detection~~ → moved to Phase 6 (MIT blocker)
 
@@ -91,7 +96,9 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [ ] Add README with install, usage, architecture
 - [ ] Publish to GitHub (public)
 
-### Phase 7 — Voice Transcription (post-release)
+### Phase 7 — Media (post-release)
+- [ ] Send/receive images
 - [ ] Receive voice messages (download audio from chat)
 - [ ] Transcribe voice messages (Whisper or equivalent)
 - [ ] Surface transcription in `read` output
+- [ ] Feasibility spike: can audio URLs be extracted from aria snapshot or DOM?
