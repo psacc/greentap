@@ -63,6 +63,7 @@ Before committing a completed feature, run both `/review-code` and `/review-secu
 
 ## Constraints
 
+- **PUBLIC REPO — NO PII**: This repo is public. NEVER commit real names, phone numbers, email addresses, chat content, or any personally identifiable information. Fixtures use fake names (Roberto Marini, Elena Conti, Famiglia Rossi, etc.). All new fixtures and examples MUST use fake data only.
 - Selectors are locale-agnostic (structural ARIA roles + runtime locale detection); aria snapshot structure may still change with WhatsApp Web updates
 - Low volume personal use only — minimize automation fingerprint
 - No CI yet — tests run locally

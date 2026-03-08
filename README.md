@@ -94,11 +94,18 @@ lib/client.js        CDP connection, lazy start, lockfile, recovery
 
 ## Use as an AI agent skill
 
-greentap ships with a [Claude Code skill](https://docs.anthropic.com/en/docs/claude-code/skills) at `.claude/skills/greentap/SKILL.md`. When you clone the repo, Claude Code automatically picks it up — no extra configuration needed.
+greentap ships with a skill at `.claude/skills/greentap/SKILL.md` that teaches AI agents how to use it: which commands to call, when to use `--json`, and to **never send messages without user confirmation**.
 
-The skill teaches the agent how to use greentap: which commands to call, when to use `--json`, and to **never send messages without user confirmation**.
+Install the skill globally with [skills](https://github.com/vercel-labs/skills):
 
-To use it from a different project, symlink or copy the skill:
+```sh
+npx skills add psacc/greentap
+```
+
+This works with Claude Code, Cursor, Cline, and [40+ other agents](https://github.com/vercel-labs/skills#supported-agents).
+
+<details>
+<summary>Manual install (symlink or copy)</summary>
 
 ```sh
 # Option A: symlink (always up to date)
@@ -107,6 +114,7 @@ ln -s /path/to/greentap/.claude/skills/greentap ~/.claude/skills/greentap
 # Option B: copy
 cp -r /path/to/greentap/.claude/skills/greentap ~/.claude/skills/greentap
 ```
+</details>
 
 ## Testing
 
