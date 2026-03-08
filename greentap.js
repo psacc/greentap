@@ -28,9 +28,9 @@ const USER_DATA_DIR = join(homedir(), ".greentap", "browser-data");
 const WA_URL = "https://web.whatsapp.com";
 
 async function withDaemon(fn) {
-  const { page, disconnect } = await connect();
+  const { page, disconnect, localeConfig } = await connect();
   try {
-    return await fn(page);
+    return await fn(page, localeConfig);
   } finally {
     await disconnect();
   }
@@ -73,7 +73,7 @@ async function cmdLogout() {
 }
 
 async function cmdChats(json) {
-  const result = await withDaemon((page) => commands.chats(page));
+  const result = await withDaemon((page, localeConfig) => commands.chats(page, localeConfig));
   if (json) {
     console.log(JSON.stringify(result));
   } else {
@@ -82,7 +82,7 @@ async function cmdChats(json) {
 }
 
 async function cmdUnread(json) {
-  const result = await withDaemon((page) => commands.unread(page));
+  const result = await withDaemon((page, localeConfig) => commands.unread(page, localeConfig));
   if (json) {
     console.log(JSON.stringify(result));
   } else {
@@ -91,7 +91,7 @@ async function cmdUnread(json) {
 }
 
 async function cmdRead(chatName, json, scroll) {
-  const result = await withDaemon((page) => commands.read(page, chatName, { scroll }));
+  const result = await withDaemon((page, localeConfig) => commands.read(page, chatName, { scroll, localeConfig }));
   if (json) {
     console.log(JSON.stringify(result));
   } else {
@@ -104,7 +104,7 @@ async function cmdSend(chatName, message) {
 }
 
 async function cmdSearch(query, json) {
-  const result = await withDaemon((page) => commands.search(page, query));
+  const result = await withDaemon((page, localeConfig) => commands.search(page, query, localeConfig));
   if (json) {
     console.log(JSON.stringify(result));
   } else {

@@ -60,7 +60,7 @@ describe("parseChatList", () => {
     const times = chats.map((c) => c.time).filter(Boolean);
     // Should have HH:MM, day names, and DD/MM/YYYY formats
     const hasHHMM = times.some((t) => /^\d{1,2}:\d{2}$/.test(t));
-    const hasDay = times.some((t) => /^(lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica|Ieri|Oggi)$/.test(t));
+    const hasDay = times.some((t) => /^(lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica|ieri|oggi)$/i.test(t));
     assert.ok(hasHHMM, "should have HH:MM format times");
     assert.ok(hasDay, "should have day name format times");
   });
@@ -123,7 +123,7 @@ describe("parseMessages", () => {
     const aria = loadFixture("chat-aria.txt");
     const messages = parseMessages(aria);
 
-    const own = messages.filter((m) => m.sender === "Tu");
+    const own = messages.filter((m) => m.sender === "You");
     assert.ok(own.length >= 1, "should have at least 1 own message");
   });
 
@@ -135,26 +135,26 @@ describe("parseMessages", () => {
     assert.deepEqual(parseMessages('- document:\n  - heading "Nothing" [level=1]'), []);
   });
 
-  it("attributes own messages with Tu: prefix", () => {
+  it("attributes own messages with delivery icon (msg-dblcheck)", () => {
     const aria = loadFixture("chat-own-messages-aria.txt");
     const messages = parseMessages(aria);
 
-    const withTuPrefix = messages.find((m) => m.text.includes("Tutto bene"));
-    assert.ok(withTuPrefix, "should find 'Tutto bene' message");
-    assert.equal(withTuPrefix.sender, "Tu");
+    const withIcon = messages.find((m) => m.text.includes("Tutto bene"));
+    assert.ok(withIcon, "should find 'Tutto bene' message");
+    assert.equal(withIcon.sender, "You");
   });
 
-  it("attributes own messages without Tu: prefix via msg-dblcheck", () => {
+  it("attributes own messages via msg-dblcheck icon", () => {
     const aria = loadFixture("chat-own-messages-aria.txt");
     const messages = parseMessages(aria);
 
     const noPrefix = messages.find((m) => m.text.includes("Ci vediamo stasera"));
     assert.ok(noPrefix, "should find 'Ci vediamo stasera' message");
-    assert.equal(noPrefix.sender, "Tu", "own message without Tu: prefix should be attributed to Tu");
+    assert.equal(noPrefix.sender, "You", "own message should be attributed to You via icon");
 
     const noPrefix2 = messages.find((m) => m.text.includes("A che ora"));
     assert.ok(noPrefix2, "should find 'A che ora' message");
-    assert.equal(noPrefix2.sender, "Tu", "own message without Tu: prefix should be attributed to Tu");
+    assert.equal(noPrefix2.sender, "You", "own message should be attributed to You via icon");
   });
 
   it("attributes other person messages correctly", () => {

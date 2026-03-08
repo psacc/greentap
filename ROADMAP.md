@@ -86,7 +86,7 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [ ] Retry logic for transient WA errors → deferred
 
 ### Phase 6 — Open Source (MIT)
-- [ ] Locale detection (moved from Phase 5 — blocker for public release)
+- [x] Locale-agnostic selectors — structural ARIA selectors + runtime locale detection
 - [ ] Add LICENSE (MIT)
 - [ ] Add privacy disclaimer + WhatsApp ToS notice (README)
   - Clearly state: unofficial, not affiliated with WhatsApp/Meta
@@ -97,7 +97,12 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [ ] Add README with install, usage, architecture
 - [ ] Publish to GitHub (public)
 
-### Phase 7 — Media (post-release)
+### Phase 7 — Multi-agent Concurrency (explore)
+- [ ] Spike: can multiple agents use greentap concurrently without interfering?
+- [ ] Options: tab-per-agent, port-per-agent, locking, or queuing
+- [ ] Assess: is this a real need or premature optimization?
+
+### Phase 8 — Media (post-release)
 - [ ] Send/receive images
 - [ ] Receive voice messages (download audio from chat)
 - [ ] Transcribe voice messages (Whisper or equivalent)
