@@ -26,7 +26,7 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 | CSS selectors break on WA updates | High | Use aria snapshots + roles, not CSS classes |
 | Account ban (ToS violation) | Medium | Low volume, human-like delays, personal account |
 | Session expires (14-day inactivity) | Low | Keep sessions active, `greentap login` to re-auth |
-| Aria labels are locale-dependent | Medium | Hardcoded Italian; locale detection planned for Phase 6 |
+| Aria labels are locale-dependent | Low | Mitigated: structural ARIA selectors + runtime locale detection (Phase 6) |
 | WhatsApp rejects bundled Chromium | Medium | Use system Chrome (`channel: "chrome"`), headless mode |
 | Aria tree restructuring (WA updates) | Medium | Two row formats already handled; parser may need updates |
 
