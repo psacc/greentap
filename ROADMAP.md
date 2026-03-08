@@ -30,7 +30,7 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 | WhatsApp rejects bundled Chromium | Medium | Use system Chrome (`channel: "chrome"`), headed mode |
 | Aria tree restructuring (WA updates) | Medium | Two row formats already handled; parser may need updates |
 
-**Current: Phase 4**
+**Current: Phase 5**
 
 ## Phases
 
@@ -68,16 +68,14 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [x] `navigateToChat` fallback to search (archived chats)
 - [x] `button "Invia"` exact match fix
 
-### Phase 4 — Deprecate AX + Skill Migration
-- [ ] Feature parity audit — verify Node.js CLI covers all Swift skill commands:
-  - `chats [--json]`, `unread [--json]`, `read <chat> [--json]`, `search <query> [--json]`, `send <chat> <message>`
-  - Behavior: chat matching (case-insensitive substring), search fallback for archived chats, `--json` output
-  - Guidelines: never send without user confirmation, use `--json` for parsing
-- [ ] Ensure all commands tested with `node greentap.js` equivalents
-- [ ] Update Claude Code greentap skill (`~/.claude/skills/greentap/SKILL.md`) to use `node greentap.js`
-- [ ] Remove Swift codebase (`Sources/`) — git history preserves it
-- [ ] Remove `~/bin/greentap` binary
-- [ ] Update CLAUDE.md
+### Phase 4 — Deprecate AX + Skill Migration ✓
+- [x] Feature parity audit — all Swift skill commands covered by Node.js CLI
+- [x] CLI-level tests (JSON contracts + arg parsing) — 14 new tests
+- [x] Update Claude Code greentap skill to use `node greentap.js`
+- [x] Remove Swift codebase (`Sources/`, `Package.swift`) — tag `pre-swift-removal`
+- [x] Remove `~/bin/greentap` binary
+- [x] Update CLAUDE.md
+- [x] Fix: search/navigateToChat `fill()` → `keyboard.type()` (WhatsApp event handler bug)
 
 ### Phase 5 — Scroll + Robustness
 - [ ] **Message scroll** (read history beyond viewport) — priority
