@@ -12,75 +12,68 @@
  *   greentap send <chat> <message> — Send a message to a chat
  *   greentap search <query> [--json] — Search chats
  *   greentap snapshot [SCOPE] [--chat NAME] — Dump raw aria snapshot
+ *   greentap status             — Show daemon status
+ *   greentap daemon stop        — Stop the daemon
  */
 
 import { chromium } from "playwright";
 import { join } from "path";
 import { homedir } from "os";
 import { rmSync } from "fs";
-import { parseChatList, printChats, parseMessages, printMessages, parseSearchResults } from "./lib/parser.js";
+import { printChats, printMessages } from "./lib/parser.js";
+import * as commands from "./lib/commands.js";
+import { connect, stopDaemon, daemonStatus } from "./lib/client.js";
 
 const USER_DATA_DIR = join(homedir(), ".greentap", "browser-data");
 const WA_URL = "https://web.whatsapp.com";
 
-function humanDelay(min = 200, max = 500) {
-  const ms = Math.floor(Math.random() * (max - min + 1)) + min;
-  return new Promise((resolve) => setTimeout(resolve, ms));
+async function withDaemon(fn) {
+  const { page, disconnect } = await connect();
+  try {
+    return await fn(page);
+  } finally {
+    await disconnect();
+  }
 }
 
-async function waitForChatList(page) {
-  await page.getByRole("grid", { name: "Lista delle chat" }).waitFor({ timeout: 15000 });
-}
-
-async function waitForMessagePanel(page) {
-  await page.getByRole("button", { name: /Apri dettagli chat di/ }).first().waitFor({ timeout: 10000 });
-}
-
-async function withBrowser(fn, { headless = true } = {}) {
+async function cmdLogin() {
+  // Login bypasses daemon — launches headed browser directly
   const context = await chromium.launchPersistentContext(USER_DATA_DIR, {
-    headless,
+    headless: false,
     channel: "chrome",
     viewport: { width: 1280, height: 900 },
     args: ["--disable-blink-features=AutomationControlled"],
   });
   const page = context.pages()[0] || (await context.newPage());
-  try {
-    return await fn(page, context);
-  } finally {
-    await context.close();
-  }
-}
-
-async function cmdLogin() {
-  await withBrowser(
-    async (page, context) => {
-      await page.goto(WA_URL);
-      console.log("Browser opened. Scan QR code to log in.");
-      console.log("Close the browser window when done.");
-      await new Promise((resolve) => {
-        context.on("close", resolve);
-        page.on("close", () => {
-          if (context.pages().length === 0) context.close();
-        });
-      });
-    },
-    { headless: false }
-  );
+  await page.goto(WA_URL);
+  console.log("Browser opened. Scan QR code to log in.");
+  console.log("Close the browser window when done.");
+  await new Promise((resolve) => {
+    context.on("close", resolve);
+    page.on("close", () => {
+      if (context.pages().length === 0) context.close();
+    });
+  });
 }
 
 async function cmdLogout() {
+  // Stop daemon before clearing data
+  if (stopDaemon()) {
+    // Poll until daemon PID is dead (max 10s)
+    const deadline = Date.now() + 10000;
+    while (Date.now() < deadline) {
+      const status = daemonStatus();
+      if (!status.running) break;
+      await new Promise((r) => setTimeout(r, 300));
+    }
+    console.log("Daemon stopped.");
+  }
   rmSync(USER_DATA_DIR, { recursive: true, force: true });
   console.log("Logged out. Browser data cleared.");
 }
 
 async function cmdChats(json) {
-  const result = await withBrowser(async (page) => {
-    await page.goto(WA_URL);
-    await waitForChatList(page);
-    const aria = await page.locator(":root").ariaSnapshot();
-    return parseChatList(aria);
-  });
-
+  const result = await withDaemon((page) => commands.chats(page));
   if (json) {
     console.log(JSON.stringify(result));
   } else {
@@ -89,13 +82,7 @@ async function cmdChats(json) {
 }
 
 async function cmdUnread(json) {
-  const result = await withBrowser(async (page) => {
-    await page.goto(WA_URL);
-    await waitForChatList(page);
-    const aria = await page.locator(":root").ariaSnapshot();
-    return parseChatList(aria).filter((c) => c.unread);
-  });
-
+  const result = await withDaemon((page) => commands.unread(page));
   if (json) {
     console.log(JSON.stringify(result));
   } else {
@@ -104,23 +91,7 @@ async function cmdUnread(json) {
 }
 
 async function cmdRead(chatName, json) {
-  const result = await withBrowser(async (page) => {
-    await page.goto(WA_URL);
-    await waitForChatList(page);
-
-    const chatGrid = page.getByRole("grid", { name: "Lista delle chat" });
-    const row = chatGrid.getByRole("row").filter({ hasText: chatName }).first();
-    if (!(await row.isVisible())) {
-      throw new Error(`Chat "${chatName}" not found in chat list`);
-    }
-    await humanDelay(200, 500);
-    await row.click();
-    await waitForMessagePanel(page);
-
-    const aria = await page.locator(":root").ariaSnapshot();
-    return parseMessages(aria);
-  });
-
+  const result = await withDaemon((page) => commands.read(page, chatName));
   if (json) {
     console.log(JSON.stringify(result));
   } else {
@@ -129,105 +100,18 @@ async function cmdRead(chatName, json) {
 }
 
 async function cmdSend(chatName, message) {
-  await withBrowser(async (page) => {
-    await page.goto(WA_URL);
-    await waitForChatList(page);
-
-    // Navigate to chat
-    const chatGrid = page.getByRole("grid", { name: "Lista delle chat" });
-    const row = chatGrid.getByRole("row").filter({ hasText: chatName }).first();
-    if (!(await row.isVisible())) {
-      throw new Error(`Chat "${chatName}" not found in chat list`);
-    }
-    await humanDelay(200, 500);
-    await row.click();
-    await waitForMessagePanel(page);
-
-    // Verify correct chat opened
-    // Groups: button "<name> clicca qui per info gruppo"
-    // 1:1: button "<name> clicca qui per info contatto"
-    const aria = await page.locator(":root").ariaSnapshot();
-    const headerMatch = aria.match(/button "(.+?) clicca qui per info (?:gruppo|contatto)"/);
-    if (!headerMatch || !headerMatch[1].toLowerCase().includes(chatName.toLowerCase())) {
-      const actual = headerMatch ? headerMatch[1] : "unknown";
-      throw new Error(`Wrong chat opened. Expected "${chatName}", got "${actual}"`);
-    }
-
-    // Focus compose and type message via keyboard (fill() doesn't trigger WhatsApp's event handlers)
-    const compose = page.getByRole("textbox", { name: /Scrivi a/ });
-    await compose.waitFor({ timeout: 5000 });
-    await compose.click();
-    await humanDelay(300, 600);
-    await page.keyboard.type(message, { delay: 30 });
-
-    // Wait for Send button and click
-    const sendBtn = page.getByRole("button", { name: "Invia" });
-    await sendBtn.waitFor({ timeout: 5000 });
-    await humanDelay(200, 400);
-    await sendBtn.click();
-
-    // Wait for delivery confirmation (msg-check or msg-dblcheck)
-    await humanDelay(1000, 2000);
-
-    const postSendAria = await page.locator(":root").ariaSnapshot();
-
-    // Check for send errors
-    if (postSendAria.includes("Si è verificato un errore")) {
-      throw new Error("Message send failed — WhatsApp reported an error. Check the app.");
-    }
-
-    // Strip emoji for snippet match (emoji become img tags in aria)
-    const textOnly = message.replace(/\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu, "").trim();
-    const msgSnippet = textOnly.length > 40 ? textOnly.slice(0, 40) : textOnly;
-    if (msgSnippet && !postSendAria.includes(msgSnippet)) {
-      console.error("WARNING: Sent message not found in chat snapshot.");
-    }
-
-    console.log(`Sent to ${chatName}.`);
-  });
+  await withDaemon((page) => commands.send(page, chatName, message));
 }
 
 async function cmdSearch(query, json) {
-  const result = await withBrowser(async (page) => {
-    await page.goto(WA_URL);
-    await waitForChatList(page);
-
-    // Click search textbox and type query
-    const searchBox = page.getByRole("textbox", { name: "Cerca o avvia una nuova chat" });
-    await searchBox.click();
-    await humanDelay(300, 600);
-    await searchBox.fill(query);
-
-    // Wait for search results grid to appear
-    try {
-      await page.getByRole("grid", { name: "Risultati della ricerca." }).waitFor({ timeout: 5000 });
-    } catch {
-      // No results grid — will return empty
-    }
-    await humanDelay(200, 400);
-
-    // Take snapshot and parse results
-    const aria = await page.locator(":root").ariaSnapshot();
-
-    // Clean up: press Escape twice to exit search
-    await page.keyboard.press("Escape");
-    await humanDelay(200, 400);
-    await page.keyboard.press("Escape");
-
-    return aria;
-  });
-
-  // Parse search results from the aria snapshot
-  // Search results appear in a listbox or similar structure — parse what we get
-  const parsed = parseSearchResults(result);
-
+  const result = await withDaemon((page) => commands.search(page, query));
   if (json) {
-    console.log(JSON.stringify(parsed));
+    console.log(JSON.stringify(result));
   } else {
-    if (parsed.length === 0) {
+    if (result.length === 0) {
       console.log("No results found.");
     } else {
-      for (const r of parsed) {
+      for (const r of result) {
         console.log(`  ${r.name}`);
         if (r.lastMessage) console.log(`    ${r.lastMessage}`);
       }
@@ -236,62 +120,25 @@ async function cmdSearch(query, json) {
 }
 
 async function cmdSnapshot(scope, chatName) {
-  const result = await withBrowser(async (page) => {
-    await page.goto(WA_URL);
-
-    await waitForChatList(page);
-
-    // If a chat name is specified, click into it first
-    if (chatName) {
-      const chatGrid = page.getByRole("grid", { name: "Lista delle chat" });
-      const row = chatGrid.getByRole("row").filter({ hasText: chatName }).first();
-      if (await row.isVisible()) {
-        await row.click();
-        await waitForMessagePanel(page);
-      } else {
-        throw new Error(`Chat "${chatName}" not found in chat list`);
-      }
-    }
-
-    const rootAria = await page.locator(":root").ariaSnapshot();
-
-    if (scope === "full") {
-      return rootAria;
-    }
-
-    // Try scoped snapshots via aria roles/names
-    const scopes = {
-      chats: async () => {
-        const grid = page.getByRole("grid", { name: "Lista delle chat" });
-        if (await grid.isVisible()) {
-          return await grid.ariaSnapshot();
-        }
-        return "Chat list not found. Full snapshot:\n" + rootAria;
-      },
-      messages: async () => {
-        const panel = page.getByRole("application");
-        if (await panel.isVisible()) {
-          return await panel.ariaSnapshot();
-        }
-        return "Message panel not found. Full snapshot:\n" + rootAria;
-      },
-      compose: async () => {
-        const box = page.getByRole("textbox");
-        if (await box.first().isVisible()) {
-          return await box.first().ariaSnapshot();
-        }
-        return "Compose box not found. Full snapshot:\n" + rootAria;
-      },
-    };
-
-    if (scopes[scope]) {
-      return await scopes[scope]();
-    }
-
-    return rootAria;
-  });
-
+  const result = await withDaemon((page) => commands.snapshot(page, scope, chatName));
   console.log(result);
+}
+
+function cmdStatus() {
+  const status = daemonStatus();
+  if (status.running) {
+    console.log(`Daemon running. PID: ${status.pid}, CDP port: ${status.port}`);
+  } else {
+    console.log("No daemon running.");
+  }
+}
+
+function cmdDaemonStop() {
+  if (stopDaemon()) {
+    console.log("Daemon stopping...");
+  } else {
+    console.log("No daemon running.");
+  }
 }
 
 // --- Main ---
@@ -349,6 +196,16 @@ try {
       await cmdSnapshot(remaining[0] || "full", snapshotChat);
       break;
     }
+    case "status":
+      cmdStatus();
+      break;
+    case "daemon":
+      if (args[1] === "stop") {
+        cmdDaemonStop();
+      } else {
+        console.log("Usage: greentap daemon stop");
+      }
+      break;
     default:
       console.log(`Usage: greentap <command> [options]
 
@@ -360,8 +217,12 @@ Commands:
   read <chat> [--json]           Read messages from a chat
   send <chat> <message>          Send a message to a chat
   search <query> [--json]        Search chats
-  snapshot [SCOPE] [--chat NAME] Dump aria snapshot (full|chats|messages|compose)`);
+  snapshot [SCOPE] [--chat NAME] Dump aria snapshot (full|chats|messages|compose)
+  status                         Show daemon status
+  daemon stop                    Stop the daemon`);
   }
+  // Force exit — CDP disconnect leaves Playwright's event loop alive
+  process.exit(0);
 } catch (err) {
   console.error(`greentap error: ${err.message}`);
   process.exit(1);
