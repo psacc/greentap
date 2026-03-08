@@ -1,3 +1,10 @@
 .build/
 .swiftpm/
 node_modules/
+
+# Temp output files (may contain chat PII)
+deadlock_msgs.json
+drafts.md
+summary_stats.txt
+*_msgs.json
+*_stats.txt
