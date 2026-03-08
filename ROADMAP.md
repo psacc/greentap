@@ -78,7 +78,7 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [x] Fix: search/navigateToChat `fill()` → `keyboard.type()` (WhatsApp event handler bug)
 
 ### Phase 5 — Scroll + Robustness
-- [ ] **Message scroll** (read history beyond viewport) — priority
+- [x] **Message scroll** (`read --scroll` — full history via virtual scroll + dedup)
 - [ ] Retry logic for transient WA errors
 - [ ] ~~Locale detection~~ → moved to Phase 6 (MIT blocker)
 

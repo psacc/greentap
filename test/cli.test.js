@@ -188,6 +188,108 @@ describe("CLI arg parsing: unknown command", () => {
   });
 });
 
+// --- Scroll Tests ---
+
+describe("dedupKey", () => {
+  it("returns correct key format", () => {
+    const key = commands.dedupKey({ sender: "Alice", time: "10:30", text: "Hello world" });
+    assert.equal(key, "Alice|10:30|Hello world");
+  });
+
+  it("handles empty text", () => {
+    const key = commands.dedupKey({ sender: "Alice", time: "10:30", text: "" });
+    assert.equal(key, "Alice|10:30|");
+  });
+
+  it("handles undefined text", () => {
+    const key = commands.dedupKey({ sender: "Alice", time: "10:30" });
+    assert.equal(key, "Alice|10:30|");
+  });
+
+  it("truncates text to 50 chars", () => {
+    const longText = "a".repeat(100);
+    const key = commands.dedupKey({ sender: "Bob", time: "11:00", text: longText });
+    assert.equal(key, `Bob|11:00|${"a".repeat(50)}`);
+  });
+
+  it("handles emoji-only text", () => {
+    const key = commands.dedupKey({ sender: "Alice", time: "10:30", text: "😀🎉" });
+    assert.equal(key, "Alice|10:30|😀🎉");
+  });
+});
+
+describe("scroll dedup merge", () => {
+  it("deduplicates overlapping message sets in chronological order", () => {
+    // Simulate 3 scroll iterations (newest first, then older)
+    const iter1 = [
+      { sender: "Alice", time: "10:03", text: "msg3" },
+      { sender: "Bob", time: "10:04", text: "msg4" },
+      { sender: "Alice", time: "10:05", text: "msg5" },
+    ];
+    const iter2 = [
+      { sender: "Bob", time: "10:01", text: "msg1" },
+      { sender: "Alice", time: "10:02", text: "msg2" },
+      { sender: "Alice", time: "10:03", text: "msg3" }, // overlap with iter1
+    ];
+
+    // Merge oldest-first, dedup (same logic as scrollAndCollect)
+    const iterations = [iter1, iter2];
+    const merged = new Map();
+    for (let i = iterations.length - 1; i >= 0; i--) {
+      for (const msg of iterations[i]) {
+        const key = commands.dedupKey(msg);
+        if (!merged.has(key)) merged.set(key, msg);
+      }
+    }
+    const result = [...merged.values()];
+
+    assert.equal(result.length, 5);
+    assert.equal(result[0].text, "msg1");
+    assert.equal(result[1].text, "msg2");
+    assert.equal(result[2].text, "msg3");
+    assert.equal(result[3].text, "msg4");
+    assert.equal(result[4].text, "msg5");
+  });
+
+  it("preserves messages with same time but different sender", () => {
+    const iter1 = [
+      { sender: "Alice", time: "10:00", text: "hello" },
+      { sender: "Bob", time: "10:00", text: "hello" },
+    ];
+
+    const merged = new Map();
+    for (const msg of iter1) {
+      const key = commands.dedupKey(msg);
+      if (!merged.has(key)) merged.set(key, msg);
+    }
+    const result = [...merged.values()];
+
+    assert.equal(result.length, 2);
+  });
+});
+
+describe("CLI arg parsing: read --scroll", () => {
+  it("exits 1 with usage when only --scroll given (no chat name)", async () => {
+    const { code, stderr } = await runCli("read", "--scroll");
+    assert.equal(code, 1);
+    assert.ok(stderr.includes("Usage: greentap read"), `stderr should contain usage, got: ${stderr}`);
+  });
+
+  it("filters --scroll from chat name extraction", () => {
+    // Simulate the arg parsing from greentap.js
+    const args = ["read", "--scroll", "Alice", "--json"];
+    const chatName = args.slice(1).filter((a) => a !== "--json" && a !== "--scroll")[0];
+    assert.equal(chatName, "Alice");
+  });
+
+  it("detects --scroll flag in any position", () => {
+    const args1 = ["read", "Alice", "--scroll"];
+    const args2 = ["read", "--scroll", "Alice"];
+    assert.ok(args1.includes("--scroll"));
+    assert.ok(args2.includes("--scroll"));
+  });
+});
+
 describe("CLI arg parsing: send message joining", () => {
   // We can't test actual send without a browser, but we can verify
   // the arg joining logic by checking greentap.js source behavior:

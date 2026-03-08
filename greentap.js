@@ -90,8 +90,8 @@ async function cmdUnread(json) {
   }
 }
 
-async function cmdRead(chatName, json) {
-  const result = await withDaemon((page) => commands.read(page, chatName));
+async function cmdRead(chatName, json, scroll) {
+  const result = await withDaemon((page) => commands.read(page, chatName, { scroll }));
   if (json) {
     console.log(JSON.stringify(result));
   } else {
@@ -160,12 +160,12 @@ try {
       await cmdUnread(args.includes("--json"));
       break;
     case "read": {
-      const chatName = args.slice(1).filter((a) => a !== "--json")[0];
+      const chatName = args.slice(1).filter((a) => a !== "--json" && a !== "--scroll")[0];
       if (!chatName) {
-        console.error("Usage: greentap read <chat> [--json]");
+        console.error("Usage: greentap read <chat> [--json] [--scroll]");
         process.exit(1);
       }
-      await cmdRead(chatName, args.includes("--json"));
+      await cmdRead(chatName, args.includes("--json"), args.includes("--scroll"));
       break;
     }
     case "send": {
@@ -214,7 +214,7 @@ Commands:
   logout                         Clear session data
   chats [--json]                 List all chats
   unread [--json]                List unread chats
-  read <chat> [--json]           Read messages from a chat
+  read <chat> [--json] [--scroll] Read messages from a chat
   send <chat> <message>          Send a message to a chat
   search <query> [--json]        Search chats
   snapshot [SCOPE] [--chat NAME] Dump aria snapshot (full|chats|messages|compose)
