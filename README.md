@@ -94,26 +94,19 @@ lib/client.js        CDP connection, lazy start, lockfile, recovery
 
 ## Use as an AI agent skill
 
-greentap is designed to be called by AI coding assistants (Claude Code, etc.) as a shell tool. All commands support `--json` for structured output.
+greentap ships with a [Claude Code skill](https://docs.anthropic.com/en/docs/claude-code/skills) at `.claude/skills/greentap/SKILL.md`. When you clone the repo, Claude Code automatically picks it up — no extra configuration needed.
 
-Example skill configuration (Claude Code `SKILL.md`):
+The skill teaches the agent how to use greentap: which commands to call, when to use `--json`, and to **never send messages without user confirmation**.
 
-```yaml
----
-name: greentap
-description: Read and send WhatsApp messages via CLI
----
+To use it from a different project, symlink or copy the skill:
+
+```sh
+# Option A: symlink (always up to date)
+ln -s /path/to/greentap/.claude/skills/greentap ~/.claude/skills/greentap
+
+# Option B: copy
+cp -r /path/to/greentap/.claude/skills/greentap ~/.claude/skills/greentap
 ```
-
-### Agent guidelines
-
-- Use `--json` for parsing, plain text when showing to the user
-- **Never send a message without explicit user confirmation**
-- When drafting messages, match the language the user typically uses with that contact
-- If asked to "check messages", start with `greentap unread --json`
-- If a chat isn't found, try `greentap search` with a shorter query
-- Own messages have `sender: "You"` in JSON output
-- First command auto-starts the daemon (~6s cold start), subsequent ones are ~500ms
 
 ## Testing
 
