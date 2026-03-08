@@ -55,14 +55,23 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [x] Post-send verification (compose empty + message in snapshot)
 - [x] Human-like delays (random jitter between actions)
 
-### Phase 3 — Performance
-- [ ] Browser daemon (forked Node process + CDP via `connectOverCDP`)
-- [ ] Startup reduction: 3-5s -> ~200ms per invocation
-- [ ] Lazy start: first command auto-launches daemon
-- [ ] Auto-shutdown after 15min idle
-- [ ] `greentap status` / `greentap daemon stop`
+### Phase 3 — Performance ✓
+- [x] Browser daemon (`launchPersistentContext` + CDP port 19222)
+- [x] Per-command latency ~531ms (was 3-5s)
+- [x] Lazy start: first command auto-launches daemon
+- [x] Auto-shutdown after 15min idle (CDP event monitoring)
+- [x] `greentap status` / `greentap daemon stop`
+- [x] `waitForMessagePanel` fix (compose textbox, works for all chat types)
+- [x] `navigateToChat` fallback to search (archived chats)
+- [x] `button "Invia"` exact match fix
 
 ### Phase 4 — Deprecate AX
-- [ ] Remove Swift codebase
-- [ ] Update Claude Code greentap skill
+- [ ] Remove Swift codebase (`Sources/`)
+- [ ] Update Claude Code greentap skill to use `node greentap.js` instead of `~/bin/greentap`
 - [ ] Update CLAUDE.md
+
+### Phase 5 — Robustness (ideas)
+- [ ] Message scroll (read history beyond viewport)
+- [ ] Media support (send/receive images)
+- [ ] Retry logic for transient WA errors
+- [ ] Locale detection (currently hardcoded Italian)
