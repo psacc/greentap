@@ -201,8 +201,8 @@ describe("parseSearchResults", () => {
     const results = parseSearchResults(aria);
 
     assert.ok(results.length >= 1, "should parse at least one result");
-    const mamma = results.find((r) => r.name.includes("Famiglia Rossi"));
-    assert.ok(mamma, "should find Famiglia Rossi");
+    const famiglia = results.find((r) => r.name.includes("Famiglia Rossi"));
+    assert.ok(famiglia, "should find Famiglia Rossi");
   });
 
   it("detects unread in search results", () => {
