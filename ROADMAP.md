@@ -30,7 +30,7 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 | WhatsApp rejects bundled Chromium | Medium | Use system Chrome (`channel: "chrome"`), headless mode |
 | Aria tree restructuring (WA updates) | Medium | Two row formats already handled; parser may need updates |
 
-**Current: Phase 6**
+**Current: Phase 7 (explore)**
 
 ## Phases
 
@@ -85,17 +85,17 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [x] Switch daemon to headless mode
 - [ ] Retry logic for transient WA errors → deferred
 
-### Phase 6 — Open Source (MIT)
+### Phase 6 — Open Source (MIT) ✓
 - [x] Locale-agnostic selectors — structural ARIA selectors + runtime locale detection
-- [ ] Add LICENSE (MIT)
-- [ ] Add privacy disclaimer + WhatsApp ToS notice (README)
-  - Clearly state: unofficial, not affiliated with WhatsApp/Meta
-  - Warn about ToS violation risk and potential account ban
-  - Recommend personal use only, low volume
-- [ ] Anonymize all fixtures (no real PII in committed snapshots)
-- [ ] Review codebase for hardcoded paths / personal config
-- [ ] Add README with install, usage, architecture
-- [ ] Publish to GitHub (public)
+- [x] Add LICENSE (MIT)
+- [x] Add privacy disclaimer + WhatsApp ToS notice (README)
+- [x] Anonymize all fixtures (no real PII in committed snapshots)
+- [x] Scrub git history (`git filter-repo` — PII replacements + email rewrite)
+- [x] Add README with install, usage, architecture
+- [x] Ship Claude Code skill in repo (`.claude/skills/greentap/SKILL.md`)
+- [x] Skill installable via `npx skills add psacc/greentap`
+- [x] Release process: semver tags + GitHub releases (`v0.1.0`)
+- [x] Publish to GitHub (public)
 
 ### Phase 7 — Multi-agent Concurrency (explore)
 - [ ] Spike: can multiple agents use greentap concurrently without interfering?

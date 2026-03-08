@@ -61,6 +61,28 @@ Commands:
 
 Before committing a completed feature, run both `/review-code` and `/review-security`.
 
+## Releases
+
+Semver tags, manual process. No CHANGELOG file — release notes live on GitHub.
+
+```bash
+git tag v0.x.y
+git push origin v0.x.y
+gh release create v0.x.y --title "v0.x.y — Short title" --notes "..."
+```
+
+- Tag after merging a meaningful batch of changes (new command, breaking change, significant fix)
+- Patch (`v0.1.1`): bug fixes. Minor (`v0.2.0`): new features. Major: breaking changes.
+- Write release notes with: what changed, why, any migration steps
+
+## Roadmap
+
+`ROADMAP.md` tracks phases, priorities, and risk table. Keep it up to date:
+
+- After completing a phase or milestone → mark it done, set the next phase as current
+- After a significant decision or discovery → update the risk table if severity/status changed
+- At the start of a new session that changes scope → check if ROADMAP.md reflects reality
+
 ## Constraints
 
 - **PUBLIC REPO — NO PII**: This repo is public. NEVER commit real names, phone numbers, email addresses, chat content, or any personally identifiable information. Fixtures use fake names (Roberto Marini, Elena Conti, Famiglia Rossi, etc.). All new fixtures and examples MUST use fake data only.
