@@ -27,10 +27,10 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 | Account ban (ToS violation) | Medium | Low volume, human-like delays, personal account |
 | Session expires (14-day inactivity) | Low | Keep sessions active, `greentap login` to re-auth |
 | Aria labels are locale-dependent | Medium | Hardcoded Italian; locale detection planned for Phase 6 |
-| WhatsApp rejects bundled Chromium | Medium | Use system Chrome (`channel: "chrome"`), headed mode |
+| WhatsApp rejects bundled Chromium | Medium | Use system Chrome (`channel: "chrome"`), headless mode |
 | Aria tree restructuring (WA updates) | Medium | Two row formats already handled; parser may need updates |
 
-**Current: Phase 5**
+**Current: Phase 6**
 
 ## Phases
 
@@ -77,10 +77,13 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [x] Update CLAUDE.md
 - [x] Fix: search/navigateToChat `fill()` → `keyboard.type()` (WhatsApp event handler bug)
 
-### Phase 5 — Scroll + Robustness
+### Phase 5 — Scroll + Robustness ✓
 - [x] **Message scroll** (`read --scroll` — full history via virtual scroll + dedup)
-- [ ] Retry logic for transient WA errors
-- [ ] ~~Locale detection~~ → moved to Phase 6 (MIT blocker)
+- [x] Fix: scroll container targeting (message panel vs chat list sidebar)
+- [x] Fix: timestamp extraction for group messages (trailing time in row label)
+- [x] Fix: scroll back to bottom after collection (stale daemon state)
+- [x] Switch daemon to headless mode
+- [ ] Retry logic for transient WA errors → deferred
 
 ### Phase 6 — Open Source (MIT)
 - [ ] Locale detection (moved from Phase 5 — blocker for public release)

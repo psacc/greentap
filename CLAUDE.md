@@ -16,7 +16,7 @@ node greentap.js login               # Open browser for QR scan
 node greentap.js logout              # Clear session data
 node greentap.js chats [--json]      # List all chats
 node greentap.js unread [--json]     # List unread chats
-node greentap.js read <chat> [--json] # Read messages from a chat
+node greentap.js read <chat> [--json] [--scroll] # Read messages from a chat
 node greentap.js send <chat> <msg>   # Send a message
 node greentap.js search <q> [--json] # Search chats
 node greentap.js snapshot [SCOPE]    # Dump aria snapshot (full|chats|messages|compose)
