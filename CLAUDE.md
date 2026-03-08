@@ -38,6 +38,7 @@ npm test                             # Run all unit tests (node:test)
 | `lib/commands.js` | Pure command logic (accepts `page`, returns data) |
 | `lib/parser.js` | Pure parsing of aria snapshot text |
 | `lib/daemon.js` | Background Chrome process management |
+| `lib/locale.js` | Runtime locale detection via Intl API probing |
 | `lib/client.js` | CDP connection, lazy start, lockfile, recovery |
 | `test/parser.test.js` | Fixture-based parser unit tests |
 | `test/cli.test.js` | JSON contract + arg parsing tests |
@@ -62,6 +63,6 @@ Before committing a completed feature, run both `/review-code` and `/review-secu
 
 ## Constraints
 
-- Aria snapshot structure is locale-dependent and may change with WhatsApp Web updates
+- Selectors are locale-agnostic (structural ARIA roles + runtime locale detection); aria snapshot structure may still change with WhatsApp Web updates
 - Low volume personal use only — minimize automation fingerprint
 - No CI yet — tests run locally
