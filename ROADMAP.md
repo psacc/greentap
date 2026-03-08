@@ -65,13 +65,33 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [x] `navigateToChat` fallback to search (archived chats)
 - [x] `button "Invia"` exact match fix
 
-### Phase 4 — Deprecate AX
-- [ ] Remove Swift codebase (`Sources/`)
+### Phase 4 — Deprecate AX + Skill Migration
+- [ ] Feature parity audit: compare Swift skill (`~/.claude/skills/greentap/SKILL.md`) vs Node.js CLI
+- [ ] Ensure all commands tested with `node greentap.js` equivalents
 - [ ] Update Claude Code greentap skill to use `node greentap.js` instead of `~/bin/greentap`
+- [ ] Remove Swift codebase (`Sources/`)
+- [ ] Remove `~/bin/greentap` binary
 - [ ] Update CLAUDE.md
 
-### Phase 5 — Robustness (ideas)
-- [ ] Message scroll (read history beyond viewport)
+### Phase 5 — Scroll + Robustness
+- [ ] **Message scroll** (read history beyond viewport) — priority
 - [ ] Media support (send/receive images)
 - [ ] Retry logic for transient WA errors
-- [ ] Locale detection (currently hardcoded Italian)
+- [ ] ~~Locale detection~~ → moved to Phase 6 (MIT blocker)
+
+### Phase 6 — Open Source (MIT)
+- [ ] Locale detection (moved from Phase 5 — blocker for public release)
+- [ ] Add LICENSE (MIT)
+- [ ] Add privacy disclaimer + WhatsApp ToS notice (README)
+  - Clearly state: unofficial, not affiliated with WhatsApp/Meta
+  - Warn about ToS violation risk and potential account ban
+  - Recommend personal use only, low volume
+- [ ] Anonymize all fixtures (no real PII in committed snapshots)
+- [ ] Review codebase for hardcoded paths / personal config
+- [ ] Add README with install, usage, architecture
+- [ ] Publish to GitHub (public)
+
+### Phase 7 — Voice Transcription (post-release)
+- [ ] Receive voice messages (download audio from chat)
+- [ ] Transcribe voice messages (Whisper or equivalent)
+- [ ] Surface transcription in `read` output
