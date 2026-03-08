@@ -92,6 +92,29 @@ lib/client.js        CDP connection, lazy start, lockfile, recovery
 - **`send` verifies** the correct chat opened and the message appeared after sending.
 - The daemon runs headless by default. Use `login` for the initial QR scan (headed mode).
 
+## Use as an AI agent skill
+
+greentap is designed to be called by AI coding assistants (Claude Code, etc.) as a shell tool. All commands support `--json` for structured output.
+
+Example skill configuration (Claude Code `SKILL.md`):
+
+```yaml
+---
+name: greentap
+description: Read and send WhatsApp messages via CLI
+---
+```
+
+### Agent guidelines
+
+- Use `--json` for parsing, plain text when showing to the user
+- **Never send a message without explicit user confirmation**
+- When drafting messages, match the language the user typically uses with that contact
+- If asked to "check messages", start with `greentap unread --json`
+- If a chat isn't found, try `greentap search` with a shorter query
+- Own messages have `sender: "You"` in JSON output
+- First command auto-starts the daemon (~6s cold start), subsequent ones are ~500ms
+
 ## Testing
 
 ```sh
