@@ -10,6 +10,9 @@ description: |
   - Draft a message for review before sending
   Triggers: "whatsapp", "check messages", "read chat", "send message to",
   "unread messages", "message from", "greentap"
+license: MIT
+compatibility: "Requires Node.js 18+, Google Chrome (system install)"
+allowed-tools: Bash
 ---
 
 # greentap — WhatsApp Web CLI via Playwright
