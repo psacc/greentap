@@ -8,3 +8,10 @@ drafts.md
 summary_stats.txt
 *_msgs.json
 *_stats.txt
+
+# Skills infrastructure (agent-deck, skills.sh)
+.agent/
+.agents/
+.worktrees/
+skills/
+skills-lock.json
