@@ -100,7 +100,7 @@ async function cmdRead(chatName, json, scroll) {
 }
 
 async function cmdSend(chatName, message) {
-  await withDaemon((page) => commands.send(page, chatName, message));
+  await withDaemon((page, localeConfig) => commands.send(page, chatName, message, localeConfig));
 }
 
 async function cmdSearch(query, json) {
@@ -120,7 +120,7 @@ async function cmdSearch(query, json) {
 }
 
 async function cmdSnapshot(scope, chatName) {
-  const result = await withDaemon((page) => commands.snapshot(page, scope, chatName));
+  const result = await withDaemon((page, localeConfig) => commands.snapshot(page, scope, chatName, localeConfig));
   console.log(result);
 }
 
