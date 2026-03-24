@@ -72,6 +72,66 @@ describe("parseChatList", () => {
   it("returns empty array for aria without chat grid", () => {
     assert.deepEqual(parseChatList('- document:\n  - heading "Nothing" [level=1]'), []);
   });
+
+  it("strips unread badge prefix from chat names (English)", () => {
+    const aria = `- grid "Chat list":
+    - row "3 unread messages WE 1 maggio 2025 17:36 Last msg 3 unread messages":
+      - gridcell "3 unread messages WE 1 maggio 2025 17:36 Last msg 3 unread messages":
+        - img
+        - gridcell "3 unread messages WE 1 maggio 2025 17:36"
+        - text: Last msg
+        - gridcell "3 unread messages": "3"
+  - text: end`;
+    const chats = parseChatList(aria);
+    assert.equal(chats.length, 1);
+    assert.equal(chats[0].name, "WE 1 maggio 2025");
+    assert.equal(chats[0].unreadCount, 3);
+  });
+
+  it("strips unread badge prefix from chat names (Italian)", () => {
+    const aria = `- grid "Lista delle chat":
+    - row "1 messaggio non letto Test Chat 14:00 Ciao 1 messaggio non letto":
+      - gridcell "1 messaggio non letto Test Chat 14:00 Ciao 1 messaggio non letto":
+        - img
+        - gridcell "1 messaggio non letto Test Chat 14:00"
+        - text: Ciao
+        - gridcell "1 messaggio non letto": "1"
+  - text: end`;
+    const chats = parseChatList(aria);
+    assert.equal(chats.length, 1);
+    assert.equal(chats[0].name, "Test Chat");
+    assert.equal(chats[0].unreadCount, 1);
+  });
+
+  it("strips unread badge prefix from chat names (French)", () => {
+    const aria = `- grid "Liste des discussions":
+    - row "5 messages non lus Mon Groupe 09:15 Salut 5 messages non lus":
+      - gridcell "5 messages non lus Mon Groupe 09:15 Salut 5 messages non lus":
+        - img
+        - gridcell "5 messages non lus Mon Groupe 09:15"
+        - text: Salut
+        - gridcell "5 messages non lus": "5"
+  - text: end`;
+    const chats = parseChatList(aria);
+    assert.equal(chats.length, 1);
+    assert.equal(chats[0].name, "Mon Groupe");
+    assert.equal(chats[0].unreadCount, 5);
+  });
+
+  it("strips Italian plural unread badge prefix", () => {
+    const aria = `- grid "Lista delle chat":
+    - row "61 messaggi non letti Sport Club 17:28 Msg Chat silenziata messaggio con menzione 61 messaggi non letti":
+      - gridcell "61 messaggi non letti Sport Club 17:28 Msg Chat silenziata messaggio con menzione 61 messaggi non letti":
+        - img
+        - gridcell "61 messaggi non letti Sport Club 17:28"
+        - text: Msg
+        - gridcell "Chat silenziata messaggio con menzione 61 messaggi non letti": "61"
+  - text: end`;
+    const chats = parseChatList(aria);
+    assert.equal(chats.length, 1);
+    assert.equal(chats[0].name, "Sport Club");
+    assert.equal(chats[0].unreadCount, 61);
+  });
 });
 
 describe("printChats", () => {
