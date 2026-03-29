@@ -8,8 +8,8 @@
  *   greentap logout             — Clear session data
  *   greentap chats [--json]     — List all chats
  *   greentap unread [--json]    — List unread chats
- *   greentap read <chat> [--json] — Read messages from a chat
- *   greentap send <chat> <message> — Send a message to a chat
+ *   greentap read <chat> [--json] [--scroll] [--index N] — Read messages from a chat
+ *   greentap send <chat> <message> [--index N] — Send a message to a chat
  *   greentap search <query> [--json] — Search chats
  *   greentap snapshot [SCOPE] [--chat NAME] — Dump raw aria snapshot
  *   greentap status             — Show daemon status
@@ -90,8 +90,8 @@ async function cmdUnread(json) {
   }
 }
 
-async function cmdRead(chatName, json, scroll) {
-  const result = await withDaemon((page, localeConfig) => commands.read(page, chatName, { scroll, localeConfig }));
+async function cmdRead(chatName, json, scroll, index) {
+  const result = await withDaemon((page, localeConfig) => commands.read(page, chatName, { scroll, localeConfig, index }));
   if (json) {
     console.log(JSON.stringify(result));
   } else {
@@ -99,8 +99,8 @@ async function cmdRead(chatName, json, scroll) {
   }
 }
 
-async function cmdSend(chatName, message) {
-  await withDaemon((page, localeConfig) => commands.send(page, chatName, message, localeConfig));
+async function cmdSend(chatName, message, index) {
+  await withDaemon((page, localeConfig) => commands.send(page, chatName, message, localeConfig, index));
 }
 
 async function cmdSearch(query, json) {
@@ -160,21 +160,35 @@ try {
       await cmdUnread(args.includes("--json"));
       break;
     case "read": {
-      const chatName = args.slice(1).filter((a) => a !== "--json" && a !== "--scroll")[0];
+      const readIndexIdx = args.indexOf("--index");
+      const readIndex = readIndexIdx >= 0 ? parseInt(args[readIndexIdx + 1], 10) : undefined;
+      const chatName = args.slice(1).filter((a, relI) => {
+        const absI = relI + 1;
+        if (a === "--json" || a === "--scroll" || a === "--index") return false;
+        if (readIndexIdx >= 0 && absI === readIndexIdx + 1) return false;
+        return true;
+      })[0];
       if (!chatName) {
-        console.error("Usage: greentap read <chat> [--json] [--scroll]");
+        console.error("Usage: greentap read <chat> [--json] [--scroll] [--index N]");
         process.exit(1);
       }
-      await cmdRead(chatName, args.includes("--json"), args.includes("--scroll"));
+      await cmdRead(chatName, args.includes("--json"), args.includes("--scroll"), readIndex);
       break;
     }
     case "send": {
-      const sendArgs = args.slice(1);
+      const sendRaw = args.slice(1);
+      const sendIndexIdx = sendRaw.indexOf("--index");
+      const sendIndex = sendIndexIdx >= 0 ? parseInt(sendRaw[sendIndexIdx + 1], 10) : undefined;
+      const sendArgs = sendRaw.filter((a, i) => {
+        if (a === "--index") return false;
+        if (sendIndexIdx >= 0 && i === sendIndexIdx + 1) return false;
+        return true;
+      });
       if (sendArgs.length < 2) {
-        console.error("Usage: greentap send <chat> <message>");
+        console.error("Usage: greentap send <chat> <message> [--index N]");
         process.exit(1);
       }
-      await cmdSend(sendArgs[0], sendArgs.slice(1).join(" "));
+      await cmdSend(sendArgs[0], sendArgs.slice(1).join(" "), sendIndex);
       break;
     }
     case "search": {
@@ -210,16 +224,18 @@ try {
       console.log(`Usage: greentap <command> [options]
 
 Commands:
-  login                          Open browser for QR scan
-  logout                         Clear session data
-  chats [--json]                 List all chats
-  unread [--json]                List unread chats
-  read <chat> [--json] [--scroll] Read messages from a chat
-  send <chat> <message>          Send a message to a chat
-  search <query> [--json]        Search chats
-  snapshot [SCOPE] [--chat NAME] Dump aria snapshot (full|chats|messages|compose)
-  status                         Show daemon status
-  daemon stop                    Stop the daemon`);
+  login                                   Open browser for QR scan
+  logout                                  Clear session data
+  chats [--json]                          List all chats
+  unread [--json]                         List unread chats
+  read <chat> [--json] [--scroll] [--index N]  Read messages from a chat
+  send <chat> <message> [--index N]       Send a message to a chat
+  search <query> [--json]                 Search chats
+  snapshot [SCOPE] [--chat NAME]          Dump aria snapshot (full|chats|messages|compose)
+  status                                  Show daemon status
+  daemon stop                             Stop the daemon
+
+  --index N  Select the Nth match when multiple chats share the same name (1-based)`);
   }
   // Force exit — CDP disconnect leaves Playwright's event loop alive
   process.exit(0);
