@@ -1,0 +1,23 @@
+- document:
+  - banner:
+    - button "Chat" [pressed]: "1"
+  - textbox "Cerca o avvia una nuova chat"
+  - grid "Lista delle chat":
+    - 'row "Famiglia Rossi 17:36 Ciao a tutti! 2 messaggi non letti"':
+      - 'gridcell "Famiglia Rossi 17:36 Ciao a tutti! 2 messaggi non letti"':
+        - img
+        - gridcell "Famiglia Rossi 17:36"
+        - text: "Ciao a tutti!"
+        - gridcell "2 messaggi non letti": "2"
+    - 'row "Famiglia Rossi 16:00 A domani!"':
+      - 'gridcell "Famiglia Rossi 16:00 A domani!"':
+        - img
+        - gridcell "Famiglia Rossi 16:00"
+        - text: "A domani!"
+    - 'row "Vacanze Estate 15:30 Buone vacanze a tutti"':
+      - 'gridcell "Vacanze Estate 15:30 Buone vacanze a tutti"':
+        - img
+        - gridcell "Vacanze Estate 15:30"
+        - text: "Buone vacanze a tutti"
+  - contentinfo:
+    - textbox "Scrivi un messaggio"

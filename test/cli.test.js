@@ -24,29 +24,30 @@ function loadFixture(name) {
 
 function makeMockPage(fixtureFile) {
   const ariaText = loadFixture(fixtureFile);
+
+  const chainable = (overrides = {}) => ({
+    waitFor: async () => {},
+    filter: () => chainable(),
+    click: async () => {},
+    fill: async () => {},
+    first: () => chainable({ ariaSnapshot: async () => ariaText }),
+    last: () => chainable(),
+    count: async () => 0,
+    textContent: async () => "",
+    isVisible: async () => true,
+    ariaSnapshot: async () => ariaText,
+    getByRole: () => chainable({ ariaSnapshot: async () => ariaText }),
+    ...overrides,
+  });
+
   return {
-    locator: () => ({
-      ariaSnapshot: async () => ariaText,
-    }),
-    getByRole: () => ({
-      waitFor: async () => {},
-      filter: () => ({
-        first: () => ({
-          isVisible: async () => true,
-          click: async () => {},
-        }),
-      }),
-      click: async () => {},
-      fill: async () => {},
-      first: () => ({
-        isVisible: async () => true,
-        ariaSnapshot: async () => ariaText,
-      }),
-    }),
+    locator: () => chainable({ ariaSnapshot: async () => ariaText }),
+    getByRole: () => chainable({ ariaSnapshot: async () => ariaText }),
     keyboard: {
       type: async () => {},
       press: async () => {},
     },
+    evaluate: async () => null,
   };
 }
 
@@ -300,5 +301,110 @@ describe("CLI arg parsing: send message joining", () => {
     const sendArgs = args;
     const message = sendArgs.slice(1).join(" ");
     assert.equal(message, "hello world");
+  });
+});
+
+// --- Duplicate name disambiguation ---
+
+describe("navigateToChat: duplicate name disambiguation", () => {
+  it("throws with list and instructions when multiple chats share the same name and no index given", async () => {
+    const page = makeMockPage("main-aria-duplicate-names.txt");
+    await assert.rejects(
+      () => commands.navigateToChat(page, "Famiglia Rossi", undefined, undefined),
+      (err) => {
+        assert.ok(err.message.includes("Multiple chats named"), `expected 'Multiple chats named' in: ${err.message}`);
+        assert.ok(err.message.includes("--index"), `expected '--index' in: ${err.message}`);
+        assert.ok(err.message.includes("1."), `expected listing index 1 in: ${err.message}`);
+        assert.ok(err.message.includes("2."), `expected listing index 2 in: ${err.message}`);
+        return true;
+      }
+    );
+  });
+
+  it("navigates to first match when index=1 is given", async () => {
+    const page = makeMockPage("main-aria-duplicate-names.txt");
+    // Should not throw — resolves to the first "Famiglia Rossi" entry
+    await assert.doesNotReject(() => commands.navigateToChat(page, "Famiglia Rossi", undefined, 1));
+  });
+
+  it("navigates to second match when index=2 is given", async () => {
+    const page = makeMockPage("main-aria-duplicate-names.txt");
+    // Should not throw — resolves to the second "Famiglia Rossi" entry
+    await assert.doesNotReject(() => commands.navigateToChat(page, "Famiglia Rossi", undefined, 2));
+  });
+
+  it("navigates normally when chat name is unique (no index needed)", async () => {
+    const page = makeMockPage("main-aria-duplicate-names.txt");
+    await assert.doesNotReject(() => commands.navigateToChat(page, "Vacanze Estate", undefined, undefined));
+  });
+
+  it("throws out-of-range error when index=0 is given (0 is invalid for 1-based API)", async () => {
+    const page = makeMockPage("main-aria-duplicate-names.txt");
+    await assert.rejects(
+      () => commands.navigateToChat(page, "Famiglia Rossi", undefined, 0),
+      (err) => {
+        assert.ok(err.message.includes("out of range"), `expected 'out of range' in: ${err.message}`);
+        return true;
+      }
+    );
+  });
+
+  it("throws out-of-range error when index exceeds match count", async () => {
+    const page = makeMockPage("main-aria-duplicate-names.txt");
+    await assert.rejects(
+      () => commands.navigateToChat(page, "Famiglia Rossi", undefined, 99),
+      (err) => {
+        assert.ok(err.message.includes("out of range"), `expected 'out of range' in: ${err.message}`);
+        return true;
+      }
+    );
+  });
+});
+
+describe("CLI arg parsing: --index for read", () => {
+  it("extracts --index N from read args correctly", () => {
+    // Simulate the arg parsing logic from greentap.js for the 'read' command
+    const args = ["read", "Famiglia Rossi", "--index", "2", "--json"];
+    const readIndexIdx = args.indexOf("--index");
+    const readIndex = readIndexIdx >= 0 ? parseInt(args[readIndexIdx + 1], 10) : undefined;
+    const chatName = args.slice(1).filter((a, relI) => {
+      const absI = relI + 1;
+      if (a === "--json" || a === "--scroll" || a === "--index") return false;
+      if (readIndexIdx >= 0 && absI === readIndexIdx + 1) return false;
+      return true;
+    })[0];
+    assert.equal(chatName, "Famiglia Rossi");
+    assert.equal(readIndex, 2);
+  });
+
+  it("leaves index undefined when --index not given", () => {
+    const args = ["read", "Famiglia Rossi", "--json"];
+    const readIndexIdx = args.indexOf("--index");
+    const readIndex = readIndexIdx >= 0 ? parseInt(args[readIndexIdx + 1], 10) : undefined;
+    assert.equal(readIndex, undefined);
+  });
+});
+
+describe("CLI arg parsing: --index for send", () => {
+  it("extracts --index N from send args correctly", () => {
+    // Simulate the arg parsing logic from greentap.js for the 'send' command
+    const raw = ["Famiglia Rossi", "--index", "1", "Ciao a tutti"];
+    const sendIndexIdx = raw.indexOf("--index");
+    const sendIndex = sendIndexIdx >= 0 ? parseInt(raw[sendIndexIdx + 1], 10) : undefined;
+    const sendArgs = raw.filter((a, i) => {
+      if (a === "--index") return false;
+      if (sendIndexIdx >= 0 && i === sendIndexIdx + 1) return false;
+      return true;
+    });
+    assert.equal(sendArgs[0], "Famiglia Rossi");
+    assert.equal(sendArgs[1], "Ciao a tutti");
+    assert.equal(sendIndex, 1);
+  });
+
+  it("leaves index undefined when --index not given", () => {
+    const raw = ["Famiglia Rossi", "Ciao a tutti"];
+    const sendIndexIdx = raw.indexOf("--index");
+    const sendIndex = sendIndexIdx >= 0 ? parseInt(raw[sendIndexIdx + 1], 10) : undefined;
+    assert.equal(sendIndex, undefined);
   });
 });
