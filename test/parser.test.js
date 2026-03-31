@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { parseChatList, printChats, parseMessages, printMessages, parseSearchResults } from "../lib/parser.js";
+import { parseChatList, printChats, parseMessages, printMessages, parseSearchResults, parsePollMessages } from "../lib/parser.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURES = join(__dirname, "fixtures");
@@ -280,5 +280,65 @@ describe("parseSearchResults", () => {
 
   it("returns empty array for aria without search grid", () => {
     assert.deepEqual(parseSearchResults('- document:\n  - heading "Nothing" [level=1]'), []);
+  });
+});
+
+describe("parsePollMessages", () => {
+  it("parses poll from fixture", () => {
+    const aria = loadFixture("poll-aria.txt");
+    const polls = parsePollMessages(aria);
+
+    assert.ok(polls.length >= 1, "should find at least one poll");
+  });
+
+  it("extracts poll question", () => {
+    const aria = loadFixture("poll-aria.txt");
+    const polls = parsePollMessages(aria);
+    const poll = polls[0];
+
+    assert.ok(poll.question.length > 0, "question should not be empty");
+    assert.ok(poll.question.includes("Partita"), "question should contain poll title");
+  });
+
+  it("extracts poll options with vote counts", () => {
+    const aria = loadFixture("poll-aria.txt");
+    const polls = parsePollMessages(aria);
+    const poll = polls[0];
+
+    assert.equal(poll.options.length, 2, "should have 2 options");
+
+    const presente = poll.options.find((o) => o.label === "Presente");
+    assert.ok(presente, "should have Presente option");
+    assert.equal(presente.votes, 8, "Presente should have 8 votes");
+
+    const assente = poll.options.find((o) => o.label === "Assente");
+    assert.ok(assente, "should have Assente option");
+    assert.equal(assente.votes, 2, "Assente should have 2 votes");
+  });
+
+  it("extracts poll time", () => {
+    const aria = loadFixture("poll-aria.txt");
+    const polls = parsePollMessages(aria);
+    const poll = polls[0];
+
+    assert.equal(poll.time, "14:00");
+  });
+
+  it("extracts poll sender", () => {
+    const aria = loadFixture("poll-aria.txt");
+    const polls = parsePollMessages(aria);
+    const poll = polls[0];
+
+    assert.ok(poll.sender.includes("Roberto"), "sender should be Roberto Marini");
+  });
+
+  it("returns empty array for snapshot without polls", () => {
+    const aria = loadFixture("main-aria.txt");
+    const polls = parsePollMessages(aria);
+    assert.deepEqual(polls, []);
+  });
+
+  it("returns empty array for empty input", () => {
+    assert.deepEqual(parsePollMessages(""), []);
   });
 });

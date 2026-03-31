@@ -1,0 +1,73 @@
+- document:
+  - banner:
+    - button "Chat" [pressed]: "0"
+    - button "Aggiornamenti nello stato"
+    - button "Canali"
+    - button "Community"
+    - button "File multimediali"
+    - button "Tu":
+      - img
+  - banner:
+    - banner:
+      - heading "WhatsApp" [level=2]:
+        - img "wa-wordmark-refreshed"
+      - button "Nuova chat"
+      - button "Menu"
+  - textbox "Cerca o avvia una nuova chat"
+  - tablist "chat-list-filters":
+    - tab "Tutte"
+    - tab "‎Non lette 0"
+    - tab "‎Preferiti"
+    - tab "‎Gruppi 0"
+    - tab "Nuova lista"
+  - grid "Lista delle chat":
+    - row "Sport Club 14:30 ~ Roberto M. : A domani":
+      - gridcell "Sport Club 14:30 ~ Roberto M. : A domani":
+        - img
+        - gridcell "Sport Club 14:30"
+        - text: "~ Roberto M. : A domani"
+        - gridcell
+  - banner:
+    - button "Dettagli profilo":
+      - img
+    - button "Sport Club clicca qui per info gruppo"
+    - button "Cerca"
+    - button "Menu"
+  - text: I tuoi messaggi personali sono
+  - button "crittografati end-to-end"
+  - text: .
+  - text: 18/03/2026
+  - button "Apri dettagli chat di Roberto Marini": R
+  - row "Roberto Marini Ciao ragazzi, ci vediamo stasera? 13:10":
+    - text: Roberto Marini
+    - text: Ciao ragazzi, ci vediamo stasera? 13:10
+  - button "Apri dettagli chat di Elena Conti": E
+  - row "Elena Conti Sì, ci sono! 13:25 Reazioni 👍 3 in totale. Visualizza reazioni":
+    - text: Elena Conti
+    - text: Sì, ci sono! 13:25
+    - button "Reazioni 👍 3 in totale. Visualizza reazioni":
+      - img "👍"
+      - text: "3"
+  - button "Apri dettagli chat di Roberto Marini": R
+  - row "Sondaggio inviato da Roberto Marini 14:00 Partita mercoledì 18/03 21h-22h30 Opzioni più votate: Presente: 8, Assente: 2.":
+    - button "Roberto Marini":
+      - text: Roberto Marini
+    - text: Partita mercoledì 18/03 21h-22h30 Seleziona un'opzione
+    - checkbox "Presente 8 voti"
+    - text: Presente
+    - button "8"
+    - checkbox "Assente 2 voti"
+    - text: Assente
+    - button "2"
+    - text: 14:00
+    - button "Visualizza voti"
+  - row "Roberto Marini A domani allora! 14:30":
+    - text: Roberto Marini
+    - text: A domani allora! 14:30
+  - contentinfo:
+    - button "Allega"
+    - button "Emoji, GIF, Sticker"
+    - textbox "Digita un messaggio per il gruppo Sport Club":
+      - paragraph
+    - button "Messaggio vocale":
+      - button "Messaggio vocale"
