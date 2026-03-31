@@ -103,6 +103,29 @@ async function cmdSend(chatName, message, index) {
   await withDaemon((page, localeConfig) => commands.send(page, chatName, message, localeConfig, index));
 }
 
+async function cmdPollResults(chatName, json, index) {
+  const result = await withDaemon((page, localeConfig) => commands.pollResults(page, chatName, { localeConfig, index }));
+  if (result === null) {
+    if (json) {
+      console.log(JSON.stringify(null));
+    } else {
+      console.log("No poll found in this chat.");
+    }
+    return;
+  }
+  if (json) {
+    console.log(JSON.stringify(result));
+  } else {
+    console.log(`Poll: ${result.question}`);
+    if (result.time) console.log(`Time: ${result.time}`);
+    if (result.sender) console.log(`Sender: ${result.sender}`);
+    console.log("Options:");
+    for (const opt of result.options) {
+      console.log(`  ${opt.label}: ${opt.votes} votes`);
+    }
+  }
+}
+
 async function cmdSearch(query, json) {
   const result = await withDaemon((page, localeConfig) => commands.search(page, query, localeConfig));
   if (json) {
@@ -191,6 +214,22 @@ try {
       await cmdSend(sendArgs[0], sendArgs.slice(1).join(" "), sendIndex);
       break;
     }
+    case "poll-results": {
+      const prIndexIdx = args.indexOf("--index");
+      const prIndex = prIndexIdx >= 0 ? parseInt(args[prIndexIdx + 1], 10) : undefined;
+      const prChat = args.slice(1).filter((a, relI) => {
+        const absI = relI + 1;
+        if (a === "--json" || a === "--index") return false;
+        if (prIndexIdx >= 0 && absI === prIndexIdx + 1) return false;
+        return true;
+      })[0];
+      if (!prChat) {
+        console.error("Usage: greentap poll-results <chat> [--json] [--index N]");
+        process.exit(1);
+      }
+      await cmdPollResults(prChat, args.includes("--json"), prIndex);
+      break;
+    }
     case "search": {
       const searchQuery = args.slice(1).filter((a) => a !== "--json").join(" ");
       if (!searchQuery) {
@@ -224,16 +263,17 @@ try {
       console.log(`Usage: greentap <command> [options]
 
 Commands:
-  login                                   Open browser for QR scan
-  logout                                  Clear session data
-  chats [--json]                          List all chats
-  unread [--json]                         List unread chats
+  login                                        Open browser for QR scan
+  logout                                       Clear session data
+  chats [--json]                               List all chats
+  unread [--json]                              List unread chats
   read <chat> [--json] [--scroll] [--index N]  Read messages from a chat
-  send <chat> <message> [--index N]       Send a message to a chat
-  search <query> [--json]                 Search chats
-  snapshot [SCOPE] [--chat NAME]          Dump aria snapshot (full|chats|messages|compose)
-  status                                  Show daemon status
-  daemon stop                             Stop the daemon
+  send <chat> <message> [--index N]            Send a message to a chat
+  poll-results <chat> [--json] [--index N]     Get most recent poll results
+  search <query> [--json]                      Search chats
+  snapshot [SCOPE] [--chat NAME]               Dump aria snapshot (full|chats|messages|compose)
+  status                                       Show daemon status
+  daemon stop                                  Stop the daemon
 
   --index N  Select the Nth match when multiple chats share the same name (1-based)`);
   }
