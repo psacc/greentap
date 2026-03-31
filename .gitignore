@@ -14,4 +14,5 @@ summary_stats.txt
 .agents/
 .worktrees/
 skills/
+!.claude/skills/
 skills-lock.json
