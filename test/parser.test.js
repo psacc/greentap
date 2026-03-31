@@ -255,6 +255,128 @@ describe("printMessages", () => {
   });
 });
 
+describe("parseMessages — timestamps", () => {
+  // now = Tuesday 2026-03-31 (DOW=2)
+  const NOW = new Date(2026, 2, 31);
+
+  // Italian locale config — passed explicitly per localization rules (Tier 3, no silent fallback)
+  const ITALIAN_TEST_LOCALE = {
+    dayNames: ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"],
+    yesterday: "Ieri",
+    today: "Oggi",
+    dateRegex: "\\d{2}\\/\\d{2}\\/\\d{4}",
+  };
+
+  it("adds timestamp field to all messages", () => {
+    const aria = loadFixture("chat-multiday-aria.txt");
+    const messages = parseMessages(aria, { now: NOW, localeConfig: ITALIAN_TEST_LOCALE });
+    assert.ok(messages.length > 0, "should parse messages");
+    for (const m of messages) {
+      assert.ok("timestamp" in m, `message should have timestamp field: ${JSON.stringify(m)}`);
+    }
+  });
+
+  it("preserves time field for backward compatibility", () => {
+    const aria = loadFixture("chat-multiday-aria.txt");
+    const messages = parseMessages(aria, { now: NOW, localeConfig: ITALIAN_TEST_LOCALE });
+    for (const m of messages) {
+      assert.ok(m.time.length > 0, `message should still have time field: ${JSON.stringify(m)}`);
+    }
+  });
+
+  it("produces correct timestamp from DD/MM/YYYY separator", () => {
+    const aria = loadFixture("chat-multiday-aria.txt");
+    // Absolute dates don't need localeConfig — testing without it here to verify
+    const messages = parseMessages(aria, { now: NOW });
+    const msg = messages.find((m) => m.text.includes("Prima di tutto"));
+    assert.ok(msg, "should find 'Prima di tutto' message");
+    assert.equal(msg.timestamp, "2026-03-18 10:00");
+  });
+
+  it("produces correct timestamp from Ieri separator", () => {
+    const aria = loadFixture("chat-multiday-aria.txt");
+    const messages = parseMessages(aria, { now: NOW, localeConfig: ITALIAN_TEST_LOCALE });
+    const msg = messages.find((m) => m.text.includes("Come va?"));
+    assert.ok(msg, "should find 'Come va?' message");
+    assert.equal(msg.timestamp, "2026-03-30 09:30");
+  });
+
+  it("produces correct timestamp from Ieri separator for own messages", () => {
+    const aria = loadFixture("chat-multiday-aria.txt");
+    const messages = parseMessages(aria, { now: NOW, localeConfig: ITALIAN_TEST_LOCALE });
+    const msg = messages.find((m) => m.text.includes("Benissimo"));
+    assert.ok(msg, "should find 'Benissimo' message");
+    assert.equal(msg.timestamp, "2026-03-30 11:00");
+  });
+
+  it("produces correct timestamp from Oggi separator", () => {
+    const aria = loadFixture("chat-multiday-aria.txt");
+    const messages = parseMessages(aria, { now: NOW, localeConfig: ITALIAN_TEST_LOCALE });
+    const msg = messages.find((m) => m.text.includes("Ci vediamo stasera"));
+    assert.ok(msg, "should find 'Ci vediamo stasera' message");
+    assert.equal(msg.timestamp, "2026-03-31 14:00");
+    assert.equal(msg.sender, "You");
+  });
+
+  it("produces correct timestamp from day-name separator (domenica)", () => {
+    const aria = loadFixture("chat-multiday-aria.txt");
+    // now=2026-03-31 (Tuesday DOW=2): domenica (Sunday DOW=0) → 2 days back → 2026-03-29
+    const messages = parseMessages(aria, { now: NOW, localeConfig: ITALIAN_TEST_LOCALE });
+    const msg = messages.find((m) => m.text.includes("Fine settimana"));
+    assert.ok(msg, "should find 'Fine settimana' message");
+    assert.equal(msg.timestamp, "2026-03-29 18:00");
+  });
+
+  it("resolves same-weekday day separator to 7 days back (|| 7 branch)", () => {
+    // now = Monday 2026-03-30 (DOW=1), separator = "lunedì" (Monday, targetDow=1)
+    // daysBack = (1-1+7)%7 = 0 → || 7 → 7 days back → 2026-03-23
+    const nowMonday = new Date(2026, 2, 30);
+    const ariaLunedi = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - text: lunedì
+  - row "Roberto Marini Ciao 09:00":
+    - text: Roberto Marini Ciao 09:00
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(ariaLunedi, { now: nowMonday, localeConfig: ITALIAN_TEST_LOCALE });
+    assert.ok(messages.length > 0, "should parse message");
+    assert.equal(messages[0].timestamp, "2026-03-23 09:00");
+  });
+
+  it("timestamp is empty string when no date separator seen", () => {
+    const ariaNoSep = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - row "Solo 12:00 Consegnato":
+    - text: Solo 12:00
+    - img "msg-dblcheck"
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(ariaNoSep, { now: NOW });
+    assert.ok(messages.length > 0, "should parse at least one message");
+    assert.equal(messages[0].timestamp, "", "timestamp should be empty with no date separator");
+  });
+
+  it("produces timestamp without now when separator is absolute date (production path smoke)", () => {
+    // DD/MM/YYYY doesn't depend on current date — validates the no-now production path
+    const ariaAbsolute = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - text: 18/03/2026
+  - row "Roberto Marini Ciao 10:00":
+    - text: Roberto Marini Ciao 10:00
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(ariaAbsolute); // no now, no localeConfig
+    assert.ok(messages.length > 0, "should parse message");
+    assert.equal(messages[0].timestamp, "2026-03-18 10:00");
+  });
+});
+
 describe("parseSearchResults", () => {
   it("parses search results fixture", () => {
     const aria = loadFixture("search-aria.txt");

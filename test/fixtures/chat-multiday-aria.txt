@@ -1,0 +1,37 @@
+- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+    - button "Roberto Marini clicca qui per info contatto"
+    - button "Videochiamata": Chiama
+    - button "Cerca"
+    - button "Menu"
+  - text: domenica
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini Fine settimana! 18:00":
+    - text: Roberto Marini Fine settimana! 18:00
+  - text: 18/03/2026
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini Prima di tutto ciao 10:00":
+    - text: Roberto Marini Prima di tutto ciao 10:00
+  - text: Ieri
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini Come va? 09:30":
+    - text: Roberto Marini Come va? 09:30
+  - row "Benissimo grazie 11:00 Letto":
+    - text: Benissimo grazie 11:00
+    - img "msg-dblcheck"
+  - text: Oggi
+  - row "Ci vediamo stasera? 14:00 Consegnato":
+    - text: Ci vediamo stasera? 14:00
+    - img "msg-dblcheck"
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini Perfetto! 14:05":
+    - text: Roberto Marini Perfetto! 14:05
+  - contentinfo:
+    - textbox "Scrivi a Roberto Marini":
+      - paragraph
