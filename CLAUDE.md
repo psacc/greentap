@@ -84,6 +84,26 @@ gh release create v0.x.y --title "v0.x.y — Short title" --notes "..."
 - After a significant decision or discovery → update the risk table if severity/status changed
 - At the start of a new session that changes scope → check if ROADMAP.md reflects reality
 
+## Localization
+
+WhatsApp Web syncs its UI language from the phone — `navigator.language` and Playwright's `locale` option have no effect. All parsing must work regardless of UI language.
+
+**Three-tier strategy — apply in order:**
+
+| Tier | Approach | Examples |
+|------|----------|---------|
+| 1. Structural | ARIA roles + position, no text | `page.getByRole("grid").first()`, `contentinfo` textbox for compose |
+| 2. Icon-based | WhatsApp internal icon IDs (stable, locale-independent) | `img "msg-dblcheck"` / `img "msg-check"` for own messages |
+| 3. Runtime detection | `lib/locale.js` — probes Intl API against chat list content to identify the active locale | Day names, "Yesterday"/"Ieri", date format regex |
+
+**Rules for new code:**
+- Never hardcode locale strings as selectors or parser patterns (no `"lunedì"`, no `"Yesterday"`, no `"Apri dettagli chat di"`)
+- If Tier 1 or 2 cannot cover a pattern, add it to `lib/locale.js` as a detected value passed via `localeConfig`
+- `sender: "You"` is a hardcoded English constant by design — it's the JSON API contract, not a UI string
+- Known gap: sender prefix in group chats (`"Apri dettagli chat di"`) is hardcoded Italian with a regex fallback — treat as tech debt, do not copy the pattern
+
+**Fixtures:** existing fixtures are Italian (phone locale). Keep them — they test parsing logic. New fixtures for new features must also use fake data only (see Constraints).
+
 ## Constraints
 
 - **PUBLIC REPO — NO PII**: This repo is public. NEVER commit real names, phone numbers, email addresses, chat content, or any personally identifiable information. Fixtures use fake names (Roberto Marini, Elena Conti, Famiglia Rossi, etc.). All new fixtures and examples MUST use fake data only.
