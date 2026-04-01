@@ -71,6 +71,7 @@ node greentap.js daemon stop
 - Chat matching is case-insensitive substring
 - Locale-agnostic: works with any WhatsApp UI language
 - Own messages have `sender: "You"` in JSON output
+- Messages include `timestamp: "YYYY-MM-DD HH:MM"` (full date+time); empty string if chat shows no date separators
 
 ## Guidelines for the agent
 
