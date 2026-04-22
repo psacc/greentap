@@ -97,3 +97,27 @@ test("daemon source writes port file before launchPersistentContext", () => {
     `port file write (idx ${portWriteIdx}) must precede launchPersistentContext (idx ${launchIdx})`,
   );
 });
+
+test("daemon does not pin channel:'chrome' — uses bundled Chromium (#14)", () => {
+  // Static check: the `channel: "chrome"` option must be absent from
+  // launchPersistentContext. Using bundled Chromium isolates greentap's
+  // browser from the user's system Chrome (no CDP port conflicts, no
+  // version drift).
+  //
+  // Strip line and block comments first so explanatory text mentioning
+  // `channel: "chrome"` in docstrings doesn't trip the assertion.
+  const sourceNoComments = DAEMON_SOURCE
+    .replace(/\/\*[\s\S]*?\*\//g, "") // block comments
+    .replace(/\/\/[^\n]*/g, ""); // line comments
+
+  // Matches any whitespace/quoting variant:
+  //   channel: "chrome"
+  //   channel:'chrome'
+  //   channel :  "chrome"
+  const channelPattern = /channel\s*:\s*['"]chrome['"]/;
+  assert.strictEqual(
+    channelPattern.test(sourceNoComments),
+    false,
+    "daemon.js must not pin channel:'chrome' — should use bundled Chromium",
+  );
+});

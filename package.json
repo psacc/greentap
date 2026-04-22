@@ -7,7 +7,8 @@
     "greentap": "./greentap.js"
   },
   "scripts": {
-    "test": "node --test 'test/**/*.test.js'"
+    "test": "node --test 'test/**/*.test.js'",
+    "postinstall": "playwright install chromium"
   },
   "type": "module",
   "dependencies": {
