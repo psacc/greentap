@@ -41,6 +41,8 @@ node greentap.js chats --json
 node greentap.js unread --json
 
 # Read messages from a chat (substring match on name)
+# --json output includes a `links` array per message with full URLs
+# recovered from the DOM (not just the truncated preview text).
 node greentap.js read "Family" --json
 
 # Read full chat history (scrolls up, deduplicates)
