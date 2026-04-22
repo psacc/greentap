@@ -405,6 +405,87 @@ describe("parseSearchResults", () => {
   });
 });
 
+describe("parseMessages — image detection", () => {
+  const ITALIAN_TEST_LOCALE = {
+    dayNames: ["lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica"],
+    yesterday: "Ieri",
+    today: "Oggi",
+    dateRegex: "\\d{2}\\/\\d{2}\\/\\d{4}",
+  };
+
+  it("flags image messages with kind='image'", () => {
+    const aria = loadFixture("image-messages.snapshot.txt");
+    const messages = parseMessages(aria, { localeConfig: ITALIAN_TEST_LOCALE });
+    const images = messages.filter((m) => m.kind === "image");
+    assert.ok(images.length >= 1, `expected at least one image message, got messages: ${JSON.stringify(messages, null, 2)}`);
+  });
+
+  it("image messages have required fields (imageId, sender, time, kind)", () => {
+    const aria = loadFixture("image-messages.snapshot.txt");
+    const messages = parseMessages(aria, { localeConfig: ITALIAN_TEST_LOCALE });
+    const images = messages.filter((m) => m.kind === "image");
+    for (const img of images) {
+      assert.equal(typeof img.imageId, "string", "imageId should be string");
+      assert.ok(img.imageId.length > 0, "imageId should be non-empty");
+      assert.equal(typeof img.sender, "string", "sender should be string");
+      assert.equal(typeof img.time, "string", "time should be string");
+      assert.equal(img.kind, "image");
+    }
+  });
+
+  it("imageIds are stable across repeated parses (same fixture → same ids)", () => {
+    const aria = loadFixture("image-messages.snapshot.txt");
+    const first = parseMessages(aria, { localeConfig: ITALIAN_TEST_LOCALE }).filter((m) => m.kind === "image");
+    const second = parseMessages(aria, { localeConfig: ITALIAN_TEST_LOCALE }).filter((m) => m.kind === "image");
+    assert.equal(first.length, second.length);
+    for (let i = 0; i < first.length; i++) {
+      assert.equal(first[i].imageId, second[i].imageId, `image ${i} imageId should match across parses`);
+    }
+  });
+
+  it("imageIds are unique within a snapshot", () => {
+    const aria = loadFixture("image-messages.snapshot.txt");
+    const messages = parseMessages(aria, { localeConfig: ITALIAN_TEST_LOCALE });
+    const images = messages.filter((m) => m.kind === "image");
+    const ids = images.map((m) => m.imageId);
+    const unique = new Set(ids);
+    assert.equal(unique.size, ids.length, `expected unique imageIds, got: ${ids.join(", ")}`);
+  });
+
+  it("attributes own image messages to 'You' via msg-dblcheck", () => {
+    const aria = loadFixture("image-messages.snapshot.txt");
+    const messages = parseMessages(aria, { localeConfig: ITALIAN_TEST_LOCALE });
+    const own = messages.filter((m) => m.kind === "image" && m.sender === "You");
+    assert.ok(own.length >= 1, `expected at least one own image message, got: ${JSON.stringify(messages.filter((m) => m.kind === "image"), null, 2)}`);
+  });
+
+  it("attributes other-sender image messages to the sender name", () => {
+    const aria = loadFixture("image-messages.snapshot.txt");
+    const messages = parseMessages(aria, { localeConfig: ITALIAN_TEST_LOCALE });
+    const images = messages.filter((m) => m.kind === "image");
+    const fromOther = images.filter((m) => m.sender && m.sender !== "You");
+    assert.ok(fromOther.length >= 1, "expected at least one image from another sender");
+    // Our fixture has Elena Conti + Roberto Marini
+    const senders = new Set(fromOther.map((m) => m.sender));
+    assert.ok(senders.has("Elena Conti") || senders.has("Roberto Marini"), `expected a fake persona sender, got: ${[...senders].join(", ")}`);
+  });
+
+  it("non-image messages keep kind='text'", () => {
+    const aria = loadFixture("image-messages.snapshot.txt");
+    const messages = parseMessages(aria, { localeConfig: ITALIAN_TEST_LOCALE });
+    const texts = messages.filter((m) => m.kind === "text");
+    assert.ok(texts.length >= 1, "expected at least one text message");
+  });
+
+  it("detects image messages in the real chat-aria fixture", () => {
+    // Regression: chat-aria.txt contains 3 real image rows (Roberto x2, Sara x2) with fake personas
+    const aria = loadFixture("chat-aria.txt");
+    const messages = parseMessages(aria);
+    const images = messages.filter((m) => m.kind === "image");
+    assert.ok(images.length >= 1, `expected at least one image in chat-aria.txt, got ${images.length}`);
+  });
+});
+
 describe("parsePollMessages", () => {
   it("parses poll from fixture", () => {
     const aria = loadFixture("poll-aria.txt");
