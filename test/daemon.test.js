@@ -10,11 +10,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const DAEMON_SCRIPT = join(__dirname, "..", "lib", "daemon.js");
 const DAEMON_SOURCE = readFileSync(DAEMON_SCRIPT, "utf8");
 
-// Fixed CDP port the daemon uses. The test below asserts the port file is
-// written up front (issue #13) so clients don't time out during Chrome's
-// 15-30s cold start.
-const EXPECTED_PORT = 19222;
-
 test("daemon writes port file before Chrome launch finishes", async () => {
   // Isolate from the user's real ~/.greentap/ by overriding the base dir.
   // The daemon honors GREENTAP_DIR as a test/override hook.
