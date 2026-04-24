@@ -110,6 +110,7 @@ WhatsApp Web syncs its UI language from the phone — `navigator.language` and P
 - Selectors are locale-agnostic (structural ARIA roles + runtime locale detection); aria snapshot structure may still change with WhatsApp Web updates
 - Low volume personal use only — minimize automation fingerprint
 - No CI yet — tests run locally
+- **E2E mandatory for `lib/` changes.** Any diff touching `lib/commands.js`, `lib/parser.js`, `lib/daemon.js`, `lib/client.js`, `lib/locale.js`, or `test/fixtures/**` must pass `GREENTAP_E2E=1 node greentap.js e2e` locally before merge. See `CONTRIBUTING.md`. Sandbox group `greentap-sandbox` required (member: maintainer only).
 
 <!-- BEGIN SYNCED: psacc/docs/CONVENTIONS.md — do not edit here -->
 ## Doc conventions (synced from psacc/docs/CONVENTIONS.md)

@@ -122,6 +122,22 @@ cp -r /path/to/greentap/.claude/skills/greentap ~/.claude/skills/greentap
 npm test    # 53 unit tests (node:test), fixture-based
 ```
 
+## E2E testing
+
+`greentap e2e` runs a round-trip check against a dedicated sandbox
+WhatsApp group called `greentap-sandbox`. The sandbox must contain
+only you — no other members. See `CONTRIBUTING.md` for setup.
+
+```bash
+GREENTAP_E2E=1 node greentap.js e2e
+```
+
+Exit codes: `0` pass, `1` stage failure, `2` sandbox missing,
+`3` rate-limited (60s min between runs).
+
+Output is structural JSON — no message content is logged, so the
+stdout is safe to commit as a build artifact.
+
 ## Contributing
 
 Issues and PRs welcome. This is a personal tool shared as-is — expect rough edges.
