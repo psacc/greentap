@@ -111,7 +111,30 @@ WhatsApp Web syncs its UI language from the phone — `navigator.language` and P
 - Selectors are locale-agnostic (structural ARIA roles + runtime locale detection); aria snapshot structure may still change with WhatsApp Web updates
 - Low volume personal use only — minimize automation fingerprint
 - No CI yet — tests run locally
-- **E2E mandatory for `lib/` changes.** Any diff touching `lib/commands.js`, `lib/parser.js`, `lib/daemon.js`, `lib/client.js`, `lib/locale.js`, or `test/fixtures/**` must pass `GREENTAP_E2E=1 node greentap.js e2e` locally before merge. See `CONTRIBUTING.md`. Sandbox group `greentap-sandbox` required (member: maintainer only).
+- **E2E MANDATORY for `lib/` changes — real roundtrip, not unit tests.** Any diff touching `lib/commands.js`, `lib/parser.js`, `lib/daemon.js`, `lib/client.js`, `lib/locale.js`, or `test/fixtures/**` MUST pass `GREENTAP_E2E=1 node greentap.js e2e` locally before merge, with the feature's stage actually running (NOT skipped) and passing. `npm test` passing is NOT e2e. If the PR adds image download, the downloaded image path MUST be Read()-verified multimodally to confirm `GREENTAP-E2E` text is legible. If e2e cannot run (daemon blocked, sandbox missing, preflight bug), the PR does NOT merge until the blocker is fixed. See `CONTRIBUTING.md` for full spec. Sandbox group `greentap-sandbox` required (member: maintainer only).
+
+## Merge protocol (iron-clad)
+
+These rules are absolute. No exceptions without the maintainer
+saying so, in the current session, for the specific PR.
+
+1. **Every merge requires explicit maintainer approval, per-PR,
+   per-session.** The maintainer MUST say "merge it" (or equivalent)
+   for the **specific PR** being merged, **in the current session**.
+   Approval does NOT carry across sessions or across PRs.
+2. **A generic "procedi" / "continue autonomously" / "keep going"
+   does NOT authorize merges.** It authorizes the next orchestration
+   step up to `gh pr create`. Stop there and ping.
+3. **`gh pr merge --admin` is FORBIDDEN** unless the maintainer
+   explicitly says "use admin" for the specific PR. Bypassing branch
+   protection without that explicit go-ahead is a rule violation.
+4. **E2E must have executed the feature's stage** — not skipped, not
+   preflight-only. See Constraints → E2E MANDATORY above and
+   `CONTRIBUTING.md`.
+5. **When in doubt: ping and wait.** Ping cost is trivial;
+   revert-a-bad-merge-on-a-public-repo cost is not.
+
+Full protocol: `CONTRIBUTING.md` → "Merge approval protocol".
 
 <!-- BEGIN SYNCED: psacc/docs/CONVENTIONS.md — do not edit here -->
 ## Doc conventions (synced from psacc/docs/CONVENTIONS.md)
