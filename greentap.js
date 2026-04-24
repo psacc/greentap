@@ -12,6 +12,7 @@
  *   greentap send <chat> <message> [--index N] — Send a message to a chat
  *   greentap search <query> [--json] — Search chats
  *   greentap snapshot [SCOPE] [--chat NAME] — Dump raw aria snapshot
+ *   greentap e2e                — Run round-trip verification against sandbox (GREENTAP_E2E=1)
  *   greentap status             — Show daemon status
  *   greentap daemon stop        — Stop the daemon
  */
@@ -23,6 +24,7 @@ import { rmSync } from "fs";
 import { printChats, printMessages } from "./lib/parser.js";
 import * as commands from "./lib/commands.js";
 import { connect, stopDaemon, daemonStatus } from "./lib/client.js";
+import { runE2E } from "./lib/e2e.js";
 
 const USER_DATA_DIR = join(homedir(), ".greentap", "browser-data");
 const WA_URL = "https://web.whatsapp.com";
@@ -147,6 +149,19 @@ async function cmdSnapshot(scope, chatName) {
   console.log(result);
 }
 
+async function cmdE2E() {
+  if (process.env.GREENTAP_E2E !== "1") {
+    console.error("e2e requires GREENTAP_E2E=1");
+    process.exit(1);
+  }
+  const result = await withDaemon((page, localeConfig) => runE2E({ page, localeConfig }));
+  if (result.exitCode === 3) {
+    console.error(`rate-limited: next run allowed in ${result.rateLimitedForSec}s (set GREENTAP_E2E_SKIP_RATE_LIMIT=1 to bypass)`);
+  }
+  console.log(JSON.stringify(result, null, 2));
+  process.exit(result.exitCode);
+}
+
 function cmdStatus() {
   const status = daemonStatus();
   if (status.running) {
@@ -249,6 +264,10 @@ try {
       await cmdSnapshot(remaining[0] || "full", snapshotChat);
       break;
     }
+    case "e2e": {
+      await cmdE2E();
+      break;
+    }
     case "status":
       cmdStatus();
       break;
@@ -272,6 +291,7 @@ Commands:
   poll-results <chat> [--json] [--index N]     Get most recent poll results
   search <query> [--json]                      Search chats
   snapshot [SCOPE] [--chat NAME]               Dump aria snapshot (full|chats|messages|compose)
+  e2e                                          Run round-trip verification (GREENTAP_E2E=1 required)
   status                                       Show daemon status
   daemon stop                                  Stop the daemon
 
