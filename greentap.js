@@ -12,7 +12,7 @@
  *   greentap send <chat> <message> [--index N] — Send a message to a chat
  *   greentap search <query> [--json] — Search chats
  *   greentap snapshot [SCOPE] [--chat NAME] — Dump raw aria snapshot
- *   greentap e2e [--verbose]    — Run round-trip verification against sandbox (GREENTAP_E2E=1)
+ *   greentap e2e                — Run round-trip verification against sandbox (GREENTAP_E2E=1)
  *   greentap status             — Show daemon status
  *   greentap daemon stop        — Stop the daemon
  */
@@ -149,12 +149,12 @@ async function cmdSnapshot(scope, chatName) {
   console.log(result);
 }
 
-async function cmdE2E({ verbose }) {
+async function cmdE2E() {
   if (process.env.GREENTAP_E2E !== "1") {
     console.error("e2e requires GREENTAP_E2E=1");
     process.exit(1);
   }
-  const result = await withDaemon((page, localeConfig) => runE2E({ page, localeConfig, verbose }));
+  const result = await withDaemon((page, localeConfig) => runE2E({ page, localeConfig }));
   if (result.exitCode === 3) {
     console.error(`rate-limited: next run allowed in ${result.rateLimitedForSec}s (set GREENTAP_E2E_SKIP_RATE_LIMIT=1 to bypass)`);
   }
@@ -265,8 +265,7 @@ try {
       break;
     }
     case "e2e": {
-      const verbose = args.includes("--verbose");
-      await cmdE2E({ verbose });
+      await cmdE2E();
       break;
     }
     case "status":
@@ -292,7 +291,7 @@ Commands:
   poll-results <chat> [--json] [--index N]     Get most recent poll results
   search <query> [--json]                      Search chats
   snapshot [SCOPE] [--chat NAME]               Dump aria snapshot (full|chats|messages|compose)
-  e2e [--verbose]                              Run round-trip verification (GREENTAP_E2E=1 required)
+  e2e                                          Run round-trip verification (GREENTAP_E2E=1 required)
   status                                       Show daemon status
   daemon stop                                  Stop the daemon
 
