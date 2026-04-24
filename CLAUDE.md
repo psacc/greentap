@@ -110,3 +110,39 @@ WhatsApp Web syncs its UI language from the phone — `navigator.language` and P
 - Selectors are locale-agnostic (structural ARIA roles + runtime locale detection); aria snapshot structure may still change with WhatsApp Web updates
 - Low volume personal use only — minimize automation fingerprint
 - No CI yet — tests run locally
+- **E2E mandatory for `lib/` changes.** Any diff touching `lib/commands.js`, `lib/parser.js`, `lib/daemon.js`, `lib/client.js`, `lib/locale.js`, or `test/fixtures/**` must pass `GREENTAP_E2E=1 node greentap.js e2e` locally before merge. See `CONTRIBUTING.md`. Sandbox group `greentap-sandbox` required (member: maintainer only).
+
+<!-- BEGIN SYNCED: psacc/docs/CONVENTIONS.md — do not edit here -->
+## Doc conventions (synced from psacc/docs/CONVENTIONS.md)
+
+SYNCED blocks are human-maintained. Do not edit this section — edit psacc/docs/CONVENTIONS.md and sync manually.
+
+### File placement rule
+| File | Location |
+|------|----------|
+| `ROADMAP.md` | root of project |
+| `CLAUDE.md` / `AGENTS.md` | root of project |
+| `README.md` | root of project |
+| Design docs, specs, runbooks | `docs/` |
+| Exec plans, proposals | `docs/` |
+
+### Strategic context block
+Every project `ROADMAP.md` starts with:
+```
+## Strategic context
+Priority: [high|medium|low] — [one-line rationale]
+Current phase: [e.g., "Phase 7 — explore"]
+Blocks: [project/milestone that depends on this, or "nothing"]
+Blocked by: [external dependency, or "nothing"]
+Last updated: [YYYY-MM-DD]
+→ Full strategic context: psacc/docs/ROADMAP.md
+```
+Staleness rule: if `Last updated` >7 days old with active commits in the project repository, review and touch the date.
+Conflict rule: if this block contradicts psacc/docs/ROADMAP.md, psacc wins. For public repos: log the contradiction and proceed using psacc/docs/ROADMAP.md as authoritative.
+
+### Agent spawning rule
+1. Read `CLAUDE.md` (tech stack, architecture, workflows)
+2. Read `ROADMAP.md` fully (strategic context block + phases)
+3. If "Blocked by" or "Blocks" is non-empty, read `psacc/docs/ROADMAP.md` before planning
+4. `psacc/docs/ROADMAP.md` always wins if it contradicts the project block
+<!-- END SYNCED -->

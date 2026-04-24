@@ -1,3 +1,13 @@
+## Strategic context
+Priority: medium — stable and released, in maintenance/exploration mode
+Current phase: Phase 7 — multi-agent concurrency (explore)
+Blocks: nothing
+Blocked by: nothing
+Last updated: 2026-04-02
+→ Full strategic context: psacc/docs/ROADMAP.md
+
+---
+
 # Greentap Roadmap — Playwright Migration
 
 ## Context
@@ -96,6 +106,11 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [x] Skill installable via `npx skills add psacc/greentap`
 - [x] Release process: semver tags + GitHub releases (`v0.1.0`)
 - [x] Publish to GitHub (public)
+
+### Post-Phase 6 — Shipped (v0.3.0–v0.3.1)
+- [x] `poll-results` command — reads native WhatsApp poll vote counts (v0.3.0)
+- [x] `--index N` flag — disambiguates multiple chats with the same name (v0.3.0)
+- [x] Timestamp enrichment from date separators — adds `timestamp` to message JSON (v0.3.1)
 
 ### Phase 7 — Multi-agent Concurrency (explore)
 - [ ] Spike: can multiple agents use greentap concurrently without interfering?
