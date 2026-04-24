@@ -9,8 +9,7 @@ Uses structural ARIA selectors and runtime locale detection, so it works with an
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18+)
-- [Google Chrome](https://www.google.com/chrome/) (system install, not Chromium)
-- [Playwright](https://playwright.dev/) (`npm install` handles this)
+- [Playwright](https://playwright.dev/) — bundled Chromium installed via `npx playwright install chromium` (`npm install` runs this automatically)
 
 ## Install
 
@@ -18,7 +17,10 @@ Uses structural ARIA selectors and runtime locale detection, so it works with an
 git clone https://github.com/psacc/greentap.git
 cd greentap
 npm install
+npx playwright install chromium   # if not run automatically by your setup
 ```
+
+> **v0.3.2+ note:** greentap now uses Playwright's bundled Chromium (was system Chrome). If you upgraded from v0.3.1 or earlier, you will need to re-scan the QR code via `greentap login` — browser profile data is not portable between Chrome and Chromium.
 
 First run — scan the QR code to link your WhatsApp account:
 
@@ -26,7 +28,7 @@ First run — scan the QR code to link your WhatsApp account:
 node greentap.js login
 ```
 
-This opens a headed Chrome window. Scan the QR code with your phone, then close the browser. Session data is stored in `~/.greentap/browser-data/`.
+This opens a headed Chromium window. Scan the QR code with your phone, then close the browser. Session data is stored in `~/.greentap/browser-data/`.
 
 ## Usage
 
@@ -66,7 +68,7 @@ node greentap.js logout
 
 greentap drives WhatsApp Web through Playwright's CDP connection to a persistent Chrome instance.
 
-1. **Browser daemon**: The first command auto-launches a headless Chrome instance on CDP port 19222. It stays alive for 15 minutes of idle time, so subsequent commands are fast (~500ms).
+1. **Browser daemon**: The first command auto-launches a headless Chromium instance (Playwright's bundled build) on CDP port 19222. It stays alive for 15 minutes of idle time, so subsequent commands are fast (~500ms).
 
 2. **Aria snapshots**: Instead of fragile CSS selectors (WhatsApp obfuscates classes and changes them frequently), greentap reads the page's accessibility tree. Chat lists, messages, compose boxes, and buttons are identified by ARIA roles and structural position.
 
