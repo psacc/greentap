@@ -1,0 +1,51 @@
+- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+    - button "Famiglia Rossi clicca qui per info gruppo"
+    - button "Videochiamata di gruppo": Chiama
+    - button "Cerca"
+    - button "Menu"
+  - text: Oggi
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini Ciao a tutti! 09:15":
+    - text: Roberto Marini Ciao a tutti! 09:15
+  - button "Apri dettagli chat di Elena Conti":
+    - img
+  - row "Elena Conti Apri immagine 09:20":
+    - text: Elena Conti
+    - button "Apri immagine":
+      - img
+      - img
+    - text: "09:20"
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini Apri immagine Apri immagine Bella! 10:00":
+    - text: Roberto Marini
+    - button "Apri immagine":
+      - img "Foto di gruppo"
+      - img "Foto di gruppo"
+      - img "Foto di gruppo"
+    - button "Apri immagine":
+      - img
+      - img
+      - img
+    - text: Bella!
+    - text: "10:00"
+  - row "Grazie! 10:05 Letto":
+    - text: Grazie! 10:05
+    - img "msg-dblcheck"
+  - row "Ecco la mia 10:06 Letto":
+    - text: Ecco la mia 10:06
+    - button "Apri immagine":
+      - img
+      - img
+    - img "msg-dblcheck"
+  - contentinfo:
+    - button "Allega"
+    - button "Emoji, GIF, Sticker"
+    - textbox "Scrivi al gruppo Famiglia Rossi":
+      - paragraph
+    - button "Messaggio vocale":
+      - button "Messaggio vocale"

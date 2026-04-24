@@ -385,6 +385,46 @@ describe("CLI arg parsing: --index for read", () => {
   });
 });
 
+describe("CLI arg parsing: fetch-images", () => {
+  it("exits 1 with usage when no chat name given", async () => {
+    const { code, stderr } = await runCli("fetch-images");
+    assert.equal(code, 1);
+    assert.ok(
+      stderr.includes("Usage: greentap fetch-images"),
+      `stderr should contain usage, got: ${stderr}`
+    );
+  });
+
+  it("extracts chat name + --limit + --index correctly", () => {
+    // Mirror the arg-parsing pattern already used for the other commands
+    const args = ["fetch-images", "Famiglia Rossi", "--limit", "3", "--index", "2", "--json"];
+    const limitIdx = args.indexOf("--limit");
+    const indexIdx = args.indexOf("--index");
+    const limit = limitIdx >= 0 ? parseInt(args[limitIdx + 1], 10) : undefined;
+    const index = indexIdx >= 0 ? parseInt(args[indexIdx + 1], 10) : undefined;
+    const chat = args.slice(1).filter((a, relI) => {
+      const absI = relI + 1;
+      if (a === "--json" || a === "--limit" || a === "--index") return false;
+      if (limitIdx >= 0 && absI === limitIdx + 1) return false;
+      if (indexIdx >= 0 && absI === indexIdx + 1) return false;
+      return true;
+    })[0];
+    assert.equal(chat, "Famiglia Rossi");
+    assert.equal(limit, 3);
+    assert.equal(index, 2);
+  });
+
+  it("leaves limit and index undefined when flags omitted", () => {
+    const args = ["fetch-images", "Famiglia Rossi"];
+    const limitIdx = args.indexOf("--limit");
+    const indexIdx = args.indexOf("--index");
+    const limit = limitIdx >= 0 ? parseInt(args[limitIdx + 1], 10) : undefined;
+    const index = indexIdx >= 0 ? parseInt(args[indexIdx + 1], 10) : undefined;
+    assert.equal(limit, undefined);
+    assert.equal(index, undefined);
+  });
+});
+
 describe("CLI arg parsing: --index for send", () => {
   it("extracts --index N from send args correctly", () => {
     // Simulate the arg parsing logic from greentap.js for the 'send' command

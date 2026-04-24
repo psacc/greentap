@@ -51,6 +51,9 @@ node greentap.js read "Family" --scroll --json
 # Send a message
 node greentap.js send "Family" "Hello from the terminal"
 
+# Download recent images from a chat to ~/.greentap/downloads/<chat-slug>/
+node greentap.js fetch-images "Family" --limit 5 --json
+
 # Search for a contact or group (finds archived chats too)
 node greentap.js search "John" --json
 
