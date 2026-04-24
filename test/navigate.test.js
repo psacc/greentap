@@ -143,6 +143,55 @@ const ROBERTO_GRID = `- grid "Lista delle chat":
     - textbox "Scrivi un messaggio"
 `;
 
+describe("navigateToChat: fast-path when chat is already open", () => {
+  it("returns immediately when full-page aria exposes the chat header button (direct chat)", async () => {
+    const page = makeFakePage({
+      gridVisibleAfterMs: 10_000, // would force search path if reached
+      searchAria: 'button "Roberto Marini"',
+    });
+    await commands.navigateToChat(page, "Roberto Marini", null);
+    assert.equal(page._calls.gridClick, 0, "grid should NOT be clicked");
+    assert.equal(page._calls.searchClick, 0, "search should NOT be clicked");
+  });
+
+  it("matches group-style header with locale-specific suffix", async () => {
+    const page = makeFakePage({
+      gridVisibleAfterMs: 10_000,
+      searchAria: 'button "greentap-sandbox clicca qui per info gruppo"',
+    });
+    await commands.navigateToChat(page, "greentap-sandbox", null);
+    assert.equal(page._calls.gridClick, 0);
+    assert.equal(page._calls.searchClick, 0);
+  });
+
+  it("falls through to normal navigation when header is not present", async () => {
+    const page = makeFakePage({
+      gridVisibleAfterMs: 0,
+      gridAria: ROBERTO_GRID,
+      searchAria: 'button "someone-else"', // does NOT match
+    });
+    await commands.navigateToChat(page, "Roberto Marini", null);
+    assert.equal(page._calls.gridClick, 1, "grid path should have taken over");
+  });
+
+  it("escapes regex metacharacters in chat name (no header match for foo.bar)", async () => {
+    // If escaping is broken, `.` in "foo.bar" would match any char and
+    // the fast-path could accidentally trigger on `button "fooXbar"`.
+    const page = makeFakePage({
+      gridVisibleAfterMs: 10_000,
+      searchAria: 'button "fooXbar"',
+    });
+    await assert.rejects(
+      () => commands.navigateToChat(page, "foo.bar", null),
+      // With searchAria not containing the real header, the normal path
+      // is forced. Grid is not visible (10s delay) and search aria has no
+      // row → "Chat not found" from search fallback.
+      (err) => /not found/.test(err.message),
+    );
+    assert.equal(page._calls.gridClick, 0);
+  });
+});
+
 describe("navigateToChat: grid determinism (waitFor gate)", () => {
   it("uses grid path when grid becomes visible within the wait window", async () => {
     const page = makeFakePage({
