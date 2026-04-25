@@ -17,3 +17,4 @@ skills/
 !.claude/skills/
 skills-lock.json
 scratch/
+node_modules
