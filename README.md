@@ -20,7 +20,7 @@ npm install
 npx playwright install chromium   # if not run automatically by your setup
 ```
 
-> **v0.3.2+ note:** greentap now uses Playwright's bundled Chromium (was system Chrome). If you upgraded from v0.3.1 or earlier, you will need to re-scan the QR code via `greentap login` — browser profile data is not portable between Chrome and Chromium.
+> **v0.4.0+ note:** greentap uses Playwright's bundled Chromium (was system Chrome in v0.3.x). If you upgraded from v0.3.1 or earlier, you will need to re-scan the QR code via `node greentap.js login` — browser profile data is not portable between Chrome and Chromium.
 
 First run — scan the QR code to link your WhatsApp account:
 

@@ -8,13 +8,63 @@ scope.
 
 ## Ground rules
 
-- **No PII.** Fixtures and tests must use fake personas
-  (e.g. Roberto Marini, Elena Conti, Famiglia Rossi). Never commit
-  real names, phone numbers, chat content, or any identifier that
-  could be traced to a real person. CI (when added) will grep.
+- **No PII.** See the explicit pattern list below. Fixtures and tests must
+  use fake personas (e.g. Roberto Marini, Elena Conti, Famiglia Rossi).
 - **Locale-agnostic selectors.** Don't hardcode WhatsApp UI strings.
   See `CLAUDE.md` for the three-tier selector strategy.
 - **TDD.** Write the failing test first; make it pass.
+
+## PII patterns — mandatory pre-merge grep
+
+Every PR — **including doc-only PRs** — MUST pass a PII grep before
+push and again before merge. Run this against the diff and against
+each commit message:
+
+```bash
+# Run with the real tokens substituted in your local shell —
+# do NOT put the real tokens in this file or in any committed shell
+# script. The patterns below are placeholders.
+git log --format='%H%n%s%n%b' origin/main..HEAD | \
+  grep -iE '(<maintainer-first-name>|<maintainer-last-name>|<task-tracker-domain>|/Users/<maintainer-username>|@<maintainer-email-domain>|<your-real-phone-prefix>)'
+```
+
+Forbidden tokens, by category:
+
+- **Maintainer's name** — first name, last name, nickname. Even
+  standalone in commit subjects or PR bodies.
+- **Maintainer's email** — including any `@<personal-domain>` fragment.
+- **Absolute filesystem paths** containing the maintainer's username
+  (`/Users/<name>/...`).
+- **Task-tracker URLs and IDs** — task tracker app URLs, raw task IDs (the
+  short opaque alphanumeric strings these systems use), Linear/Jira/etc
+  URLs with private workspace tokens.
+- **Real phone numbers** — anything matching `+\d{10,15}` that's not in
+  the synthetic-prefix allowlist (`+39 555 ...` / `+1 555 ...` are
+  reserved for documentation, not assigned).
+- **Real chat content** — quotes from real WhatsApp conversations,
+  group names that aren't the established fake personas, real contact
+  references.
+
+Allowed exceptions:
+
+- Author / committer metadata (`%an`/`%ae`) — can show the maintainer's
+  real identity. Considered out-of-scope for the content rules above
+  because GitHub fingerprints commits this way regardless.
+- Fake personas: Roberto Marini, Daniele Bottazzini, Elena Conti,
+  Famiglia Rossi, Lavinia Vitale, Estevan Tioni, Flavia, Amanda,
+  Mattia, "Ferragosto" (Italian holiday).
+- Synthetic phone numbers: `+39 02 0000 00000`, `+39 555 010 2030`,
+  `+1 555 123 4567`. Document any new synthetic number in this list
+  before using it.
+
+If a leak is found post-merge in commits NOT yet inside a tagged
+release: rewrite history with `git filter-branch --msg-filter` (or
+`git filter-repo --replace-message`), then force-push under temporary
+relaxation of branch protection. Restore protection immediately after.
+
+If a leak is found in commits ALREADY inside a tagged release: do not
+rewrite. Document the leak in `docs/known-leaks.md` with the SHA and
+content category, and apply prevention to future PRs.
 
 ## Merge approval protocol
 
@@ -130,6 +180,96 @@ does not merge.
    function body.
 3. The `test/e2e-guard.test.js` enforcement test will verify the
    new command rejects non-sandbox chats.
+4. Document the command + its JSON shape in
+   `.claude/skills/greentap/SKILL.md`. Run the skill-coherence checker
+   (`docs/skill-coherence-checker.md`) — verdict MUST be `COHERENT`
+   before tagging the next release.
+
+## Release procedure
+
+Releases follow semver (`v0.<minor>.<patch>`). All releases are manually
+tagged from `main`. There is no CHANGELOG file — release notes live on
+GitHub.
+
+### Pre-tag checklist (mandatory)
+
+Before running `git tag`, **every** item must be green:
+
+1. **All open PRs intended for this release are merged.** Verify with
+   `gh pr list --state open`. Defer anything that didn't make it; do
+   not block the release on a half-finished PR.
+2. **`main` is clean.** `git status` clean, `git log` shows nothing
+   surprising since the previous tag.
+3. **`npm test` on `main` HEAD is green.**
+4. **`GREENTAP_E2E=1 node greentap.js e2e` on `main` HEAD is green.**
+   This is a NEW pre-tag requirement: per-PR e2e runs catch each
+   change in isolation, but the cumulative state of `main` must also
+   pass before a tag. If a stage fails, the release is blocked until
+   fixed (which itself may be a new PR).
+5. **Skill coherence checker** (`docs/skill-coherence-checker.md`)
+   returns `verdict: "COHERENT"`. New commands or new JSON fields
+   added since the previous tag MUST be in `SKILL.md`.
+6. **PII grep on every commit message since the previous tag is
+   clean** — see § "PII patterns" above. Forbidden tokens must NOT
+   appear in any commit message, PR title, or PR body.
+7. **PII grep on the diff `<prev-tag>..HEAD` is clean.** Tracked
+   files only — `git ls-files` × `git show <SHA>:<file>`. Same
+   forbidden-token list.
+
+### Tag + release
+
+```bash
+# Replace 0.x.y with the actual version
+git tag v0.x.y
+git push origin v0.x.y
+
+gh release create v0.x.y \
+  --title "v0.x.y — short title" \
+  --notes "$(cat <<'EOF'
+## Highlights
+
+- Bullet of the headline feature
+- Bullet of the second-most-important thing
+
+## All changes
+
+(Generated from \`git log <prev-tag>..v0.x.y --oneline\`. Trim trivial
+commits, group by category if useful.)
+
+## Upgrade notes
+
+(Anything users have to do manually — re-login, install a new
+binary, contract changes, etc. If nothing, write "None.")
+
+## Known limits
+
+(Carry-over warnings from CONTRIBUTING / SKILL.md / ROADMAP.)
+EOF
+)"
+```
+
+### Version bump rules
+
+- **Patch (`v0.x.y` → `v0.x.(y+1)`):** bug fixes only, no new
+  features, no contract changes.
+- **Minor (`v0.x.y` → `v0.(x+1).0`):** new commands, new fields in
+  read output (additive), new flags. Backward-compatible.
+- **Major (`0.x.y` → `1.0.0`):** breaking contract changes (e.g.
+  removing a field, renaming a command, changing JSON shape in a way
+  consumers can't ignore). greentap is currently `0.x` — major bump
+  is reserved for a stability commitment.
+
+If a release also rewrote git history on `main` for PII reasons,
+note that in the upgrade notes (any consumer with an old clone needs
+to re-clone or `git fetch + reset --hard origin/main`).
+
+### Post-tag
+
+- Verify the GitHub release page renders correctly
+- Verify `npx skills add psacc/greentap` picks up the new version
+  (skills.sh indexing may take a few minutes)
+- Update the project memory with anything notable (next session's
+  agent benefits from a tight summary of what shipped)
 
 ## PR checklist
 

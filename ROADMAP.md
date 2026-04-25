@@ -1,9 +1,9 @@
 ## Strategic context
-Priority: medium — stable and released, in maintenance/exploration mode
-Current phase: Phase 7 — multi-agent concurrency (explore)
+Priority: medium — stable, agent-autonomy + media shipped in v0.4.0
+Current phase: Phase 9 — quality polish (sticker visibility, performance, sender inheritance hardening) — target v0.5.0
 Blocks: nothing
 Blocked by: nothing
-Last updated: 2026-04-02
+Last updated: 2026-04-25
 → Full strategic context: psacc/docs/ROADMAP.md
 
 ---
@@ -37,10 +37,11 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 | Account ban (ToS violation) | Medium | Low volume, human-like delays, personal account |
 | Session expires (14-day inactivity) | Low | Keep sessions active, `greentap login` to re-auth |
 | Aria labels are locale-dependent | Low | Mitigated: structural ARIA selectors + runtime locale detection (Phase 6) |
-| WhatsApp rejects bundled Chromium | Pending verification (2026-04-22) | Switched to bundled Chromium in v0.3.2 for CDP port isolation. If WA rejects, revert `channel: "chrome"` and open issue for user-agent spoofing. |
-| Aria tree restructuring (WA updates) | Medium | Two row formats already handled; parser may need updates |
+| WhatsApp rejects bundled Chromium | Resolved (2026-04-25) | Bundled Chromium adopted; daemon strips `HeadlessChrome` from UA via CDP `Network.setUserAgentOverride`, WA accepts the session. |
+| Aria tree restructuring (WA updates) | Medium | Two row formats already handled; parser may need updates. E2E harness catches breakage early. |
+| Sticker vs photo input confusion | Mitigated (2026-04-25) | E2E `sendFixtureImage` uses Allega → Foto e video flow keyed on `ic-filter-filled` icon; never touches the sticker input. |
 
-**Current: Phase 7 (explore)**
+**Current: Phase 9 (quality polish, v0.5.0 target)**
 
 ## Phases
 
@@ -112,14 +113,38 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 - [x] `--index N` flag — disambiguates multiple chats with the same name (v0.3.0)
 - [x] Timestamp enrichment from date separators — adds `timestamp` to message JSON (v0.3.1)
 
-### Phase 7 — Multi-agent Concurrency (explore)
+### Phase 7 — Multi-agent Concurrency (deferred)
 - [ ] Spike: can multiple agents use greentap concurrently without interfering?
 - [ ] Options: tab-per-agent, port-per-agent, locking, or queuing
 - [ ] Assess: is this a real need or premature optimization?
 
-### Phase 8 — Media (post-release)
-- [ ] Send/receive images
-- [ ] Receive voice messages (download audio from chat)
-- [ ] Transcribe voice messages (Whisper or equivalent)
-- [ ] Surface transcription in `read` output
+Status: deferred. Single-agent usage works. Re-open if multiple parallel agents become a real need.
+
+### Phase 8 — Media + Agent Autonomy ✓ (shipped v0.4.0)
+
+- [x] Daemon hardening — port file pre-launch (#15), bundled Chromium with UA strip (#15+#21)
+- [x] `navigateToChat` robustness — wait-for-grid (#16), `--index` in search fallback, fast-path no-op when chat already open (#24)
+- [x] `read --json` link recovery — `links: [{href, text}]` per message via DOM walk; greedy monotone merge handles parser/DOM length drift and URL-only messages (#17 + #22)
+- [x] `fetch-images <chat>` command — in-DOM blob download to `~/.greentap/downloads/<chat-slug>/` (#18 + #23)
+- [x] E2E harness — `greentap e2e` against `greentap-sandbox` group, four stages roundtripped end-to-end with multimodal verification (#19 + #25)
+- [x] Iron-clad merge + e2e rules — per-PR maintainer approval, feature-stage-must-not-be-skipped (#20)
+- [x] `send` newline handling — `\n` becomes Shift+Enter, multi-line messages stay in one bubble (#26)
+- [x] Parser robustness — `sender` always populated, additive `quoted_sender` / `quoted_text` / `body` fields, orphan-row recovery (#27)
+- [x] `whoami` command + locale-stable timestamps + `null`-instead-of-empty (#28)
+
+### Phase 9 — Quality polish (planned, v0.5.0 target)
+
+- [ ] **Sticker visibility** — parser `kind: "sticker"` + `fetchStickers` download. Reuses fetchImages mechanics with a different DOM marker. Tracked in task tracker.
+- [ ] **Sender-inheritance hardening** — current orphan-row recovery blindly inherits previous-row sender. Tighten to require a "same-author" hint (e.g. `msg-dblcheck` for own, structural cue) and prefer `(unknown)` when ambiguous. Tracked in task tracker.
+- [ ] **Performance hygiene** — concrete proposals reviewed by 3 independent agents, accepted only if no functionality loss. Likely targets: replace hardcoded `setTimeout` waits with element-based `waitFor`, reduce review-agent prompt size for diffs <30 LOC, cheaper overlay-dismiss alternative to `page.reload()` between e2e stages.
+
+### Phase 10 — Voice + documents (deferred, no spike yet)
+
+- [ ] Voice messages — download audio + transcribe (Whisper or equivalent)
+- [ ] Documents / generic file download — same blob pattern as images, MIME detection trickier
 - [ ] Feasibility spike: can audio URLs be extracted from aria snapshot or DOM?
+
+### Phase 11 — Skill coherence automation (planned)
+
+- [ ] Pre-release subagent that compares `lib/commands.js` exports + new fields in parser output against `.claude/skills/greentap/SKILL.md`. Fails CI if a public-API surface is undocumented.
+- [ ] Currently a manual checklist item in `.github/pull_request_template.md`; promote to automated check before tagging v0.5.0.
