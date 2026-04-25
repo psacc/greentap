@@ -44,7 +44,8 @@ node greentap.js unread --json
 
 # Read messages from a chat (substring match on name)
 # Each message includes: sender, time, text, body, quoted_sender, quoted_text,
-# links[], kind, imageId (when image), is_self, timestamp
+# links[], kind, imageId (when image), timestamp
+# Outbound messages: sender === "You" (no separate is_self flag)
 node greentap.js read "contact or group name" --json
 
 # Read full chat history (scrolls up, deduplicates)
@@ -75,6 +76,13 @@ GREENTAP_E2E=1 node greentap.js e2e
 # Daemon management
 node greentap.js status
 node greentap.js daemon stop
+
+# Clear session data (forces re-login on next run)
+node greentap.js logout
+
+# Debug: dump raw aria snapshot (full|chats|messages|compose)
+node greentap.js snapshot full
+node greentap.js snapshot messages --chat "contact or group name"
 ```
 
 ## Important behavior
@@ -99,7 +107,7 @@ Each message in `read --json` carries these fields (additive over time — older
 |-------|------|-------|
 | `sender` | string | Always populated. `"You"` for outbound; `"(unknown)"` if unattributable. Never empty string. |
 | `time` | string | `"HH:MM"` from the row label. |
-| `timestamp` | string \| null | `"YYYY-MM-DDTHH:MM"` ISO when WA shows a date separator; `null` otherwise. Stable across midnight (uses snapshot read-time, not parse-time). |
+| `timestamp` | string \| null | `"YYYY-MM-DD HH:MM"` (space-separated) when WA shows a date separator; `null` otherwise. Stable across midnight (uses snapshot read-time, not parse-time). |
 | `text` | string | Full visible text, including any quoted-reply bleed (backward compat). |
 | `body` | string \| null | New: just the user's new text, with the quoted block removed. Equal to `text` when no quote. |
 | `quoted_sender` | string \| null | New: author of the quoted message when this is a reply-with-quote. |
@@ -107,7 +115,8 @@ Each message in `read --json` carries these fields (additive over time — older
 | `links` | `[{href, text}]` | http(s) URLs recovered from the DOM (handles WhatsApp's truncated previews). |
 | `kind` | string | `"text"` or `"image"` (more kinds may appear in future versions). |
 | `imageId` | string | Only on `kind: "image"`. Stable across reads of the same DOM. Use with `fetch-images` to materialize. |
-| `is_self` | boolean | True for outbound messages. Pair with `whoami` to identify which account "self" is. |
+
+Outbound messages are identified by `sender === "You"` — there is no separate boolean `is_self` field. Pair with `whoami` to map `"You"` to a real account.
 
 ## Multimodal flow for images
 
