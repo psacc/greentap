@@ -14,6 +14,7 @@
  *   greentap search <query> [--json] — Search chats
  *   greentap snapshot [SCOPE] [--chat NAME] — Dump raw aria snapshot
  *   greentap e2e                — Run round-trip verification against sandbox (GREENTAP_E2E=1)
+ *   greentap whoami [--json]    — Show the logged-in account's name + phone
  *   greentap status             — Show daemon status
  *   greentap daemon stop        — Stop the daemon
  */
@@ -185,6 +186,16 @@ async function cmdE2E() {
   process.exit(result.exitCode);
 }
 
+async function cmdWhoami(json) {
+  const result = await withDaemon((page) => commands.whoami(page));
+  if (json) {
+    console.log(JSON.stringify(result));
+  } else {
+    console.log(`Name:  ${result.name ?? "(not detected)"}`);
+    console.log(`Phone: ${result.phone ?? "(not detected)"}`);
+  }
+}
+
 function cmdStatus() {
   const status = daemonStatus();
   if (status.running) {
@@ -310,6 +321,9 @@ try {
       await cmdE2E();
       break;
     }
+    case "whoami":
+      await cmdWhoami(args.includes("--json"));
+      break;
     case "status":
       cmdStatus();
       break;
@@ -336,6 +350,7 @@ Commands:
   search <query> [--json]                      Search chats
   snapshot [SCOPE] [--chat NAME]               Dump aria snapshot (full|chats|messages|compose)
   e2e                                          Run round-trip verification (GREENTAP_E2E=1 required)
+  whoami [--json]                              Show the logged-in account's name + phone
   status                                       Show daemon status
   daemon stop                                  Stop the daemon
 

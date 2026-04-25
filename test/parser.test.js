@@ -345,7 +345,7 @@ describe("parseMessages — timestamps", () => {
     assert.equal(messages[0].timestamp, "2026-03-23 09:00");
   });
 
-  it("timestamp is empty string when no date separator seen", () => {
+  it("timestamp is null when no date separator seen", () => {
     const ariaNoSep = `- document:
   - banner:
     - button "Dettagli profilo":
@@ -357,7 +357,45 @@ describe("parseMessages — timestamps", () => {
     - textbox "Scrivi"`;
     const messages = parseMessages(ariaNoSep, { now: NOW });
     assert.ok(messages.length > 0, "should parse at least one message");
-    assert.equal(messages[0].timestamp, "", "timestamp should be empty with no date separator");
+    assert.equal(messages[0].timestamp, null, "timestamp should be null with no date separator");
+  });
+
+  it("timestamp is null when time is missing (graceful degradation)", () => {
+    // Defensive: a row with no recognizable HH:MM time AND no separator must
+    // not produce timestamp:"" — that's the empty-string footgun this test
+    // guards against.
+    const ariaNoTime = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - row "Roberto Marini bare text no time":
+    - text: Roberto Marini hello world
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(ariaNoTime, { now: NOW });
+    for (const m of messages) {
+      assert.notEqual(m.timestamp, "", "timestamp must never be empty string, got: " + JSON.stringify(m));
+      assert.ok(m.timestamp === null || /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(m.timestamp), `timestamp must be null or ISO-shaped, got: ${m.timestamp}`);
+    }
+  });
+
+  it("Ieri (yesterday) resolves deterministically against the passed `now` (post-midnight rollover scenario)", () => {
+    // Snapshot was read at 23:55 on 2026-03-31 ("Ieri" message timestamped 22:00).
+    // Parse runs at 00:05 on 2026-04-01 — but we pass the read-time `now`,
+    // so "Ieri" must still resolve to 2026-03-30, not 2026-03-31.
+    const readNow = new Date(2026, 2, 31, 23, 55);
+    const ariaYesterday = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - text: Ieri
+  - row "Roberto Marini Ehi 22:00":
+    - text: Roberto Marini Ehi 22:00
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(ariaYesterday, { now: readNow, localeConfig: ITALIAN_TEST_LOCALE });
+    assert.ok(messages.length > 0, "should parse the Ieri message");
+    assert.equal(messages[0].timestamp, "2026-03-30 22:00", "Ieri must anchor to read-time `now`, not Date.now()");
   });
 
   it("produces timestamp without now when separator is absolute date (production path smoke)", () => {

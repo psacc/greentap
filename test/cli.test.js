@@ -448,3 +448,162 @@ describe("CLI arg parsing: --index for send", () => {
     assert.equal(sendIndex, undefined);
   });
 });
+
+// --- whoami ---
+
+describe("whoami", () => {
+  /**
+   * Build a mock page where:
+   *   - `page.evaluate(fn)` runs the inline DOM probe in a tiny
+   *     simulated DOM (we only need to satisfy the profile-button shape).
+   *   - `page.locator(":root").ariaSnapshot()` returns canned snapshots
+   *     in sequence: first call = settings menu, second call = profile pane.
+   */
+  function makeWhoamiPage({ profileBtnExists = true, ariaMenu, ariaProfile }) {
+    let ariaCallIdx = 0;
+    const ariaSnapshots = [ariaMenu, ariaProfile];
+
+    const chainable = () => ({
+      waitFor: async () => {},
+      filter: () => chainable(),
+      click: async () => {},
+      first: () => chainable(),
+      last: () => chainable(),
+      count: async () => 1,
+      isVisible: async () => true,
+      ariaSnapshot: async () => ariaSnapshots[Math.min(ariaCallIdx, ariaSnapshots.length - 1)],
+      getByRole: () => chainable(),
+    });
+
+    return {
+      locator: () => ({
+        ariaSnapshot: async () => {
+          const snap = ariaSnapshots[Math.min(ariaCallIdx, ariaSnapshots.length - 1)];
+          ariaCallIdx++;
+          return snap;
+        },
+      }),
+      getByRole: () => chainable(),
+      keyboard: {
+        press: async () => {},
+        type: async () => {},
+      },
+      // The whoami DOM probe runs `(() => { const buttons = ...; ... })()`.
+      // We can't run the real DOM, so we short-circuit: return `true` when
+      // a profile button is supposed to exist, `false` otherwise.
+      evaluate: async (fn) => {
+        // Inspect the function source to decide the return shape.
+        const src = String(fn);
+        if (src.includes("button[aria-label]") && src.includes("whatsapp.net")) {
+          return profileBtnExists;
+        }
+        return null;
+      },
+    };
+  }
+
+  const ARIA_MENU_IT = `- document:
+  - banner:
+    - button "Tu" [pressed]:
+      - img
+  - banner:
+    - heading "Mario Rossi" [level=2]
+  - listbox:
+    - listitem:
+      - button "Profilo Nome, immagine del profilo"
+  - banner:
+    - banner:
+      - heading "WhatsApp" [level=2]:
+        - img "wa-wordmark-refreshed"
+`;
+
+  const ARIA_PROFILE_IT = `- document:
+  - banner:
+    - button "Tu" [pressed]:
+      - img
+  - banner:
+    - button "Indietro"
+    - heading "Modifica profilo" [level=2]
+  - img
+  - button "Modifica"
+  - text: Nome Mario Rossi
+  - button "Modifica Nome"
+  - text: Telefono +39 555 010 2030
+  - button "Copia"
+`;
+
+  const ARIA_PROFILE_EN = `- document:
+  - banner:
+    - heading "Edit profile" [level=2]
+  - text: Name John Doe
+  - text: Phone +1 555 123 4567
+`;
+
+  it("returns name + phone when profile pane is reachable (Italian locale)", async () => {
+    const page = makeWhoamiPage({ ariaMenu: ARIA_MENU_IT, ariaProfile: ARIA_PROFILE_IT });
+    const result = await commands.whoami(page);
+    assert.equal(result.name, "Mario Rossi");
+    assert.equal(result.phone, "+39 555 010 2030");
+  });
+
+  it("returns name + phone for English locale (no IT-specific labels)", async () => {
+    const ariaMenuEn = `- document:
+  - banner:
+    - heading "John Doe" [level=2]
+  - listbox:
+    - listitem:
+      - button "Profile Name, profile picture"
+  - banner:
+    - heading "WhatsApp" [level=2]
+`;
+    const page = makeWhoamiPage({ ariaMenu: ariaMenuEn, ariaProfile: ARIA_PROFILE_EN });
+    const result = await commands.whoami(page);
+    assert.equal(result.name, "John Doe");
+    assert.equal(result.phone, "+1 555 123 4567");
+  });
+
+  it("returns {name: null, phone: null} when profile button is not in DOM", async () => {
+    const page = makeWhoamiPage({ profileBtnExists: false, ariaMenu: "", ariaProfile: "" });
+    const result = await commands.whoami(page);
+    assert.equal(result.name, null);
+    assert.equal(result.phone, null);
+  });
+
+  it("filters out the 'WhatsApp' wordmark heading when picking the name", async () => {
+    // Edge case: WA is logged in but the user's display name field is empty,
+    // so the only level-2 heading on the menu is the "WhatsApp" wordmark.
+    // The function must NOT return "WhatsApp" as the user's name.
+    const ariaMenuOnlyWordmark = `- document:
+  - banner:
+    - banner:
+      - heading "WhatsApp" [level=2]
+`;
+    const page = makeWhoamiPage({ ariaMenu: ariaMenuOnlyWordmark, ariaProfile: "" });
+    const result = await commands.whoami(page);
+    assert.equal(result.name, null, "name should be null, not 'WhatsApp'");
+  });
+
+  it("JSON-stringifies cleanly to {name, phone}", async () => {
+    const page = makeWhoamiPage({ ariaMenu: ARIA_MENU_IT, ariaProfile: ARIA_PROFILE_IT });
+    const result = await commands.whoami(page);
+    const json = JSON.stringify(result);
+    const parsed = JSON.parse(json);
+    assert.deepEqual(Object.keys(parsed).sort(), ["name", "phone"]);
+  });
+});
+
+describe("CLI arg parsing: whoami", () => {
+  it("unknown command 'whoami' is wired (does not show 'Usage' help) when daemon is unreachable", async () => {
+    // Without a daemon the command will fail with an error — but it must NOT
+    // fall through to the `default` case that prints Usage. Easiest assertion:
+    // stderr should NOT contain the usage banner.
+    const { stderr, stdout } = await runCli("whoami");
+    assert.ok(
+      !stdout.includes("Usage: greentap <command>"),
+      `whoami should be a recognized command, got stdout: ${stdout}`,
+    );
+    // Either it succeeds, or it fails with an error — both are fine here.
+    // We just want to confirm the command is dispatched (not "unknown").
+    assert.ok(true, `stderr: ${stderr}`);
+  });
+});
