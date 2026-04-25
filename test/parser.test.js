@@ -259,8 +259,10 @@ describe("parseMessages — sender always populated", () => {
     assert.equal(messages[0].text, "Mystery message");
   });
 
-  it("inherits sender from previous message when current row has no sender cue (group continuation)", () => {
+  it("inherits sender from previous message when row label confirms continuation", () => {
     // Roberto sends two messages — the second has no sender button (continuation).
+    // WhatsApp Web's aria repeats the sender token at the start of the row
+    // label even on continuation, so we accept it as confirmation.
     const aria = `- document:
   - banner:
     - button "Dettagli profilo":
@@ -270,15 +272,40 @@ describe("parseMessages — sender always populated", () => {
     - img
   - row "Roberto Marini Primo messaggio 14:00":
     - text: Roberto Marini Primo messaggio 14:00
-  - row "Secondo messaggio orfano 14:01":
-    - text: Secondo messaggio orfano 14:01
+  - row "Roberto Marini Secondo messaggio 14:01":
+    - text: Roberto Marini Secondo messaggio 14:01
   - contentinfo:
     - textbox "Scrivi"`;
     const messages = parseMessages(aria);
     assert.equal(messages.length, 2);
     assert.equal(messages[0].sender, "Roberto Marini");
     assert.equal(messages[1].sender, "Roberto Marini",
-      "orphan row should inherit sender from previous message");
+      "row whose label starts with previous sender's name should inherit that sender");
+  });
+
+  it("falls back to (unknown) when stale sender carry-over has no continuation cue (Bug 3)", () => {
+    // Roberto's row sets currentSender. The next row has no sender button,
+    // no own-icon, no label-prefix `Name:`, and the row label does NOT start
+    // with "Roberto Marini" — it could plausibly be from anyone. Per Bug 3
+    // hardening: do not blindly inherit Roberto, emit (unknown) instead.
+    const aria = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - text: Oggi
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini Primo messaggio 14:00":
+    - text: Roberto Marini Primo messaggio 14:00
+  - row "Con Flavia ci occupiamo anche delle merende 14:01":
+    - text: Con Flavia ci occupiamo anche delle merende 14:01
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(aria);
+    assert.equal(messages.length, 2);
+    assert.equal(messages[0].sender, "Roberto Marini");
+    assert.equal(messages[1].sender, "(unknown)",
+      "stale carry-over without a continuation cue must emit (unknown), not guess");
   });
 });
 
@@ -315,18 +342,20 @@ describe("parseMessages — quoted-reply parsing", () => {
     }
   });
 
-  it("orphan row right after a quote block inherits sender from previous message", () => {
+  it("orphan row right after a quote block falls back to (unknown), not stale carry-over (Bug 3)", () => {
     // The fixture's last row ('Con Flavia ci occupiamo anche delle merende')
-    // has no sender button and sits directly after Daniele's quoted-reply row.
-    // Per group-continuation rule, it should inherit Daniele's sender.
+    // has no sender button, no own-icon, and its label doesn't start with
+    // "Daniele Bottazzini". Pre-Bug-3 hardening this row was attributed to
+    // Daniele — implausibly. Now the parser refuses to guess and emits
+    // UNKNOWN_SENDER.
     const aria = loadFixture("quoted-reply.snapshot.txt");
     const messages = parseMessages(aria);
     const orphan = messages.find((m) => m.text.includes("Con Flavia"));
     assert.ok(orphan, `should find orphan message, got: ${JSON.stringify(messages, null, 2)}`);
     assert.notEqual(orphan.sender, "", "orphan sender must not be empty");
-    // Continuation hint: previous emitted message was Daniele's reply.
-    assert.equal(orphan.sender, "Daniele Bottazzini",
-      "orphan beneath a quote should inherit the previous row's sender");
+    assert.equal(orphan.sender, "(unknown)",
+      "orphan beneath a quote-reply must NOT inherit the previous row's sender — that produced false attribution. " +
+      "Use the fresh sender signal or fall to (unknown).");
   });
 });
 
