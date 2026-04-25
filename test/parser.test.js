@@ -367,6 +367,75 @@ describe("parseMessages — quoted-reply parsing", () => {
     assert.equal(reply.body, "Esatto, non prenderle");
   });
 
+  it("does NOT attribute a quote-reply to the quoted person (Bug 1)", () => {
+    // Estevan replies to Lavinia. The quote block contains Lavinia's name.
+    // Pre-fix, a stale carry-over could cause the parser to attribute
+    // Estevan's bubble to Lavinia (since her name appears in the row body).
+    // With the fresh-sender rule + quote detection, attribution must stay
+    // on Estevan.
+    const aria = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - text: Oggi
+  - button "Apri dettagli chat di Lavinia":
+    - img
+  - row "Lavinia Sì certo nessun problema 11:00":
+    - text: Lavinia Sì certo nessun problema 11:00
+  - button "Apri dettagli chat di Estevan":
+    - img
+  - row "Estevan Lavinia Sì certo nessun problema Perfetto, allora ci vediamo lì 11:08":
+    - text: Estevan
+    - gridcell:
+      - text: Lavinia
+      - text: Sì certo nessun problema
+    - text: Perfetto, allora ci vediamo lì
+    - text: 11:08
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(aria);
+    const estevanReply = messages.find((m) => m.text.includes("Perfetto"));
+    assert.ok(estevanReply, `expected Estevan's reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(estevanReply.sender, "Estevan",
+      "quote-reply must be attributed to the bubble's own sender, not the quoted person");
+    assert.equal(estevanReply.quoted_sender, "Lavinia");
+    assert.equal(estevanReply.quoted_text, "Sì certo nessun problema");
+    assert.equal(estevanReply.body, "Perfetto, allora ci vediamo lì");
+  });
+
+  it("emits (unknown) for a quote-reply whose sender button is missing AND label doesn't confirm (Bug 1 safe path)", () => {
+    // Worst case: Estevan's button got scrolled off, leaving currentSender
+    // stale (Lavinia from earlier). The row body still has the quote with
+    // Lavinia's name. Bug 3 hardening kicks in: row label doesn't start
+    // with "Lavinia" → fall to UNKNOWN_SENDER. The agent gets a clear
+    // "I don't know" instead of a confident wrong answer.
+    const aria = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - text: Oggi
+  - button "Apri dettagli chat di Lavinia":
+    - img
+  - row "Lavinia Sì certo 11:00":
+    - text: Lavinia Sì certo 11:00
+  - row "Estevan Lavinia Sì certo Perfetto 11:08":
+    - text: Estevan
+    - gridcell:
+      - text: Lavinia
+      - text: Sì certo
+    - text: Perfetto
+    - text: 11:08
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(aria);
+    const reply = messages.find((m) => m.text.includes("Perfetto"));
+    assert.ok(reply, `expected reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(reply.sender, "(unknown)",
+      "missing-button quote-reply must NOT inherit Lavinia's sender — emit (unknown)");
+    assert.equal(reply.quoted_sender, "Lavinia");
+    assert.equal(reply.quoted_text, "Sì certo");
+  });
+
   it("rejects 2-text decorative containers where the second child is HH:MM (Bug 2 safety)", () => {
     // Decorative date+time gridcell — must NOT be treated as a quote-card.
     // Without the HH:MM safety, this would emit quoted_text="14:25" which
