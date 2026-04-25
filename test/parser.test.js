@@ -342,6 +342,57 @@ describe("parseMessages — quoted-reply parsing", () => {
     }
   });
 
+  it("extracts quote block from gridcell-shaped container (Bug 2)", () => {
+    // WhatsApp Web's aria does not always render quote-cards as `generic:`.
+    // Observed shapes include `gridcell:`, `button:`, and `link:`. PR #27's
+    // generic-only restriction caused body / quoted_sender / quoted_text to
+    // be silently empty for these rows. Verify the broadened detector
+    // recognizes a 2-text gridcell (Roberto's row in this fixture).
+    const aria = loadFixture("quoted-reply-gridcell.snapshot.txt");
+    const messages = parseMessages(aria);
+    const roberto = messages.find((m) => m.sender === "Roberto Marini");
+    assert.ok(roberto, `expected Roberto's row, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(roberto.quoted_sender, "Roberto Marini");
+    assert.equal(roberto.quoted_text, "Lavinia Vitale");
+  });
+
+  it("extracts quote block from button-shaped container (Bug 2)", () => {
+    // Same fixture, second row uses a `button:` container around the quote.
+    const aria = loadFixture("quoted-reply-gridcell.snapshot.txt");
+    const messages = parseMessages(aria);
+    const reply = messages.find((m) => m.sender === "Daniele Bottazzini");
+    assert.ok(reply, `expected Daniele's reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(reply.quoted_sender, "Roberto Marini");
+    assert.equal(reply.quoted_text, "Lavinia Vitale");
+    assert.equal(reply.body, "Esatto, non prenderle");
+  });
+
+  it("rejects 2-text decorative containers where the second child is HH:MM (Bug 2 safety)", () => {
+    // Decorative date+time gridcell — must NOT be treated as a quote-card.
+    // Without the HH:MM safety, this would emit quoted_text="14:25" which
+    // is nonsense.
+    const aria = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - text: Oggi
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini hello 14:25":
+    - text: Roberto Marini hello
+    - gridcell:
+      - text: 14/03/2026
+      - text: 14:25
+    - text: 14:25
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(aria);
+    assert.ok(messages.length > 0);
+    assert.equal(messages[0].quoted_sender, null,
+      "decorative date+time gridcell must NOT be detected as a quote-card");
+    assert.equal(messages[0].quoted_text, null);
+  });
+
   it("orphan row right after a quote block falls back to (unknown), not stale carry-over (Bug 3)", () => {
     // The fixture's last row ('Con Flavia ci occupiamo anche delle merende')
     // has no sender button, no own-icon, and its label doesn't start with
