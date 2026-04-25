@@ -1,0 +1,34 @@
+- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+    - button "Famiglia Rossi clicca qui per info gruppo"
+    - button "Videochiamata di gruppo": Chiama
+    - button "Cerca"
+    - button "Menu"
+  - text: Oggi
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini Lavinia Vitale 14:25":
+    - text: Roberto Marini
+    - text: Lavinia Vitale
+    - text: 14:25
+  - button "Apri dettagli chat di Daniele Bottazzini":
+    - img
+  - row "Daniele Bottazzini Roberto Marini Lavinia Vitale Esatto, non prenderle 14:30":
+    - text: Daniele Bottazzini
+    - generic:
+      - text: Roberto Marini
+      - text: Lavinia Vitale
+    - text: Esatto, non prenderle
+    - text: 14:30
+  - row "Con Flavia ci occupiamo anche delle merende 14:31":
+    - text: Con Flavia ci occupiamo anche delle merende
+    - text: 14:31
+  - contentinfo:
+    - button "Allega"
+    - button "Emoji, GIF, Sticker"
+    - textbox "Scrivi al gruppo Famiglia Rossi":
+      - paragraph
+    - button "Messaggio vocale":
+      - button "Messaggio vocale"
