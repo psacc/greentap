@@ -231,6 +231,105 @@ describe("parseMessages", () => {
   });
 });
 
+describe("parseMessages — sender always populated", () => {
+  it("never emits sender as empty string across full chat fixture", () => {
+    const aria = loadFixture("chat-aria.txt");
+    const messages = parseMessages(aria);
+    for (const m of messages) {
+      assert.notEqual(m.sender, "", `sender must not be empty: ${JSON.stringify(m)}`);
+      assert.equal(typeof m.sender, "string");
+      assert.ok(m.sender.length > 0, `sender must be non-empty: ${JSON.stringify(m)}`);
+    }
+  });
+
+  it("falls back to (unknown) when no sender can be resolved and no prior message exists", () => {
+    // First row has no sender button, no row-label sender prefix, no own-icon — orphan.
+    const aria = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - text: Oggi
+  - row "Mystery message 14:00":
+    - text: Mystery message 14:00
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(aria);
+    assert.equal(messages.length, 1);
+    assert.equal(messages[0].sender, "(unknown)");
+    assert.equal(messages[0].text, "Mystery message");
+  });
+
+  it("inherits sender from previous message when current row has no sender cue (group continuation)", () => {
+    // Roberto sends two messages — the second has no sender button (continuation).
+    const aria = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - text: Oggi
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini Primo messaggio 14:00":
+    - text: Roberto Marini Primo messaggio 14:00
+  - row "Secondo messaggio orfano 14:01":
+    - text: Secondo messaggio orfano 14:01
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(aria);
+    assert.equal(messages.length, 2);
+    assert.equal(messages[0].sender, "Roberto Marini");
+    assert.equal(messages[1].sender, "Roberto Marini",
+      "orphan row should inherit sender from previous message");
+  });
+});
+
+describe("parseMessages — quoted-reply parsing", () => {
+  it("extracts quoted_sender, quoted_text, body from a quote-card row", () => {
+    const aria = loadFixture("quoted-reply.snapshot.txt");
+    const messages = parseMessages(aria);
+    const reply = messages.find((m) => m.sender === "Daniele Bottazzini");
+    assert.ok(reply, `should find Daniele's reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(reply.quoted_sender, "Roberto Marini");
+    assert.equal(reply.quoted_text, "Lavinia Vitale");
+    assert.equal(reply.body, "Esatto, non prenderle");
+  });
+
+  it("preserves the original text field with the full bleed for backward compatibility", () => {
+    const aria = loadFixture("quoted-reply.snapshot.txt");
+    const messages = parseMessages(aria);
+    const reply = messages.find((m) => m.sender === "Daniele Bottazzini");
+    assert.ok(reply.text.includes("Roberto Marini"),
+      "text should still include quoted sender for backward compat");
+    assert.ok(reply.text.includes("Lavinia Vitale"),
+      "text should still include quoted text for backward compat");
+    assert.ok(reply.text.includes("Esatto, non prenderle"),
+      "text should still include the reply body");
+  });
+
+  it("emits null quoted_sender / quoted_text and body===text for non-quote messages", () => {
+    const aria = loadFixture("chat-own-messages-aria.txt");
+    const messages = parseMessages(aria);
+    for (const m of messages) {
+      assert.equal(m.quoted_sender, null, `non-quote row should have quoted_sender=null: ${JSON.stringify(m)}`);
+      assert.equal(m.quoted_text, null, `non-quote row should have quoted_text=null: ${JSON.stringify(m)}`);
+      assert.equal(m.body, m.text, `non-quote row body should equal text: ${JSON.stringify(m)}`);
+    }
+  });
+
+  it("orphan row right after a quote block inherits sender from previous message", () => {
+    // The fixture's last row ('Con Flavia ci occupiamo anche delle merende')
+    // has no sender button and sits directly after Daniele's quoted-reply row.
+    // Per group-continuation rule, it should inherit Daniele's sender.
+    const aria = loadFixture("quoted-reply.snapshot.txt");
+    const messages = parseMessages(aria);
+    const orphan = messages.find((m) => m.text.includes("Con Flavia"));
+    assert.ok(orphan, `should find orphan message, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.notEqual(orphan.sender, "", "orphan sender must not be empty");
+    // Continuation hint: previous emitted message was Daniele's reply.
+    assert.equal(orphan.sender, "Daniele Bottazzini",
+      "orphan beneath a quote should inherit the previous row's sender");
+  });
+});
+
 describe("printMessages", () => {
   it("prints empty message for no messages", () => {
     const output = [];
