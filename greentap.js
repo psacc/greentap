@@ -268,7 +268,15 @@ try {
       const fiIndexIdx = fiRaw.indexOf("--index");
       const fiLimitIdx = fiRaw.indexOf("--limit");
       const fiIndex = fiIndexIdx >= 0 ? parseInt(fiRaw[fiIndexIdx + 1], 10) : undefined;
-      const fiLimit = fiLimitIdx >= 0 ? parseInt(fiRaw[fiLimitIdx + 1], 10) : undefined;
+      let fiLimit = fiLimitIdx >= 0 ? parseInt(fiRaw[fiLimitIdx + 1], 10) : undefined;
+      // Bug 4: reject invalid --limit values at the CLI surface so the user
+      // sees a clear message instead of the silent slice(-NaN)/(- 0) full-fetch.
+      if (fiLimitIdx >= 0 && (!Number.isInteger(fiLimit) || fiLimit <= 0)) {
+        console.error(
+          `Invalid --limit ${JSON.stringify(fiRaw[fiLimitIdx + 1])}; must be a positive integer. Falling back to default.`
+        );
+        fiLimit = undefined;
+      }
       const fiChat = fiRaw.filter((a, i) => {
         if (a === "--json" || a === "--limit" || a === "--index") return false;
         if (fiIndexIdx >= 0 && i === fiIndexIdx + 1) return false;
