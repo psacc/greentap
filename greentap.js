@@ -10,7 +10,7 @@
  *   greentap unread [--json]    — List unread chats
  *   greentap read <chat> [--json] [--scroll] [--index N] — Read messages from a chat
  *   greentap send <chat> <message> [--index N] — Send a message to a chat
- *   greentap fetch-images <chat> [--limit N] [--index N] [--json] — Download recent images
+ *   greentap fetch-images <chat> [--limit N] [--index N] [--scroll] [--json] — Download recent images
  *   greentap search <query> [--json] — Search chats
  *   greentap snapshot [SCOPE] [--chat NAME] — Dump raw aria snapshot
  *   greentap e2e                — Run round-trip verification against sandbox (GREENTAP_E2E=1)
@@ -107,16 +107,20 @@ async function cmdSend(chatName, message, index) {
   await withDaemon((page, localeConfig) => commands.send(page, chatName, message, localeConfig, index));
 }
 
-async function cmdFetchImages(chatName, json, limit, index) {
+async function cmdFetchImages(chatName, json, limit, index, scroll) {
   const result = await withDaemon((page, localeConfig) =>
-    commands.fetchImages(page, chatName, { localeConfig, index, limit })
+    commands.fetchImages(page, chatName, { localeConfig, index, limit, scroll })
   );
   if (json) {
     console.log(JSON.stringify(result));
     return;
   }
   if (result.length === 0) {
-    console.log("No images found in the visible chat window.");
+    console.log(
+      scroll
+        ? "No images found after scrolling the chat history."
+        : "No images found in the visible chat window. Re-run with --scroll to load older messages.",
+    );
     return;
   }
   for (const r of result) {
@@ -269,17 +273,18 @@ try {
       const fiLimitIdx = fiRaw.indexOf("--limit");
       const fiIndex = fiIndexIdx >= 0 ? parseInt(fiRaw[fiIndexIdx + 1], 10) : undefined;
       const fiLimit = fiLimitIdx >= 0 ? parseInt(fiRaw[fiLimitIdx + 1], 10) : undefined;
+      const fiScroll = fiRaw.includes("--scroll");
       const fiChat = fiRaw.filter((a, i) => {
-        if (a === "--json" || a === "--limit" || a === "--index") return false;
+        if (a === "--json" || a === "--limit" || a === "--index" || a === "--scroll") return false;
         if (fiIndexIdx >= 0 && i === fiIndexIdx + 1) return false;
         if (fiLimitIdx >= 0 && i === fiLimitIdx + 1) return false;
         return true;
       })[0];
       if (!fiChat) {
-        console.error("Usage: greentap fetch-images <chat> [--limit N] [--index N] [--json]");
+        console.error("Usage: greentap fetch-images <chat> [--limit N] [--index N] [--scroll] [--json]");
         process.exit(1);
       }
-      await cmdFetchImages(fiChat, args.includes("--json"), fiLimit, fiIndex);
+      await cmdFetchImages(fiChat, args.includes("--json"), fiLimit, fiIndex, fiScroll);
       break;
     }
     case "poll-results": {
@@ -345,7 +350,7 @@ Commands:
   read <chat> [--json] [--scroll] [--index N]  Read messages from a chat
   send <chat> <message> [--index N]            Send a message to a chat
   poll-results <chat> [--json] [--index N]     Get most recent poll results
-  fetch-images <chat> [--limit N] [--index N] [--json]
+  fetch-images <chat> [--limit N] [--index N] [--scroll] [--json]
                                                Download recent images from a chat
   search <query> [--json]                      Search chats
   snapshot [SCOPE] [--chat NAME]               Dump aria snapshot (full|chats|messages|compose)

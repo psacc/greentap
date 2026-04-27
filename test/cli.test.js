@@ -423,6 +423,110 @@ describe("CLI arg parsing: fetch-images", () => {
     assert.equal(limit, undefined);
     assert.equal(index, undefined);
   });
+
+  it("recognises --scroll flag and excludes it from the chat name", () => {
+    // Mirror the arg-parsing pattern in greentap.js
+    const fiRaw = ["GROUP_X", "--limit", "3", "--scroll", "--json"];
+    const fiIndexIdx = fiRaw.indexOf("--index");
+    const fiLimitIdx = fiRaw.indexOf("--limit");
+    const fiScroll = fiRaw.includes("--scroll");
+    const fiChat = fiRaw.filter((a, i) => {
+      if (a === "--json" || a === "--limit" || a === "--index" || a === "--scroll") return false;
+      if (fiIndexIdx >= 0 && i === fiIndexIdx + 1) return false;
+      if (fiLimitIdx >= 0 && i === fiLimitIdx + 1) return false;
+      return true;
+    })[0];
+    assert.equal(fiChat, "GROUP_X");
+    assert.equal(fiScroll, true);
+  });
+
+  it("usage string advertises --scroll", async () => {
+    const { stderr } = await runCli("fetch-images");
+    assert.ok(
+      stderr.includes("--scroll"),
+      `stderr should advertise --scroll, got: ${stderr}`,
+    );
+  });
+});
+
+describe("fetchImages diagnostics — no-image branch", () => {
+  // The no-image branch is reachable without going through navigateToChat
+  // by mocking the banner fast-path to claim the chat is already open.
+  // The fast-path returns early and lets us go straight to ariaSnapshot.
+  function makeNoImagePage(ariaText, chatName) {
+    const escaped = chatName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // Banner aria contains a button matching the chat name so
+    // navigateToChat's fast-path returns immediately.
+    const bannerAria = `- banner:\n  - button "${chatName}"`;
+    const chainable = (ariaOverride) => ({
+      waitFor: async () => {},
+      filter: () => chainable(ariaOverride),
+      click: async () => {},
+      first: () => chainable(ariaOverride),
+      last: () => chainable(bannerAria),
+      isVisible: async () => true,
+      ariaSnapshot: async (opts) => ariaOverride ?? ariaText,
+      getByRole: () => chainable(ariaOverride),
+      _banner: bannerAria,
+      _escaped: escaped,
+    });
+    return {
+      locator: () => chainable(),
+      getByRole: (role) => {
+        if (role === "banner") return chainable(bannerAria);
+        return chainable();
+      },
+      keyboard: { type: async () => {}, press: async () => {} },
+      // Default to [] so the in-page blob walk returns "no payloads"
+      // rather than null (which crashes in the array indexing below).
+      evaluate: async () => [],
+    };
+  }
+
+  it("returns [] and emits a stderr diagnostic when no image rows are present", async () => {
+    // chat-aria.txt is the chat-list fixture; it contains no message rows
+    // outside a grid, so parseMessages yields 0 messages and 0 images.
+    // chat-multiday-aria.txt has only text messages; no image rows.
+    const aria = loadFixture("chat-multiday-aria.txt");
+    const page = makeNoImagePage(aria, "ChatX");
+
+    const origErr = console.error;
+    const errs = [];
+    console.error = (m) => errs.push(m);
+    let result;
+    try {
+      result = await commands.fetchImages(page, "ChatX", { stderr: true });
+    } finally {
+      console.error = origErr;
+    }
+    assert.deepEqual(result, []);
+    assert.ok(
+      errs.some((e) => /\[fetch-images\] no image-kind messages/.test(String(e))),
+      `expected stderr diagnostic, got: ${JSON.stringify(errs)}`,
+    );
+  });
+
+  it("respects stderr:false for callers that want quiet empty results", async () => {
+    // chat-multiday-aria.txt has only text messages; no image rows.
+    const aria = loadFixture("chat-multiday-aria.txt");
+    const page = makeNoImagePage(aria, "ChatX");
+
+    const origErr = console.error;
+    const errs = [];
+    console.error = (m) => errs.push(m);
+    let result;
+    try {
+      result = await commands.fetchImages(page, "ChatX", { stderr: false });
+    } finally {
+      console.error = origErr;
+    }
+    assert.deepEqual(result, []);
+    assert.equal(
+      errs.filter((e) => /\[fetch-images\]/.test(String(e))).length,
+      0,
+      "no fetch-images diagnostic should be emitted when stderr:false",
+    );
+  });
 });
 
 describe("CLI arg parsing: --index for send", () => {

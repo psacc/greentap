@@ -18,7 +18,7 @@ node greentap.js chats [--json]      # List all chats
 node greentap.js unread [--json]     # List unread chats
 node greentap.js read <chat> [--json] [--scroll] # Read messages from a chat
 node greentap.js poll-results <chat> [--json]  # Get most recent poll question + vote counts
-node greentap.js fetch-images <chat> [--limit N] [--json] # Download recent images to ~/.greentap/downloads/<chat-slug>/
+node greentap.js fetch-images <chat> [--limit N] [--scroll] [--json] # Download recent images to ~/.greentap/downloads/<chat-slug>/
 node greentap.js send <chat> <msg>   # Send a message
 node greentap.js search <q> [--json] # Search chats
 node greentap.js snapshot [SCOPE]    # Dump aria snapshot (full|chats|messages|compose)
