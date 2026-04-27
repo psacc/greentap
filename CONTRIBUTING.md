@@ -248,6 +248,17 @@ EOF
 )"
 ```
 
+### Post-merge branch cleanup
+
+After every merge to main, prune dangling branches:
+
+- **Local**: `git branch --merged main | grep -v "^\*\|main$" | xargs -r git branch -d`
+- **Remote**: `--delete-branch` flag is included in `gh pr merge` calls; verify with
+  `gh pr list --repo psacc/greentap --state closed --json headRefName --limit 50`
+  and the corresponding remote branches should not appear in
+  `git ls-remote --heads origin`.
+- **Be conservative**: never `git push --delete` on `main` or any release tag.
+
 ### Version bump rules
 
 - **Patch (`v0.x.y` → `v0.x.(y+1)`):** bug fixes only, no new
@@ -270,6 +281,20 @@ to re-clone or `git fetch + reset --hard origin/main`).
   (skills.sh indexing may take a few minutes)
 - Update the project memory with anything notable (next session's
   agent benefits from a tight summary of what shipped)
+
+### Post-tag local install verify
+
+After tagging + creating the GitHub release, verify the new version installs cleanly:
+
+1. `cd ~/prj/psacc/greentap && npm install -g .`
+2. `npm list -g greentap` → should show `greentap@<new-version>`
+3. `greentap --help` → renders without error
+4. If a major flag was added in this release, smoke-test it:
+   `greentap <command> --help | grep <new-flag>`
+
+If install fails or smoke test breaks, the release is broken; either revert
+the release (`gh release delete v<x.y.z>`, `git push --delete origin v<x.y.z>`)
+or ship a follow-up patch release immediately.
 
 ## PR checklist
 
