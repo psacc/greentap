@@ -298,3 +298,66 @@ describe("navigateToChat: --index disambiguation in search fallback", () => {
     );
   });
 });
+
+describe("navigateToChat: partial-match suggestions", () => {
+  // Two chats whose names share a "Foot" prefix — Neko's "GROUP_X"
+  // + "Foot." repro pattern.
+  const TWO_FOOT_CHATS = `- grid "Lista delle chat":
+    - 'row "GROUP_X 14:00 Bonjour"':
+      - 'gridcell "GROUP_X 14:00 Bonjour"':
+        - img
+        - gridcell "GROUP_X 14:00"
+        - text: Bonjour
+        - gridcell
+    - 'row "Foot. 09:00 Salut"':
+      - 'gridcell "Foot. 09:00 Salut"':
+        - img
+        - gridcell "Foot. 09:00"
+        - text: Salut
+        - gridcell
+  - contentinfo:
+    - textbox "Scrivi un messaggio"
+`;
+
+  it("lists partial matches in error message when chat name has no exact match in the grid", async () => {
+    // Neko's exact UX: passing the prefix "Foot" returns 0 exact matches
+    // but two chats start with "Foot". Pre-fix: opaque "Chat not found".
+    // Post-fix: error lists candidates with --index hint.
+    const page = makeFakePage({
+      gridVisibleAfterMs: 0, // grid path
+      gridAria: TWO_FOOT_CHATS,
+    });
+    await assert.rejects(
+      () => commands.navigateToChat(page, "Foot", null),
+      (err) => {
+        assert.ok(
+          /Did you mean one of/.test(err.message),
+          `expected partial-match suggestion, got: ${err.message}`,
+        );
+        assert.ok(err.message.includes("GROUP_X"), "expected first candidate listed");
+        assert.ok(err.message.includes("Foot."), "expected second candidate listed");
+        assert.ok(err.message.includes("--index"), "expected --index hint");
+        return true;
+      },
+    );
+  });
+
+  it("lists partial matches in error message when chat name has no exact match in search results", async () => {
+    const page = makeFakePage({
+      gridVisibleAfterMs: 10_000, // force search path
+      searchAria: TWO_FOOT_CHATS,
+    });
+    await assert.rejects(
+      () => commands.navigateToChat(page, "Foot", null),
+      (err) => {
+        assert.ok(
+          /Did you mean one of/.test(err.message),
+          `expected partial-match suggestion, got: ${err.message}`,
+        );
+        assert.ok(err.message.includes("GROUP_X"));
+        assert.ok(err.message.includes("Foot."));
+        return true;
+      },
+    );
+  });
+});
