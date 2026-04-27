@@ -1,0 +1,31 @@
+- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+    - button "Foot Test clicca qui per info gruppo"
+    - button "Videochiamata di gruppo": Chiama
+    - button "Cerca"
+    - button "Menu"
+  - text: Oggi
+  - button "Apri dettagli chat di ~userc":
+    - img
+  - row "~userc [redacted] pas trop grave [redacted] 14:25":
+    - text: ~userc
+    - text: [redacted] pas trop grave [redacted]
+    - text: 14:25
+  - button "Apri dettagli chat di USER_B Test":
+    - img
+  - row "USER_B Test ~userc [redacted] pas trop grave [redacted] Merci! 14:31":
+    - text: USER_B Test
+    - button "Vai al messaggio citato":
+      - text: ~userc
+      - text: [redacted] pas trop grave [redacted]
+    - text: Merci!
+    - text: 14:31
+  - contentinfo:
+    - button "Allega"
+    - button "Emoji, GIF, Sticker"
+    - textbox "Scrivi al gruppo Foot Test":
+      - paragraph
+    - button "Messaggio vocale":
+      - button "Messaggio vocale"

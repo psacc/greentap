@@ -330,6 +330,70 @@ describe("parseMessages — quoted-reply parsing", () => {
   });
 });
 
+describe("parseMessages — tilde sender prefix + button-wrapped quote", () => {
+  // Repro for Neko's 2026-04-27 bug report: in a French group ("GROUP_X")
+  // a quote-reply by USER_B to a contact-not-saved sender ("~userc") was
+  // attributed by greentap to "userc", and the quote-card itself was not
+  // emitted as quoted_sender/quoted_text. Two root causes:
+  //   1. WA prepends "~" to senders not in the viewer's address book.
+  //   2. WA wraps the quote-card in a `button "<go-to-quoted>"` (clickable to
+  //      scroll the conversation), not a bare `generic:` container.
+
+  it("sender of a quote-reply is the replier, not the quoted sender", () => {
+    const aria = loadFixture("quoted-reply-tilde.snapshot.txt");
+    const messages = parseMessages(aria);
+    const reply = messages.find((m) => m.body && m.body.startsWith("Merci"));
+    assert.ok(reply, `should find Merci reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(reply.sender, "USER_B Test",
+      "the reply's sender must be the replier (USER_B), not the quoted sender (userc)");
+  });
+
+  it("strips WA's `~` prefix from sender names (sender + quoted_sender)", () => {
+    const aria = loadFixture("quoted-reply-tilde.snapshot.txt");
+    const messages = parseMessages(aria);
+    for (const m of messages) {
+      assert.ok(!m.sender.startsWith("~"),
+        `sender must not retain WA tilde prefix: ${JSON.stringify(m)}`);
+      if (m.quoted_sender) {
+        assert.ok(!m.quoted_sender.startsWith("~"),
+          `quoted_sender must not retain WA tilde prefix: ${JSON.stringify(m)}`);
+      }
+    }
+    const userCMsg = messages.find((m) => m.body === "[redacted] pas trop grave [redacted]" || m.text.includes("[redacted]"));
+    assert.ok(userCMsg, `should find userc's message`);
+    assert.equal(userCMsg.sender, "userc",
+      "tilde must be stripped from a sender-button-derived name");
+  });
+
+  it("detects quote-cards wrapped in a `button:` container (not just `generic:`)", () => {
+    // The fixture wraps the quote-card in a `button "Vai al messaggio citato":`
+    // (the locale-specific "Go to quoted message" button). Pre-fix, the
+    // parser only matched `generic:` containers and dropped this quote.
+    const aria = loadFixture("quoted-reply-tilde.snapshot.txt");
+    const messages = parseMessages(aria);
+    const reply = messages.find((m) => m.body && m.body.startsWith("Merci"));
+    assert.ok(reply, `should find Merci reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(reply.quoted_sender, "userc");
+    assert.equal(reply.quoted_text, "[redacted] pas trop grave [redacted]");
+    assert.equal(reply.body, "Merci!",
+      "body must contain only the reply, with the quoted bleed stripped");
+  });
+
+  it("strips the tilde-prefixed sender bleed from body even when raw text uses `~Name`", () => {
+    // The row body's text node has "~userc [redacted]...". After quote
+    // extraction (which tilde-strips quoted_sender to "userc"), the
+    // body strip must still match the raw "~userc" form.
+    const aria = loadFixture("quoted-reply-tilde.snapshot.txt");
+    const messages = parseMessages(aria);
+    const reply = messages.find((m) => m.body && m.body.startsWith("Merci"));
+    assert.ok(reply);
+    assert.ok(!reply.body.includes("userc"),
+      "body must not include the quoted-sender bleed (with or without tilde)");
+    assert.ok(!reply.body.includes("[redacted]"),
+      "body must not include the quoted-text bleed");
+  });
+});
+
 describe("printMessages", () => {
   it("prints empty message for no messages", () => {
     const output = [];
