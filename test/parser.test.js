@@ -394,6 +394,82 @@ describe("parseMessages — tilde sender prefix + button-wrapped quote", () => {
   });
 });
 
+describe("parseMessages — probable-contact-match prefix (Forse / Maybe / …)", () => {
+  // WA prepends a locale-specific word like "Forse" / "Maybe" / "Peut-être"
+  // when its contact-vs-phone heuristic is uncertain. Pre-fix we returned
+  // sender = "Forse Ju +39 555 0000 000"; post-fix we return the cleaner
+  // "Ju +39 555 0000 000" (still imperfect but matches WA's underlying
+  // contact label and avoids cluttering downstream summaries).
+
+  it("strips Italian `Forse ` prefix from sender button labels", () => {
+    const aria = `- document:
+  - banner:
+    - button "Profilo":
+      - img
+  - text: Oggi
+  - button "Apri dettagli chat di Forse Ju +39 555 0000 000":
+    - img
+  - row "Forse Ju +39 555 0000 000 Salut 14:00":
+    - text: Forse Ju +39 555 0000 000
+    - text: Salut
+    - text: 14:00
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(aria);
+    assert.equal(messages.length, 1);
+    assert.equal(messages[0].sender, "Ju +39 555 0000 000",
+      "sender should not retain the 'Forse' prefix");
+  });
+
+  it("strips other locale forms (Maybe, Peut-être, Vielleicht, Quizás)", () => {
+    const cases = [
+      ["Maybe John Doe", "John Doe"],
+      ["Peut-être Marie", "Marie"],
+      ["Vielleicht Hans", "Hans"],
+      ["Quizás Carlos", "Carlos"],
+    ];
+    for (const [raw, expected] of cases) {
+      const aria = `- document:
+  - banner:
+    - button "Profilo":
+      - img
+  - text: Oggi
+  - button "Apri dettagli chat di ${raw}":
+    - img
+  - row "${raw} Hi 14:00":
+    - text: ${raw}
+    - text: Hi
+    - text: 14:00
+  - contentinfo:
+    - textbox "Scrivi"`;
+      const messages = parseMessages(aria);
+      assert.equal(messages[0].sender, expected,
+        `expected '${expected}' for raw '${raw}', got '${messages[0].sender}'`);
+    }
+  });
+
+  it("does NOT strip `Forse` when it is part of a name (no trailing space match)", () => {
+    // "Forsemann" should not be reduced to "mann" — guard against partial
+    // strips of legitimate names that happen to start with the prefix word.
+    const aria = `- document:
+  - banner:
+    - button "Profilo":
+      - img
+  - text: Oggi
+  - button "Apri dettagli chat di Forsemann":
+    - img
+  - row "Forsemann Ciao 14:00":
+    - text: Forsemann
+    - text: Ciao
+    - text: 14:00
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(aria);
+    assert.equal(messages[0].sender, "Forsemann",
+      "names that incidentally start with 'Forse' must be preserved");
+  });
+});
+
 describe("printMessages", () => {
   it("prints empty message for no messages", () => {
     const output = [];
