@@ -47,6 +47,18 @@ npm test                             # Run all unit tests (node:test)
 | `test/fixtures/` | Recorded aria snapshots from live sessions |
 | `openspec/` | Specs, change proposals, workflow |
 
+## Daemon lifecycle
+
+The daemon (`lib/daemon.js`) is lazy-started on the first client call and self-exits after **15 min of no client connections**. Idle is tracked via a heartbeat file:
+
+- `~/.greentap/daemon.heartbeat` — `mtime` is "last client connect time"
+- Client (`lib/client.js`) calls `utimesSync` after every successful CDP connect
+- Daemon polls the file mtime every 60s; if `mtime` is older than `IDLE_TIMEOUT_MS` it shuts down
+
+The original CDP-event-based reset (`Target.attachedToTarget` listener on a session that only called `Target.setDiscoverTargets`) was a no-op for `connectOverCDP` clients — daemon died after exactly 15min regardless of activity. Fixed 2026-05-09.
+
+**Implication for cron-driven calls**: any caller hitting the daemon at intervals shorter than 15 min keeps it warm and avoids the 15-30s cold-start cost. Test isolation can override the timeout via `GREENTAP_IDLE_TIMEOUT_MS` (ms).
+
 ## openspec workflow
 
 See `openspec/WORKFLOW.md` for the full lifecycle.
