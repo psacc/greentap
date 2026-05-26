@@ -300,13 +300,13 @@ describe("navigateToChat: --index disambiguation in search fallback", () => {
 });
 
 describe("navigateToChat: partial-match suggestions", () => {
-  // Two chats whose names share a "Foot" prefix — Neko's "GROUP_X"
-  // + "Foot." repro pattern.
+  // Two chats whose names share a "Foot" prefix ("Football" + "Foot.") —
+  // Neko's partial-match repro pattern. Both contain the query "Foot".
   const TWO_FOOT_CHATS = `- grid "Lista delle chat":
-    - 'row "GROUP_X 14:00 Bonjour"':
-      - 'gridcell "GROUP_X 14:00 Bonjour"':
+    - 'row "Football 14:00 Bonjour"':
+      - 'gridcell "Football 14:00 Bonjour"':
         - img
-        - gridcell "GROUP_X 14:00"
+        - gridcell "Football 14:00"
         - text: Bonjour
         - gridcell
     - 'row "Foot. 09:00 Salut"':
@@ -334,7 +334,7 @@ describe("navigateToChat: partial-match suggestions", () => {
           /Did you mean one of/.test(err.message),
           `expected partial-match suggestion, got: ${err.message}`,
         );
-        assert.ok(err.message.includes("GROUP_X"), "expected first candidate listed");
+        assert.ok(err.message.includes("Football"), "expected first candidate listed");
         assert.ok(err.message.includes("Foot."), "expected second candidate listed");
         assert.ok(err.message.includes("--index"), "expected --index hint");
         return true;
@@ -354,7 +354,7 @@ describe("navigateToChat: partial-match suggestions", () => {
           /Did you mean one of/.test(err.message),
           `expected partial-match suggestion, got: ${err.message}`,
         );
-        assert.ok(err.message.includes("GROUP_X"));
+        assert.ok(err.message.includes("Football"));
         assert.ok(err.message.includes("Foot."));
         return true;
       },

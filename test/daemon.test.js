@@ -93,6 +93,107 @@ test("daemon source writes port file before launchPersistentContext", () => {
   );
 });
 
+test("daemon idle reset is heartbeat-file based, not CDP-event based", () => {
+  // Regression guard for the bug Neko surfaced 2026-05-09: the original
+  // implementation listened on Target.attachedToTarget / detachedFromTarget on
+  // a CDP session that only called Target.setDiscoverTargets. Those events
+  // never fire for external connectOverCDP clients, so the idle timer never
+  // reset — daemon died after exactly 15min regardless of activity. Replaced
+  // with a heartbeat file that the client touches on every connect (see
+  // lib/client.js touchHeartbeat()).
+  const sourceNoComments = DAEMON_SOURCE
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/[^\n]*/g, "");
+
+  assert.strictEqual(
+    /Target\.(attachedToTarget|detachedFromTarget|setDiscoverTargets)/.test(
+      sourceNoComments,
+    ),
+    false,
+    "daemon.js must not rely on CDP Target.* events for idle reset (they never fire for connectOverCDP clients)",
+  );
+  assert.ok(
+    /HEARTBEAT_FILE/.test(sourceNoComments),
+    "daemon.js must use a heartbeat file for idle detection",
+  );
+  assert.ok(
+    /setInterval\(\s*checkHeartbeat/.test(sourceNoComments),
+    "daemon.js must poll the heartbeat file via setInterval",
+  );
+});
+
+test("daemon shuts down when heartbeat is older than IDLE_TIMEOUT_MS", async () => {
+  // End-to-end check: spawn daemon with a very short timeout, never touch
+  // the heartbeat, and verify the daemon exits on its own. This proves the
+  // idle path actually fires (the original implementation would have stayed
+  // up because the broken CDP listener never reset the timer either way —
+  // but with the fix, "no heartbeat ever" still leads to shutdown).
+  const tmpDir = mkdtempSync(join(tmpdir(), "greentap-test-"));
+  const pidFile = join(tmpDir, "daemon.pid");
+  const testPort = 19334;
+
+  const child = fork(DAEMON_SCRIPT, [], {
+    detached: true,
+    stdio: "ignore",
+    env: {
+      ...process.env,
+      GREENTAP_DIR: tmpDir,
+      GREENTAP_CDP_PORT: String(testPort),
+      GREENTAP_IDLE_TIMEOUT_MS: "500",
+      GREENTAP_HEARTBEAT_INTERVAL_MS: "100",
+    },
+  });
+
+  try {
+    // Wait for PID file to appear (daemon started).
+    const startDeadline = Date.now() + 3000;
+    while (Date.now() < startDeadline) {
+      await new Promise((r) => setTimeout(r, 50));
+      if (existsSync(pidFile)) break;
+    }
+    assert.ok(existsSync(pidFile), "daemon should have started");
+
+    // Wait for the daemon to self-exit (idle timeout + a few poll cycles).
+    // We don't touch the heartbeat, so the daemon should shut down once
+    // checkHeartbeat sees the initial-touch mtime age exceed 500ms. Allow
+    // a generous deadline because Chrome launch is in flight and shutdown
+    // has to clean up port/pid files before the process exits.
+    const exitDeadline = Date.now() + 15000;
+    let exited = false;
+    while (Date.now() < exitDeadline) {
+      await new Promise((r) => setTimeout(r, 100));
+      try {
+        process.kill(child.pid, 0);
+      } catch {
+        exited = true;
+        break;
+      }
+    }
+    assert.ok(exited, "daemon should self-exit after idle timeout elapses");
+    assert.ok(
+      !existsSync(pidFile),
+      "daemon should clean up pid file on idle shutdown",
+    );
+  } finally {
+    try {
+      process.kill(child.pid, "SIGKILL");
+    } catch {
+      // already gone
+    }
+    try {
+      process.kill(-child.pid, "SIGKILL");
+    } catch {
+      // no group
+    }
+    await new Promise((r) => setTimeout(r, 200));
+    try {
+      rmSync(tmpDir, { recursive: true, force: true });
+    } catch {
+      // best effort
+    }
+  }
+});
+
 test("daemon does not pin channel:'chrome' — uses bundled Chromium (#14)", () => {
   // Static check: the `channel: "chrome"` option must be absent from
   // launchPersistentContext. Using bundled Chromium isolates greentap's

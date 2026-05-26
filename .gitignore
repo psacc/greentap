@@ -9,6 +9,11 @@ summary_stats.txt
 *_msgs.json
 *_stats.txt
 
+# QA reports (may reference real chat data) + local PII token list
+qa-reports/
+greentap-pii-tokens
+!scripts/greentap-pii-tokens.example
+
 # Skills infrastructure (agent-deck, skills.sh)
 .agent/
 .agents/

@@ -1,0 +1,28 @@
+# greentap PII token list — EXAMPLE / TEMPLATE
+#
+# Copy this to a GITIGNORED location the scanner reads (in priority order):
+#   1. path in $GREENTAP_PII_TOKENS
+#   2. .git/greentap-pii-tokens      (inside .git, never committed)
+#   3. ~/.greentap/pii-tokens
+#
+#   cp scripts/greentap-pii-tokens.example .git/greentap-pii-tokens
+#   # then edit in your real identity tokens
+#
+# NEVER commit the filled-in file. NEVER put real tokens in this .example
+# file or any other tracked file (CONTRIBUTING.md:25).
+#
+# Format: one literal forbidden substring per line, case-insensitive.
+# Blank lines and lines starting with '#' are ignored. Tokens are matched
+# as fixed strings (regex chars are auto-escaped), so write them plainly.
+#
+# Structural patterns (phone shapes, /Users/<user>/ paths, task-tracker
+# URLs/issue-keys) are already built into pii-scan.sh — do NOT add those
+# here. This file is ONLY for identity specifics the scanner can't guess:
+#
+#   <maintainer-first-name>
+#   <maintainer-last-name>
+#   <maintainer-nickname>
+#   <maintainer-username>
+#   maintainer@<personal-email-domain>
+#   <personal-email-domain>
+#   <real-phone-prefix-not-in-synthetic-allowlist>

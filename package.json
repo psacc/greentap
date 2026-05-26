@@ -1,6 +1,6 @@
 {
   "name": "greentap",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "CLI driver for WhatsApp Web via Playwright",
   "main": "greentap.js",
   "bin": {
@@ -8,6 +8,8 @@
   },
   "scripts": {
     "test": "node --test 'test/**/*.test.js'",
+    "pii": "./scripts/pii-scan.sh --worktree",
+    "install-hooks": "./scripts/install-hooks.sh",
     "postinstall": "playwright install chromium"
   },
   "type": "module",

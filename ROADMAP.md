@@ -1,9 +1,9 @@
 ## Strategic context
-Priority: medium — stable, agent-autonomy + media shipped in v0.4.0
-Current phase: Phase 9 — quality polish (sticker visibility, performance, sender inheritance hardening) — target v0.5.0
+Priority: medium — stable; v0.5.1 shipped (reliability + read/nav/fetch fixes)
+Current phase: Phase 9 — quality polish + release-process maturity (omnisess-parity QA gate, automated PII guard) — target v0.6.0
 Blocks: nothing
 Blocked by: nothing
-Last updated: 2026-04-25
+Last updated: 2026-05-26
 → Full strategic context: psacc/docs/ROADMAP.md
 
 ---
@@ -41,7 +41,7 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 | Aria tree restructuring (WA updates) | Medium | Two row formats already handled; parser may need updates. E2E harness catches breakage early. |
 | Sticker vs photo input confusion | Mitigated (2026-04-25) | E2E `sendFixtureImage` uses Allega → Foto e video flow keyed on `ic-filter-filled` icon; never touches the sticker input. |
 
-**Current: Phase 9 (quality polish, v0.5.0 target)**
+**Current: Phase 9 (quality polish + release-process maturity, v0.6.0 target)**
 
 ## Phases
 

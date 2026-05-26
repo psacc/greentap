@@ -128,7 +128,7 @@ cp -r /path/to/greentap/.claude/skills/greentap ~/.claude/skills/greentap
 ## Testing
 
 ```sh
-npm test    # 53 unit tests (node:test), fixture-based
+npm test    # unit tests (node:test), fixture-based
 ```
 
 ## E2E testing

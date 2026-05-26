@@ -822,3 +822,134 @@ describe("parsePollMessages", () => {
     assert.deepEqual(parsePollMessages(""), []);
   });
 });
+
+describe("parseMessages — quoted-reply gridcell/button containers (Bug 1/2/3)", () => {
+  it("extracts quote block from gridcell-shaped container (Bug 2)", () => {
+    // WhatsApp Web's aria does not always render quote-cards as `generic:`.
+    // Observed shapes include `gridcell:`, `button:`, and `link:`. PR #27's
+    // generic-only restriction caused body / quoted_sender / quoted_text to
+    // be silently empty for these rows. Verify the broadened detector
+    // recognizes a 2-text gridcell (Roberto's row in this fixture).
+    const aria = loadFixture("quoted-reply-gridcell.snapshot.txt");
+    const messages = parseMessages(aria);
+    const roberto = messages.find((m) => m.sender === "Roberto Marini");
+    assert.ok(roberto, `expected Roberto's row, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(roberto.quoted_sender, "Roberto Marini");
+    assert.equal(roberto.quoted_text, "Lavinia Vitale");
+  });
+
+  it("extracts quote block from button-shaped container (Bug 2)", () => {
+    // Same fixture, second row uses a `button:` container around the quote.
+    const aria = loadFixture("quoted-reply-gridcell.snapshot.txt");
+    const messages = parseMessages(aria);
+    const reply = messages.find((m) => m.sender === "Daniele Bottazzini");
+    assert.ok(reply, `expected Daniele's reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(reply.quoted_sender, "Roberto Marini");
+    assert.equal(reply.quoted_text, "Lavinia Vitale");
+    assert.equal(reply.body, "Esatto, non prenderle");
+  });
+
+  it("does NOT attribute a quote-reply to the quoted person (Bug 1)", () => {
+    // Estevan replies to Lavinia. The quote block contains Lavinia's name.
+    // Pre-fix, a stale carry-over could cause the parser to attribute
+    // Estevan's bubble to Lavinia (since her name appears in the row body).
+    // With the fresh-sender rule + quote detection, attribution must stay
+    // on Estevan.
+    const aria = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - text: Oggi
+  - button "Apri dettagli chat di Lavinia":
+    - img
+  - row "Lavinia Sì certo nessun problema 11:00":
+    - text: Lavinia Sì certo nessun problema 11:00
+  - button "Apri dettagli chat di Estevan":
+    - img
+  - row "Estevan Lavinia Sì certo nessun problema Perfetto, allora ci vediamo lì 11:08":
+    - text: Estevan
+    - gridcell:
+      - text: Lavinia
+      - text: Sì certo nessun problema
+    - text: Perfetto, allora ci vediamo lì
+    - text: 11:08
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(aria);
+    const estevanReply = messages.find((m) => m.text.includes("Perfetto"));
+    assert.ok(estevanReply, `expected Estevan's reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(estevanReply.sender, "Estevan",
+      "quote-reply must be attributed to the bubble's own sender, not the quoted person");
+    assert.equal(estevanReply.quoted_sender, "Lavinia");
+    assert.equal(estevanReply.quoted_text, "Sì certo nessun problema");
+    assert.equal(estevanReply.body, "Perfetto, allora ci vediamo lì");
+  });
+
+  it("emits (unknown) for a quote-reply whose sender button is missing AND label doesn't confirm (Bug 1 safe path)", () => {
+    // Worst case: Estevan's button got scrolled off, leaving currentSender
+    // stale (Lavinia from earlier). The row body still has the quote with
+    // Lavinia's name. Bug 3 hardening kicks in: row label doesn't start
+    // with "Lavinia" → fall to UNKNOWN_SENDER. The agent gets a clear
+    // "I don't know" instead of a confident wrong answer.
+    const aria = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - text: Oggi
+  - button "Apri dettagli chat di Lavinia":
+    - img
+  - row "Lavinia Sì certo 11:00":
+    - text: Lavinia Sì certo 11:00
+  - row "Estevan Lavinia Sì certo Perfetto 11:08":
+    - text: Estevan
+    - gridcell:
+      - text: Lavinia
+      - text: Sì certo
+    - text: Perfetto
+    - text: 11:08
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(aria);
+    const reply = messages.find((m) => m.text.includes("Perfetto"));
+    assert.ok(reply, `expected reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(reply.sender, "(unknown)",
+      "missing-button quote-reply must NOT inherit Lavinia's sender — emit (unknown)");
+    assert.equal(reply.quoted_sender, "Lavinia");
+    assert.equal(reply.quoted_text, "Sì certo");
+  });
+
+  it("rejects 2-text decorative containers where the second child is HH:MM (Bug 2 safety)", () => {
+    // Decorative date+time gridcell — must NOT be treated as a quote-card.
+    // Without the HH:MM safety, this would emit quoted_text="14:25" which
+    // is nonsense.
+    const aria = `- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+  - text: Oggi
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini hello 14:25":
+    - text: Roberto Marini hello
+    - gridcell:
+      - text: 14/03/2026
+      - text: 14:25
+    - text: 14:25
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(aria);
+    assert.ok(messages.length > 0);
+    assert.equal(messages[0].quoted_sender, null,
+      "decorative date+time gridcell must NOT be detected as a quote-card");
+    assert.equal(messages[0].quoted_text, null);
+  });
+
+  // NOTE: a 6th case from the source branch — "orphan row right after a quote
+  // block falls back to (unknown)" — is DEFERRED. It contradicts the existing
+  // shipped contract test (parseMessages — sender always populated:
+  // "orphan row ... inherits sender from previous message"), which expects the
+  // same fixture row to inherit the previous sender. Flipping that to
+  // (unknown) is a behavioral-contract change to non-quote orphan rows and is
+  // a separate maintainer decision — tracked in docs/known-leaks.md /
+  // qa-reports, not bundled into this quote-reply fix.
+});
