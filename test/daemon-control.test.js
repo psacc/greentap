@@ -90,6 +90,25 @@ test("daemonStatus: dead pid → not running, and stale files are cleaned", asyn
   assert.ok(!existsSync(PORT_FILE), "stale port file should be removed");
 });
 
+test("daemonStatus: a negative pid file is treated as not-running (no process-group probe)", () => {
+  clearDaemonFiles();
+  writeDaemonFiles(-1, 19987); // corrupted pid; -1 would mean "process group"
+  assert.deepStrictEqual(daemonStatus(), { running: false });
+});
+
+test("daemonStatus: a non-numeric pid file is treated as not-running", () => {
+  clearDaemonFiles();
+  writeFileSync(PID_FILE, "not-a-pid");
+  writeFileSync(PORT_FILE, "19987");
+  assert.deepStrictEqual(daemonStatus(), { running: false });
+});
+
+test("stopDaemon: never signals a process group for a negative pid", () => {
+  clearDaemonFiles();
+  writeDaemonFiles(-1, 19987);
+  assert.strictEqual(stopDaemon(), false); // must NOT reach process.kill(-1, SIGTERM)
+});
+
 test("stopDaemon: returns false when no daemon is running", () => {
   clearDaemonFiles();
   assert.strictEqual(stopDaemon(), false);
