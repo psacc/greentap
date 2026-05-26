@@ -94,7 +94,11 @@ remaining items are re-verified on `main` in Stage 2.)
   cumulative E2E gate is a Stage 2 item, per `CONTRIBUTING.md` § "E2E is mandatory".)
 - **PII scan clean** — `make pii` over the diff and over every commit message
   since the previous tag. Forbidden-token list lives in `CONTRIBUTING.md` §
-  "PII patterns". This applies to doc-only release PRs too.
+  "PII patterns". This applies to doc-only release PRs too. **Before trusting a
+  "clean" result, confirm `.git/greentap-pii-tokens` exists** (copy from
+  `scripts/greentap-pii-tokens.example`) — without it the scan is
+  STRUCTURAL-only and will not catch maintainer name/email/identity leaks (the
+  exact category of the 2026-04-27 incident).
 - **Skill-coherence `COHERENT`** — run the checker (`docs/skill-coherence-checker.md`).
   Any new command or new JSON field added since the previous tag MUST already
   be documented in `SKILL.md`. Verdict must read `COHERENT`.

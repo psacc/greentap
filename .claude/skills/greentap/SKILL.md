@@ -69,7 +69,9 @@ node greentap.js poll-results "contact or group name" --index 2 --json
 
 # Download recently-visible images from a chat to ~/.greentap/downloads/<chat-slug>/
 node greentap.js fetch-images "contact or group name" --limit 3 --json
-# --scroll loads older images first (mirrors read --scroll); --index N for duplicate names.
+# --scroll materializes more image rows into the DOM first (still bounded by
+# --limit and WhatsApp's blob lifetime — scrolled-off blobs may be unfetchable).
+# --index N disambiguates duplicate chat names.
 # An invalid --limit (0, negative, non-numeric) warns on stderr and falls back to the default (20).
 node greentap.js fetch-images "contact or group name" --limit 5 --scroll --index 2 --json
 

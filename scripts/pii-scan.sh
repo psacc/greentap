@@ -60,6 +60,9 @@ TRACKER='(app\.todoist\.com|todoist\.com/(app|showTask|task)|linear\.app/|[a-z0-
 #  - the documented doc numbers (CONTRIBUTING.md): +39 555…, +1 555…, +39 02 0000…
 #  - the established fixture convention: an all-zeros tail (>=3 "00" groups),
 #    e.g. +33 6 00 00 00 01 — unambiguously a placeholder, never a real number.
+# Deliberate false-negative: a REAL number that happens to contain an internal
+# "00 00 00" run is suppressed too. Accepted trade-off — such numbers are rare
+# and the identity-token list (below) is the backstop for known real numbers.
 SYNTH_PHONE='\+39[ ]?555|\+1[ ]?555|\+39[ ]?02[ ]?0000|\+39[ ]?555[ ]?010|00[ ]?00[ ]?00'
 
 STRUCT="(${PHONE})|(${USERPATH})|(${TRACKER})"
@@ -117,13 +120,9 @@ scan_text() { # label  <stdin: text with line numbers "N:content">
   done
 }
 
-is_text_blob() { # ref:path  -> 0 if text
-  ! git show "$1" 2>/dev/null | grep -qclP '\x00' 2>/dev/null
-}
-
 scan_file_at() { # ref(":" for index or "SHA:")  path
-  local ref="$1" path="$2" blob="$1$2"
-  # Skip binary.
+  local path="$2" blob="$1$2"
+  # Skip binary (grep -I treats a NUL-containing blob as binary).
   if git show "$blob" 2>/dev/null | grep -qIl . 2>/dev/null; then :; else return 0; fi
   git show "$blob" 2>/dev/null | grep -nE "$STRUCT" 2>/dev/null | scan_text "$path"
   if [ -n "$TOKEN_PAT" ]; then
@@ -150,6 +149,11 @@ case "$MODE" in
     ;;
   range)
     [ -z "$RANGE" ] && { echo "pii-scan: --range needs A..B" >&2; exit 2; }
+    # Validate the range resolves — an unresolvable ref or a swallowed flag
+    # (e.g. `--range --show`) must FAIL loudly, never silently report "clean".
+    if ! git rev-list "$RANGE" >/dev/null 2>&1; then
+      echo "pii-scan: invalid range '$RANGE' (does not resolve)" >&2; exit 2
+    fi
     B="${RANGE##*..}"
     while IFS= read -r f; do
       [ -z "$f" ] && continue

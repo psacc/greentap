@@ -14,6 +14,12 @@ set -euo pipefail
 ROOT="$(git rev-parse --show-toplevel)"
 HOOK="$ROOT/.git/hooks/pre-commit"
 
+# Don't silently clobber a pre-existing, non-greentap hook — back it up first.
+if [ -e "$HOOK" ] && ! grep -q "greentap pre-commit hook" "$HOOK" 2>/dev/null; then
+  cp "$HOOK" "$HOOK.bak"
+  echo "Backed up existing pre-commit hook -> $HOOK.bak"
+fi
+
 cat > "$HOOK" <<'HOOK_EOF'
 #!/usr/bin/env bash
 # greentap pre-commit hook (installed by scripts/install-hooks.sh).
