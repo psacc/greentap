@@ -33,10 +33,14 @@ happened, its category and scope, and the remediation — not the leaked values.
 
 ---
 
-## OPEN / UNDER REVIEW — `pre-swift-removal` tag on public origin
+## REMEDIATED 2026-05-26 — `pre-swift-removal` tag on public origin
 
-> Status: **flagged 2026-05-26, awaiting maintainer decision.** Not yet
-> remediated. Listed here so it is not lost.
+> Status: **remediated 2026-05-26.** Tag deleted from `origin` and locally
+> (maintainer authorized deleting all non-semver / non-release tags). The
+> related local-only backups `pre-oss-rewrite` and `pii-leak-backup-2026-04-27`
+> were deleted in the same pass. Residual risk: GitHub may retain the unreferenced
+> objects until garbage-collection, and any prior clone/fork/cache/index is
+> outside our control — deletion reduces but does not guarantee removal.
 
 - **What:** The tag `pre-swift-removal` (commit `b2bb0c1`, 2026-03-08 01:17) is
   present on the **public** `origin`. It **predates** the fixture-anonymization
