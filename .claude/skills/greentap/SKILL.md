@@ -69,6 +69,9 @@ node greentap.js poll-results "contact or group name" --index 2 --json
 
 # Download recently-visible images from a chat to ~/.greentap/downloads/<chat-slug>/
 node greentap.js fetch-images "contact or group name" --limit 3 --json
+# --scroll loads older images first (mirrors read --scroll); --index N for duplicate names.
+# An invalid --limit (0, negative, non-numeric) warns on stderr and falls back to the default (20).
+node greentap.js fetch-images "contact or group name" --limit 5 --scroll --index 2 --json
 
 # E2E roundtrip verification against the dedicated greentap-sandbox group
 GREENTAP_E2E=1 node greentap.js e2e
