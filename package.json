@@ -8,6 +8,8 @@
   },
   "scripts": {
     "test": "node --test 'test/**/*.test.js'",
+    "pii": "./scripts/pii-scan.sh --worktree",
+    "install-hooks": "./scripts/install-hooks.sh",
     "postinstall": "playwright install chromium"
   },
   "type": "module",
