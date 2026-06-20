@@ -1,0 +1,42 @@
+- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+    - button "Aperitivo Test clicca qui per info gruppo"
+    - button "Cerca"
+    - button "Menu"
+  - text: Oggi
+  - button "Apri dettagli chat di Forse Marco Bianchi +39 555 0100 200":
+    - img
+  - row "Forse Marco Bianchi +39 555 0100 200 Messaggio citato Tu veramente avevi la pizza! Ma la mangio dopo 09:45":
+    - text: ~ Marco Bianchi
+    - button "+39 555 0100 200"
+    - button "Messaggio citato":
+      - text: Elena Conti
+      - button "Tu veramente avevi la pizza!"
+    - text: Ma la mangio dopo
+    - text: 09:45
+  - row "Forse Marco Bianchi +39 555 0100 200 Messaggio citato La prendo io 09:47":
+    - text: ~ Marco Bianchi
+    - button "+39 555 0100 200"
+    - button "Messaggio citato":
+      - text: Elena Conti
+      - button "Oppure pasta"
+    - text: La prendo io
+    - text: 09:47
+  - button "Apri dettagli chat di Luca Santini":
+    - img
+  - row "Luca Santini Messaggio citato Accendere il forno oggi è criminale ma fa caldo Buona idea 09:50":
+    - text: Luca Santini
+    - button "Messaggio citato":
+      - text: ~ Marco Bianchi +39 555 0100 200
+      - button "Accendere il forno oggi è criminale 😅 ma fa caldo":
+        - text: Accendere il forno oggi è criminale
+        - img "😅"
+        - text: ma fa caldo
+    - text: Buona idea
+    - text: 09:50
+  - contentinfo:
+    - button "Allega"
+    - textbox "Scrivi al gruppo Aperitivo Test":
+      - paragraph
