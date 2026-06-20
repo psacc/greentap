@@ -1,9 +1,9 @@
 ## Strategic context
-Priority: medium — stable; v0.5.1 shipped (reliability + read/nav/fetch fixes)
-Current phase: Phase 9 — quality polish + release-process maturity (omnisess-parity QA gate, automated PII guard) — target v0.6.0
+Priority: medium — stable; v0.7.0 shipped (sender attribution + read fidelity + agent-governed visual QA gate)
+Current phase: Phase 10 — read-fidelity hardening (v0.7.0 visual-QA follow-ups: edited-message time #42, initials-avatar sender #43, poll kind #44)
 Blocks: nothing
 Blocked by: nothing
-Last updated: 2026-05-26
+Last updated: 2026-06-20
 → Full strategic context: psacc/docs/ROADMAP.md
 
 ---
