@@ -1,0 +1,39 @@
+- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+    - button "Aperitivo Test clicca qui per info gruppo"
+    - button "Cerca"
+    - button "Menu"
+  - text: Oggi
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini Mi piace tanto 😅 e anche questo 😂 10:00":
+    - text: Roberto Marini
+    - text: Mi piace tanto
+    - img "😅"
+    - text: e anche questo
+    - img "😂"
+    - text: 10:00
+  - row "Roberto Marini 👍 👍 😅 10:01 reazione ❤️. Visualizza reazioni":
+    - text: Roberto Marini
+    - img "👍"
+    - img "👍"
+    - img "😅"
+    - text: 10:01
+    - button "reazione ❤️. Visualizza reazioni":
+      - img "❤️"
+  - button "Apri dettagli chat di Elena Conti":
+    - img
+  - row "Elena Conti Messaggio citato Buona idea 😎 10:05":
+    - text: Elena Conti
+    - button "Messaggio citato":
+      - text: Roberto Marini
+      - button "Mi piace tanto 😅 e anche questo 😂"
+    - text: Perfetto
+    - img "🎉"
+    - text: 10:05
+  - contentinfo:
+    - button "Allega"
+    - textbox "Scrivi al gruppo Aperitivo Test":
+      - paragraph
