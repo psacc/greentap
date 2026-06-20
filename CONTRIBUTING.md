@@ -215,6 +215,12 @@ Before running `git tag`, **every** item must be green:
 7. **PII grep on the diff `<prev-tag>..HEAD` is clean.** Tracked
    files only — `git ls-files` × `git show <SHA>:<file>`. Same
    forbidden-token list.
+8. **Visual QA gate is green** (`VISUAL-QA: pass` or `pass with
+   N notes`). Run the agent-governed screenshot↔JSON semantic check
+   on a representative group per `TESTING.md` — it catches attribution
+   drift (wrong `sender`, dropped quote cards, lost messages) that
+   `npm test` and `e2e` pass straight through. A `VISUAL-QA: fail`
+   blocks the tag until fixed (with a fake-data fixture).
 
 ### Tag + release
 

@@ -9,8 +9,9 @@ summary_stats.txt
 *_msgs.json
 *_stats.txt
 
-# QA reports (may reference real chat data) + local PII token list
+# QA reports + visual-QA screenshots (contain real chat data) + local PII tokens
 qa-reports/
+qa-visual-out/
 greentap-pii-tokens
 !scripts/greentap-pii-tokens.example
 
