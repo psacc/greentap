@@ -1,0 +1,36 @@
+- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+    - button "Aperitivo Test clicca qui per info gruppo"
+    - button "Cerca"
+    - button "Menu"
+  - text: Oggi
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini Modalità PiP 1:10 12:58 Reazioni 😂, ❤ 2 in totale. Visualizza reazioni":
+    - text: Roberto Marini
+    - button "Modalità PiP 1:10":
+      - button "Modalità PiP"
+      - text: 1:10
+    - text: 12:58
+    - button "Reazioni 😂, ❤ 2 in totale. Visualizza reazioni":
+      - img "😂"
+      - img "❤️"
+      - text: "2"
+  - button "Apri dettagli chat di Elena Conti":
+    - img
+  - row "Elena Conti Picture-in-picture 0:42 13:01":
+    - text: Elena Conti
+    - button "Picture-in-picture 0:42":
+      - button "Picture-in-picture"
+      - text: 0:42
+    - text: 13:01
+  - row "Elena Conti Bel video! 13:02":
+    - text: Elena Conti
+    - text: Bel video!
+    - text: 13:02
+  - contentinfo:
+    - button "Allega"
+    - textbox "Scrivi al gruppo Aperitivo Test":
+      - paragraph
