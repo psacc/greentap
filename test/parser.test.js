@@ -1124,3 +1124,44 @@ describe("parseMessages — emoji content preservation", () => {
       "body keeps its own emoji but not the nested quoted emoji");
   });
 });
+
+describe("parseMessages — body-less label-only rows (2026-06-20 drop bug)", () => {
+  // WhatsApp emits some message rows as a label only, with NO trailing colon
+  // and NO child nodes (observed: short received messages like a lone "?", and
+  // the most recent rows in an active chat). The message-row regex required a
+  // trailing colon, so every such row was silently DROPPED. Fake data only.
+
+  it("does not drop body-less rows — all four messages are parsed", () => {
+    const aria = loadFixture("bodyless-rows.snapshot.txt");
+    const messages = parseMessages(aria);
+    assert.equal(messages.length, 4, `expected 4 messages, got: ${JSON.stringify(messages, null, 2)}`);
+  });
+
+  it("recovers text + time from a body-less row's label (continuation sender)", () => {
+    const aria = loadFixture("bodyless-rows.snapshot.txt");
+    const messages = parseMessages(aria);
+    const m = messages.find((x) => x.body === "Verso le sette");
+    assert.ok(m, `expected the body-less continuation, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(m.sender, "Roberto Marini", "continuation inherits the carried sender");
+    assert.equal(m.time, "14:01");
+    assert.equal(m.text, "Verso le sette", "sender prefix + trailing time stripped from label");
+  });
+
+  it("recovers a lone-token body-less row (e.g. \"?\") without the time", () => {
+    const aria = loadFixture("bodyless-rows.snapshot.txt");
+    const messages = parseMessages(aria);
+    const q = messages.find((x) => x.body === "?");
+    assert.ok(q, `expected the "?" message, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(q.sender, "Roberto Marini");
+    assert.equal(q.time, "14:01");
+  });
+
+  it("a body-less row preceded by its own sender button is attributed correctly", () => {
+    const aria = loadFixture("bodyless-rows.snapshot.txt");
+    const messages = parseMessages(aria);
+    const m = messages.find((x) => x.body === "Perfetto allora");
+    assert.ok(m, `expected Elena's body-less row, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(m.sender, "Elena Conti");
+    assert.equal(m.time, "14:05");
+  });
+});

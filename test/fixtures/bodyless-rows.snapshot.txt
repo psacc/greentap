@@ -1,0 +1,23 @@
+- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+    - button "Aperitivo Test clicca qui per info gruppo"
+    - button "Cerca"
+    - button "Menu"
+  - text: Oggi
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini Allora a che ora arrivate 14:00":
+    - text: Roberto Marini
+    - text: Allora a che ora arrivate
+    - text: 14:00
+  - 'row "Roberto Marini Verso le sette 14:01"'
+  - row "? 14:01"
+  - button "Apri dettagli chat di Elena Conti":
+    - img
+  - row "Elena Conti Perfetto allora 14:05"
+  - contentinfo:
+    - button "Allega"
+    - textbox "Scrivi al gruppo Aperitivo Test":
+      - paragraph
