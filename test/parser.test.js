@@ -195,6 +195,30 @@ describe("parseMessages", () => {
     assert.deepEqual(parseMessages('- document:\n  - heading "Nothing" [level=1]'), []);
   });
 
+  it("attributes own messages via the current wds-ic-* delivery icon (not just legacy msg-*)", () => {
+    // WhatsApp Web renamed delivery-receipt icons from msg-check/msg-dblcheck
+    // to the wds-ic-* design-system set (e.g. wds-ic-read). Pre-fix, isOwn
+    // never matched live snapshots, so own messages were mis-attributed to the
+    // self-label ("Tu") instead of "You". Both own messages here use wds-ic-read.
+    const aria = loadFixture("own-message-wds-icon.snapshot.txt");
+    const messages = parseMessages(aria);
+    const mine = messages.find((m) => m.text.includes("Tutto bene grazie"));
+    assert.ok(mine, `should find own message, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(mine.sender, "You",
+      "own message with wds-ic-read receipt must be attributed to You, not 'Tu'");
+    assert.equal(mine.body, "Tutto bene grazie");
+
+    const mine2 = messages.find((m) => m.text.includes("Anche oggi si lavora"));
+    assert.ok(mine2, "continuation own message should be found");
+    assert.equal(mine2.sender, "You",
+      "continuation own message (no 'Tu:' prefix) must also be You");
+
+    const incoming = messages.find((m) => m.text.includes("Ciao come va"));
+    assert.ok(incoming);
+    assert.equal(incoming.sender, "Roberto Marini",
+      "incoming message must keep its real sender");
+  });
+
   it("attributes own messages with delivery icon (msg-dblcheck)", () => {
     const aria = loadFixture("chat-own-messages-aria.txt");
     const messages = parseMessages(aria);
@@ -396,12 +420,13 @@ describe("parseMessages — tilde sender prefix + button-wrapped quote", () => {
 
 describe("parseMessages — probable-contact-match prefix (Forse / Maybe / …)", () => {
   // WA prepends a locale-specific word like "Forse" / "Maybe" / "Peut-être"
-  // when its contact-vs-phone heuristic is uncertain. Pre-fix we returned
-  // sender = "Forse Ju +39 555 0000 000"; post-fix we return the cleaner
-  // "Ju +39 555 0000 000" (still imperfect but matches WA's underlying
-  // contact label and avoids cluttering downstream summaries).
+  // when its contact-vs-phone heuristic is uncertain, AND appends the raw
+  // phone number to the display name for contacts not in the address book.
+  // Both are presentation cruft that pollute the `sender` identity field and
+  // leak PII (the phone number). Post-fix we strip the prefix word AND the
+  // trailing phone number, returning the clean display name ("Ju").
 
-  it("strips Italian `Forse ` prefix from sender button labels", () => {
+  it("strips Italian `Forse ` prefix and trailing phone from sender button labels", () => {
     const aria = `- document:
   - banner:
     - button "Profilo":
@@ -417,8 +442,31 @@ describe("parseMessages — probable-contact-match prefix (Forse / Maybe / …)"
     - textbox "Scrivi"`;
     const messages = parseMessages(aria);
     assert.equal(messages.length, 1);
-    assert.equal(messages[0].sender, "Ju +39 555 0000 000",
-      "sender should not retain the 'Forse' prefix");
+    assert.equal(messages[0].sender, "Ju",
+      "sender should drop the 'Forse' prefix AND the trailing phone number");
+  });
+
+  it("keeps a phone number as sender when there is no display name (phone-only contact)", () => {
+    // A truly unsaved contact with no name renders as just the phone number.
+    // Stripping it would leave an empty sender — keep the phone as identity.
+    const aria = `- document:
+  - banner:
+    - button "Profilo":
+      - img
+  - text: Oggi
+  - button "Apri dettagli chat di +39 555 0000 000":
+    - img
+  - row "+39 555 0000 000 Ciao 14:00":
+    - text: +39 555 0000 000
+    - text: Ciao
+    - text: 14:00
+  - contentinfo:
+    - textbox "Scrivi"`;
+    const messages = parseMessages(aria);
+    assert.equal(messages.length, 1);
+    assert.equal(messages[0].sender, "+39 555 0000 000",
+      "phone-only sender must be preserved, not stripped to empty");
+    assert.equal(messages[0].body, "Ciao", "body must not include the phone label");
   });
 
   it("strips other locale forms (Maybe, Peut-être, Vielleicht, Quizás)", () => {
@@ -952,4 +1000,80 @@ describe("parseMessages — quoted-reply gridcell/button containers (Bug 1/2/3)"
   // (unknown) is a behavioral-contract change to non-quote orphan rows and is
   // a separate maintainer decision — tracked in docs/known-leaks.md /
   // qa-reports, not bundled into this quote-reply fix.
+});
+
+describe("parseMessages — real WA quote structure: button-label quoted text + phone-polluted sender", () => {
+  // Reproduces the live WhatsApp Web structure observed 2026-06-20 in a group
+  // QA run (fake data). Two defects this fixture pins down:
+  //   Bug A: WA appends the phone number to the display name for contacts not
+  //          in the address book ("Apri dettagli chat di Forse Marco Bianchi
+  //          +39 555 0100 200") — the phone leaked into `sender`/`quoted_sender`.
+  //   Bug B: the quoted message text is rendered as a `button "<text>"` child
+  //          of the "Messaggio citato" container (NOT a `text:` node), so the
+  //          earlier 2-text-children detector missed it entirely — quoted_sender
+  //          / quoted_text came back null and the quoted author bled into body.
+
+  it("strips the trailing phone from sender (Bug A)", () => {
+    const aria = loadFixture("quoted-reply-button-label.snapshot.txt");
+    const messages = parseMessages(aria);
+    for (const m of messages) {
+      assert.ok(!/\+\d/.test(m.sender),
+        `sender must not contain a phone number: ${JSON.stringify(m)}`);
+      if (m.quoted_sender) {
+        assert.ok(!/\+\d/.test(m.quoted_sender),
+          `quoted_sender must not contain a phone number: ${JSON.stringify(m)}`);
+      }
+    }
+    const first = messages.find((m) => m.body === "Ma la mangio dopo");
+    assert.ok(first, `expected first reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(first.sender, "Marco Bianchi");
+  });
+
+  it("extracts quoted_sender/quoted_text when quoted text is a button label (Bug B)", () => {
+    const aria = loadFixture("quoted-reply-button-label.snapshot.txt");
+    const messages = parseMessages(aria);
+    const first = messages.find((m) => m.body === "Ma la mangio dopo");
+    assert.ok(first);
+    assert.equal(first.quoted_sender, "Elena Conti");
+    assert.equal(first.quoted_text, "Tu veramente avevi la pizza!");
+    assert.equal(first.body, "Ma la mangio dopo",
+      "body must be the reply only — no sender label or quoted bleed");
+  });
+
+  it("keeps emoji-bearing quoted text via the button accessible name", () => {
+    const aria = loadFixture("quoted-reply-button-label.snapshot.txt");
+    const messages = parseMessages(aria);
+    const gloria = messages.find((m) => m.sender === "Luca Santini");
+    assert.ok(gloria, `expected Gloria's reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(gloria.quoted_sender, "Marco Bianchi",
+      "quoted_sender must be tilde- and phone-stripped");
+    assert.equal(gloria.quoted_text, "Accendere il forno oggi è criminale 😅 ma fa caldo");
+    assert.equal(gloria.body, "Buona idea");
+  });
+
+  it("continuation quote-reply (no sender button) stays attributed to the same sender, not (unknown)", () => {
+    // The 09:47 row has no preceding sender button (group continuation). Once
+    // quote detection is live, the fresh-sender rule must NOT downgrade it to
+    // (unknown): the row body's own sender-label node ("~ Marco Bianchi")
+    // confirms the carried sender.
+    const aria = loadFixture("quoted-reply-button-label.snapshot.txt");
+    const messages = parseMessages(aria);
+    const second = messages.find((m) => m.body === "La prendo io");
+    assert.ok(second, `expected continuation reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(second.sender, "Marco Bianchi",
+      "continuation quote-reply must stay attributed to Marco, not (unknown)");
+    assert.equal(second.quoted_sender, "Elena Conti");
+    assert.equal(second.quoted_text, "Oppure pasta");
+  });
+
+  it("text field still carries the quoted bleed for backward compatibility", () => {
+    const aria = loadFixture("quoted-reply-button-label.snapshot.txt");
+    const messages = parseMessages(aria);
+    const first = messages.find((m) => m.body === "Ma la mangio dopo");
+    assert.ok(first);
+    assert.ok(first.text.includes("Elena Conti"),
+      "text should retain quoted sender for backward compat");
+    assert.ok(first.text.includes("Ma la mangio dopo"),
+      "text should retain the reply body");
+  });
 });

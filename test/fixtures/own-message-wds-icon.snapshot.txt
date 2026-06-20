@@ -1,0 +1,28 @@
+- document:
+  - banner:
+    - button "Dettagli profilo":
+      - img
+    - button "greentap-sandbox clicca qui per info gruppo"
+    - button "Cerca"
+    - button "Menu"
+  - text: Oggi
+  - button "Apri dettagli chat di Roberto Marini":
+    - img
+  - row "Roberto Marini Ciao come va 10:30":
+    - text: Roberto Marini
+    - text: Ciao come va
+    - text: 10:30
+  - 'row "Tu: Tutto bene grazie 10:35 Consegnato"':
+    - text: Tutto bene grazie
+    - button "10:35 Consegnato":
+      - text: 10:35
+      - img "wds-ic-read"
+  - row "Anche oggi si lavora 10:36 Letto":
+    - text: Anche oggi si lavora
+    - button "10:36 Letto":
+      - text: 10:36
+      - img "wds-ic-read"
+  - contentinfo:
+    - button "Allega"
+    - textbox "Digita un messaggio per il gruppo greentap-sandbox":
+      - paragraph
