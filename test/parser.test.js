@@ -1077,3 +1077,50 @@ describe("parseMessages — real WA quote structure: button-label quoted text + 
       "text should retain the reply body");
   });
 });
+
+describe("parseMessages — emoji content preservation", () => {
+  // Emoji render as `img "<glyph>"` nodes; a text-only pass dropped them, so
+  // "Mi piace 😅 molto" lost the emoji and an emoji-only message read as empty.
+  // Direct-child emoji are now interleaved into text/body; nested emoji
+  // (reactions, quoted-content) stay excluded. Fake data only.
+
+  it("interleaves inline emoji into body in document order", () => {
+    const aria = loadFixture("emoji-messages.snapshot.txt");
+    const messages = parseMessages(aria);
+    const m = messages.find((x) => x.body.startsWith("Mi piace tanto"));
+    assert.ok(m, `expected the inline-emoji message, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(m.body, "Mi piace tanto 😅 e anche questo 😂");
+    assert.equal(m.sender, "Roberto Marini");
+    assert.equal(m.body, m.text, "non-quote row: body must still equal text");
+  });
+
+  it("preserves an emoji-only message instead of dropping it to empty", () => {
+    const aria = loadFixture("emoji-messages.snapshot.txt");
+    const messages = parseMessages(aria);
+    const m = messages.find((x) => x.time === "10:01");
+    assert.ok(m, `expected the emoji-only message, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(m.body, "👍 👍 😅", "emoji-only body must contain the emoji, not be empty");
+    assert.equal(m.sender, "Roberto Marini", "continuation emoji-only msg keeps the sender");
+  });
+
+  it("excludes reaction emoji from message content", () => {
+    const aria = loadFixture("emoji-messages.snapshot.txt");
+    const messages = parseMessages(aria);
+    const m = messages.find((x) => x.time === "10:01");
+    assert.ok(m);
+    assert.ok(!m.body.includes("❤️"), "a reaction emoji must NOT leak into body");
+    assert.ok(!m.text.includes("❤️"), "a reaction emoji must NOT leak into text");
+  });
+
+  it("keeps body clean of nested quoted emoji while preserving its own emoji", () => {
+    const aria = loadFixture("emoji-messages.snapshot.txt");
+    const messages = parseMessages(aria);
+    const m = messages.find((x) => x.sender === "Elena Conti");
+    assert.ok(m, `expected Elena's quote-reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(m.quoted_sender, "Roberto Marini");
+    assert.equal(m.quoted_text, "Mi piace tanto 😅 e anche questo 😂",
+      "quoted_text retains the quoted message's emoji (from the button label)");
+    assert.equal(m.body, "Perfetto 🎉",
+      "body keeps its own emoji but not the nested quoted emoji");
+  });
+});
