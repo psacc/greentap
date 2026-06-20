@@ -1165,3 +1165,58 @@ describe("parseMessages — body-less label-only rows (2026-06-20 drop bug)", ()
     assert.equal(m.time, "14:05");
   });
 });
+
+describe("parseMessages — video message classification", () => {
+  // WhatsApp renders a video bubble as a player control: a button nesting a
+  // play/PiP button + an M:SS duration text. Pre-fix it fell through to
+  // kind:"text" with a leaked reaction count as `text` and the clip duration
+  // as `time`. Fake data only. Detection is structural — the wrapper label
+  // ("Modalità PiP" IT, "Picture-in-picture" EN) is deliberately ignored.
+
+  it("classifies a video bubble as kind:'video', not a text message", () => {
+    const aria = loadFixture("video-message.snapshot.txt");
+    const messages = parseMessages(aria);
+    const vids = messages.filter((m) => m.kind === "video");
+    assert.equal(vids.length, 2, `expected 2 videos, got: ${JSON.stringify(messages, null, 2)}`);
+    for (const v of vids) {
+      assert.equal(v.text, "", "video carries no text content");
+      assert.equal(v.body, "", "video carries no body content");
+    }
+  });
+
+  it("uses the message send time, not the clip duration, as `time`", () => {
+    const aria = loadFixture("video-message.snapshot.txt");
+    const messages = parseMessages(aria);
+    const v = messages.find((m) => m.kind === "video" && m.sender === "Roberto Marini");
+    assert.ok(v);
+    assert.equal(v.time, "12:58", "time must be the 12:58 send time, not the 1:10 duration");
+  });
+
+  it("does not leak a reaction count into the video message", () => {
+    const aria = loadFixture("video-message.snapshot.txt");
+    const messages = parseMessages(aria);
+    // The reaction count "2" must not appear as any message's text/body.
+    for (const m of messages) {
+      assert.notEqual(m.text, "2", `reaction count leaked into text: ${JSON.stringify(m)}`);
+    }
+  });
+
+  it("detects video structurally regardless of the locale-specific control label", () => {
+    const aria = loadFixture("video-message.snapshot.txt");
+    const messages = parseMessages(aria);
+    // The second video uses an English "Picture-in-picture" label.
+    const en = messages.find((m) => m.kind === "video" && m.sender === "Elena Conti");
+    assert.ok(en, "English-labelled video must still be detected as video");
+    assert.equal(en.time, "13:01");
+  });
+
+  it("still parses a normal text message in the same chat correctly", () => {
+    const aria = loadFixture("video-message.snapshot.txt");
+    const messages = parseMessages(aria);
+    const txt = messages.find((m) => m.body === "Bel video!");
+    assert.ok(txt, "the plain text reply must parse normally");
+    assert.equal(txt.kind, "text");
+    assert.equal(txt.sender, "Elena Conti");
+    assert.equal(txt.time, "13:02");
+  });
+});
