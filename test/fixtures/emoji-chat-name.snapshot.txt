@@ -1,0 +1,19 @@
+- grid "Lista delle chat":
+    - 'row "Calcetto del Giovedì 🤸 ⚽ 🏃 20:56 ~Marco : Sticker"':
+      - 'gridcell "Calcetto del Giovedì 🤸 ⚽ 🏃 20:56 ~Marco : Sticker"':
+        - img
+        - gridcell "Calcetto del Giovedì 🤸 ⚽ 🏃 20:56":
+          - text: Calcetto del Giovedì
+          - img "🤸"
+          - img "⚽"
+          - img "🏃"
+          - text: "20:56"
+        - text: "~Marco : Sticker"
+        - gridcell
+    - 'row "Futsal Group 17:36 Sergio L. : Ok a dopo ciao cari 1 messaggio non letto"':
+      - 'gridcell "Futsal Group 17:36 Sergio L. : Ok a dopo ciao cari 1 messaggio non letto"':
+        - img
+        - gridcell "Futsal Group 17:36"
+        - text: "Sergio L. : Ok a dopo ciao cari"
+        - gridcell "1 messaggio non letto": "1"
+  - text: end

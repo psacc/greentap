@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { parseChatList, printChats, parseMessages, printMessages, parseSearchResults, parsePollMessages } from "../lib/parser.js";
+import { parseChatList, printChats, parseMessages, printMessages, parseSearchResults, parsePollMessages, normalizeChatName } from "../lib/parser.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURES = join(__dirname, "fixtures");
@@ -63,6 +63,24 @@ describe("parseChatList", () => {
     const hasDay = times.some((t) => /^(lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica|ieri|oggi)$/i.test(t));
     assert.ok(hasHHMM, "should have HH:MM format times");
     assert.ok(hasDay, "should have day name format times");
+  });
+
+  // Regression: chats whose NAME contains emoji render the name+time gridcell
+  // with child nodes (text + `img "emoji"`), so its aria line ends with `":`
+  // (has children) instead of `"` + newline (leaf). The old extraction regex
+  // `/- gridcell "(.+?)"\n/` only matched leaf gridcells, so emoji-named chats
+  // were silently dropped from the parsed list — manifesting as "Chat not
+  // found" on read/poll-results/snapshot and empty search results, even though
+  // `snapshot chats` (raw aria) showed the chat. See navigateToChat resolution.
+  it("does not drop chats whose name contains emoji", () => {
+    const aria = loadFixture("emoji-chat-name.snapshot.txt");
+    const chats = parseChatList(aria);
+    const emoji = chats.find((c) => c.name.startsWith("Calcetto del Giovedì"));
+    assert.ok(emoji, `emoji-named chat should be parsed, got: ${JSON.stringify(chats)}`);
+    assert.equal(emoji.time, "20:56");
+    assert.ok(emoji.name.includes("⚽"), "emoji should be preserved in the name");
+    // The neighbouring plain chat must still parse (no regression).
+    assert.ok(chats.find((c) => c.name === "Futsal Group"), "plain chat still parsed");
   });
 
   it("returns empty array for empty input", () => {
@@ -131,6 +149,35 @@ describe("parseChatList", () => {
     assert.equal(chats.length, 1);
     assert.equal(chats[0].name, "Sport Club");
     assert.equal(chats[0].unreadCount, 61);
+  });
+});
+
+describe("normalizeChatName", () => {
+  it("strips Private Use Area artifacts injected by WhatsApp's emoji font", () => {
+    // WhatsApp Web renders some emoji via a custom font that injects a PUA
+    // code point (e.g. U+E000 after ⚽) into the accessible name. Users cannot
+    // type it, so the raw name must be normalised before exact-matching.
+    const typed = "Calcetto del Giovedì 🤸 ⚽ 🏃";
+    const rendered = typed.replace("⚽", "⚽\u{E000}"); // WA injects a PUA char here
+    assert.notEqual(rendered, typed, "raw strings differ (the bug)");
+    assert.equal(normalizeChatName(rendered), normalizeChatName(typed));
+  });
+
+  it("is insensitive to emoji variation selectors", () => {
+    assert.equal(normalizeChatName("Foot ⚽️"), normalizeChatName("Foot ⚽"));
+  });
+
+  it("collapses non-breaking spaces and trims", () => {
+    assert.equal(normalizeChatName("A  B "), "A B");
+  });
+
+  it("preserves distinct emoji so different names stay distinguishable", () => {
+    assert.notEqual(normalizeChatName("Foot ⚽"), normalizeChatName("Foot 🏀"));
+  });
+
+  it("handles null/undefined safely", () => {
+    assert.equal(normalizeChatName(null), "");
+    assert.equal(normalizeChatName(undefined), "");
   });
 });
 
