@@ -1,9 +1,9 @@
 ## Strategic context
-Priority: medium — stable; v0.7.0 shipped (sender attribution + read fidelity + agent-governed visual QA gate)
+Priority: medium — stable; v0.7.1 shipped (patch: resolve chats whose name contains emoji #46); v0.7.0 (sender attribution + read fidelity + agent-governed visual QA gate)
 Current phase: Phase 10 — read-fidelity hardening (v0.7.0 visual-QA follow-ups: edited-message time #42, initials-avatar sender #43, poll kind #44)
 Blocks: nothing
 Blocked by: nothing
-Last updated: 2026-06-20
+Last updated: 2026-06-23
 → Full strategic context: psacc/docs/ROADMAP.md
 
 ---
@@ -137,6 +137,7 @@ Status: deferred. Single-agent usage works. Re-open if multiple parallel agents 
 - [ ] **Sticker visibility** — parser `kind: "sticker"` + `fetchStickers` download. Reuses fetchImages mechanics with a different DOM marker. Tracked in task tracker.
 - [ ] **Sender-inheritance hardening** — current orphan-row recovery blindly inherits previous-row sender. Tighten to require a "same-author" hint (e.g. `msg-dblcheck` for own, structural cue) and prefer `(unknown)` when ambiguous. Tracked in task tracker.
 - [ ] **Performance hygiene** — concrete proposals reviewed by 3 independent agents, accepted only if no functionality loss. Likely targets: replace hardcoded `setTimeout` waits with element-based `waitFor`, reduce review-agent prompt size for diffs <30 LOC, cheaper overlay-dismiss alternative to `page.reload()` between e2e stages.
+- [ ] **`snapshot messages` stale selector** (low priority; debug-only command) — the `messages` scope uses `page.getByRole("application")`, but WA Web's message panel has no `application`/`main`/`region`/`log` container role, so it always returns "Message panel not found" for ALL chats. Not emoji-related; `read` (the real path) is unaffected since it snapshots `:root`. Fix: fall back to `:root` or scope to the region after the chat-header banner. Discovered during the v0.7.1 emoji-chat-name QA.
 
 ### Phase 10 — Voice + documents (deferred, no spike yet)
 
