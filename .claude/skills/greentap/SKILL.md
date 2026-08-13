@@ -28,66 +28,66 @@ Uses a background browser daemon for fast (~500ms) command execution.
 ## Prerequisites
 
 - Node.js (v18+); bundled Chromium auto-installed via `npx playwright install chromium`
-- First run: `node greentap.js login` to scan QR code
+- First run: `greentap login` to scan QR code
 
 ## Commands
 
 ```bash
 # Identity of the currently logged-in WA account
-node greentap.js whoami --json
+greentap whoami --json
 
 # List visible chats with last message and unread count
-node greentap.js chats --json
+greentap chats --json
 
 # List only chats with unread messages
-node greentap.js unread --json
+greentap unread --json
 
 # Read messages from a chat (substring match on name)
 # Each message includes: sender, time, text, body, quoted_sender, quoted_text,
 # links[], kind, imageId (when image), timestamp
 # Outbound messages: sender === "You" (no separate is_self flag)
-node greentap.js read "contact or group name" --json
+greentap read "contact or group name" --json
 
 # Read full chat history (scrolls up, deduplicates)
-node greentap.js read "contact or group name" --scroll --json
+greentap read "contact or group name" --scroll --json
 
 # If multiple chats share the same name, use --index N (1-based) to pick one
-node greentap.js read "contact or group name" --index 2 --json
-node greentap.js send "contact or group name" --index 2 "message text"
+greentap read "contact or group name" --index 2 --json
+greentap send "contact or group name" --index 2 "message text"
 
 # Search for a contact or group (finds archived chats too)
-node greentap.js search "query" --json
+greentap search "query" --json
 
 # Send a message (finds chat by name, types and sends)
 # Multi-line messages: use real \n in the string — they are sent as one bubble
-node greentap.js send "contact or group name" "line one
+greentap send "contact or group name" "line one
 line two"
 
 # Read poll results from a chat (most recent poll, with vote counts per option)
-node greentap.js poll-results "contact or group name" --json
-node greentap.js poll-results "contact or group name" --index 2 --json
+greentap poll-results "contact or group name" --json
+greentap poll-results "contact or group name" --index 2 --json
 
 # Download recently-visible images from a chat to ~/.greentap/downloads/<chat-slug>/
-node greentap.js fetch-images "contact or group name" --limit 3 --json
+greentap fetch-images "contact or group name" --limit 3 --json
 # --scroll materializes more image rows into the DOM first (still bounded by
 # --limit and WhatsApp's blob lifetime — scrolled-off blobs may be unfetchable).
 # --index N disambiguates duplicate chat names.
 # An invalid --limit (0, negative, non-numeric) warns on stderr and falls back to the default (20).
-node greentap.js fetch-images "contact or group name" --limit 5 --scroll --index 2 --json
+greentap fetch-images "contact or group name" --limit 5 --scroll --index 2 --json
 
 # E2E roundtrip verification against the dedicated greentap-sandbox group
-GREENTAP_E2E=1 node greentap.js e2e
+GREENTAP_E2E=1 greentap e2e
 
 # Daemon management
-node greentap.js status
-node greentap.js daemon stop
+greentap status
+greentap daemon stop
 
 # Clear session data (forces re-login on next run)
-node greentap.js logout
+greentap logout
 
 # Debug: dump raw aria snapshot (full|chats|messages|compose)
-node greentap.js snapshot full
-node greentap.js snapshot messages --chat "contact or group name"
+greentap snapshot full
+greentap snapshot messages --chat "contact or group name"
 ```
 
 ## Important behavior
@@ -126,7 +126,7 @@ Outbound messages are identified by `sender === "You"` — there is no separate 
 ## Multimodal flow for images
 
 ```
-$ node greentap.js fetch-images "Famiglia Rossi" --limit 3 --json
+$ greentap fetch-images "Famiglia Rossi" --limit 3 --json
 [
   { "imageId": "a7f3c211", "path": "/Users/<you>/.greentap/downloads/famiglia-rossi/a7f3c211.jpg",
     "sender": "Elena Conti", "time": "14:22", "mimeType": "image/jpeg" }
