@@ -20,7 +20,11 @@ import * as commands from "../lib/commands.js";
  * @param {string} expectedAriaSnippet - Snippet to embed in the post-send
  *   aria so the snippet-match check passes (default: chatName).
  */
-function makeSendFakePage(chatName, expectedAriaSnippet = chatName) {
+function makeSendFakePage(
+  chatName,
+  expectedAriaSnippet = chatName,
+  { previewCloseAfterSend = false } = {},
+) {
   const calls = [];
   // The post-send aria must contain a snippet of the typed message so the
   // snippet-match warning does not fire. Build a snapshot that contains
@@ -43,9 +47,15 @@ function makeSendFakePage(chatName, expectedAriaSnippet = chatName) {
     },
   };
 
+  const previewCloseButton = {
+    click: async () => {
+      calls.push({ kind: "previewCloseClick" });
+    },
+  };
+
   const contentinfoButtons = {
-    count: async () => 1,
-    last: () => sendButton,
+    count: async () => previewCloseAfterSend ? 2 : 1,
+    last: () => previewCloseAfterSend ? previewCloseButton : sendButton,
   };
 
   const contentinfo = {
@@ -54,6 +64,10 @@ function makeSendFakePage(chatName, expectedAriaSnippet = chatName) {
       if (role === "button") return contentinfoButtons;
       return composeTextbox;
     },
+    locator: () => ({
+      count: async () => 1,
+      click: sendButton.click,
+    }),
   };
 
   // Fast-path returns immediately when this banner exposes the chat name.
@@ -109,6 +123,31 @@ describe("send: multi-line newline handling", () => {
     assert.equal(types.length, 1, "should have exactly 1 type call");
     assert.equal(types[0].text, "Ciao");
     assert.equal(shiftEnters.length, 0, "no Shift+Enter for single-line");
+  });
+
+  it("clicks Send when a link-preview close button follows it", async () => {
+    const page = makeSendFakePage(
+      "Roberto Marini",
+      "https://example.com",
+      { previewCloseAfterSend: true },
+    );
+
+    await commands.send(
+      page,
+      "Roberto Marini",
+      "https://example.com",
+      null,
+      undefined,
+    );
+
+    assert.equal(
+      page._calls.filter((call) => call.kind === "sendBtnClick").length,
+      1,
+    );
+    assert.equal(
+      page._calls.filter((call) => call.kind === "previewCloseClick").length,
+      0,
+    );
   });
 
   it("3-line message: 3 type calls, 2 Shift+Enter between segments", async () => {

@@ -120,3 +120,68 @@ test("mergeLinksIntoMessages preserves monotone ordering across multiple URL-onl
   assert.strictEqual(out[0].links[0].href, "https://a.example/1");
   assert.strictEqual(out[1].links[0].href, "https://b.example/2");
 });
+
+test("mergeLinksIntoMessages keeps later matches after an unparsed link row", () => {
+  const messages = [
+    { sender: "Roberto Marini", time: "10:00", text: "plain message" },
+    { sender: "You", time: "10:01", text: "" },
+  ];
+  const linkRows = [
+    {
+      links: [{ href: "https://example.com/unparsed", text: "example.com/unparsed" }],
+      rowText: "a link-bearing row the parser omitted 09:59",
+    },
+    {
+      links: [{ href: "https://example.com/current", text: "example.com/current" }],
+      rowText: "https://example.com/current 10:01",
+    },
+  ];
+
+  const out = mergeLinksIntoMessages(messages, linkRows);
+
+  assert.deepStrictEqual(out[0].links, []);
+  assert.strictEqual(out[1].links[0].href, "https://example.com/current");
+});
+
+test("mergeLinksIntoMessages matches a rendered URL when row text differs from ARIA text", () => {
+  const href = "https://example.com/e2e-safe-marker";
+  const messages = [
+    { sender: "You", time: "12:06", text: "" },
+    {
+      sender: "You",
+      time: "12:06",
+      text: `example.com ${href} example.com`,
+    },
+  ];
+  const linkRows = [
+    {
+      links: [{ href, text: "example.com/e2e-safe-marker" }],
+      rowText: `${href} 12:0612:06 msg-dblcheck`,
+    },
+  ];
+
+  const out = mergeLinksIntoMessages(messages, linkRows);
+
+  assert.deepStrictEqual(out[0].links, []);
+  assert.strictEqual(out[1].links[0].href, href);
+});
+
+test("mergeLinksIntoMessages prefers an exact href over earlier visible link text", () => {
+  const href = "https://example.com/exact-safe-marker";
+  const visibleText = "example.com/exact-safe-marker";
+  const messages = [
+    { sender: "You", time: "12:06", text: visibleText },
+    { sender: "You", time: "12:06", text: `preview ${href}` },
+  ];
+  const linkRows = [
+    {
+      links: [{ href, text: visibleText }],
+      rowText: `${href} 12:0612:06 msg-dblcheck`,
+    },
+  ];
+
+  const out = mergeLinksIntoMessages(messages, linkRows);
+
+  assert.deepStrictEqual(out[0].links, []);
+  assert.strictEqual(out[1].links[0].href, href);
+});
