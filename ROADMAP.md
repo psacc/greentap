@@ -1,6 +1,6 @@
 ## Strategic context
 Priority: medium — stable; v0.7.2 release candidate adds safe modal dismissal and enforces the visible-only default `read` contract; v0.7.1 shipped (emoji chat-name resolution)
-Current phase: Phase 10 — read-fidelity hardening (v0.7.0 visual-QA follow-ups: edited-message time #42, initials-avatar sender #43, poll kind #44)
+Current phase: Phase 9 — quality polish and read-fidelity hardening
 Blocks: nothing
 Blocked by: nothing
 Last updated: 2026-09-01
@@ -41,7 +41,7 @@ Migrating to Playwright on WhatsApp Web, following the same pattern as hey-cli.
 | Aria tree restructuring (WA updates) | Medium | Two row formats already handled; parser may need updates. E2E harness catches breakage early. |
 | Sticker vs photo input confusion | Mitigated (2026-04-25) | E2E `sendFixtureImage` uses Allega → Foto e video flow keyed on `ic-filter-filled` icon; never touches the sticker input. |
 
-**Current: Phase 9 (quality polish + release-process maturity, v0.6.0 target)**
+**Current: Phase 9 — quality polish and read-fidelity hardening**
 
 ## Phases
 
@@ -126,18 +126,21 @@ Status: deferred. Single-agent usage works. Re-open if multiple parallel agents 
 - [x] `navigateToChat` robustness — wait-for-grid (#16), `--index` in search fallback, fast-path no-op when chat already open (#24)
 - [x] `read --json` link recovery — `links: [{href, text}]` per message via DOM walk; greedy monotone merge handles parser/DOM length drift and URL-only messages (#17 + #22)
 - [x] `fetch-images <chat>` command — in-DOM blob download to `~/.greentap/downloads/<chat-slug>/` (#18 + #23)
-- [x] E2E harness — `greentap e2e` against `greentap-sandbox` group, four stages roundtripped end-to-end with multimodal verification (#19 + #25)
+- [x] E2E harness — `greentap e2e` against `greentap-sandbox` group, five stages roundtripped end-to-end with multimodal verification (#19 + #25 + #50)
 - [x] Iron-clad merge + e2e rules — per-PR maintainer approval, feature-stage-must-not-be-skipped (#20)
 - [x] `send` newline handling — `\n` becomes Shift+Enter, multi-line messages stay in one bubble (#26)
 - [x] Parser robustness — `sender` always populated, additive `quoted_sender` / `quoted_text` / `body` fields, orphan-row recovery (#27)
 - [x] `whoami` command + locale-stable timestamps + `null`-instead-of-empty (#28)
 
-### Phase 9 — Quality polish (planned, v0.5.0 target)
+### Phase 9 — Quality polish and read-fidelity hardening (current)
 
 - [ ] **Sticker visibility** — parser `kind: "sticker"` + `fetchStickers` download. Reuses fetchImages mechanics with a different DOM marker. Tracked in task tracker.
 - [ ] **Sender-inheritance hardening** — current orphan-row recovery blindly inherits previous-row sender. Tighten to require a "same-author" hint (e.g. `msg-dblcheck` for own, structural cue) and prefer `(unknown)` when ambiguous. Tracked in task tracker.
 - [ ] **Performance hygiene** — concrete proposals reviewed by 3 independent agents, accepted only if no functionality loss. Likely targets: replace hardcoded `setTimeout` waits with element-based `waitFor`, reduce review-agent prompt size for diffs <30 LOC, cheaper overlay-dismiss alternative to `page.reload()` between e2e stages.
 - [ ] **`snapshot messages` stale selector** (low priority; debug-only command) — the `messages` scope uses `page.getByRole("application")`, but WA Web's message panel has no `application`/`main`/`region`/`log` container role, so it always returns "Message panel not found" for ALL chats. Not emoji-related; `read` (the real path) is unaffected since it snapshots `:root`. Fix: fall back to `:root` or scope to the region after the chat-header banner. Discovered during the v0.7.1 emoji-chat-name QA.
+- [ ] **Edited-message time** — preserve the send time when WhatsApp appends its localized edited marker (#42).
+- [ ] **Initials-avatar sender attribution** — detect senders whose avatar has no child image node (#43).
+- [ ] **Native poll classification** — emit native polls with a dedicated message kind instead of legacy text (#44).
 
 ### Phase 10 — Voice + documents (deferred, no spike yet)
 
