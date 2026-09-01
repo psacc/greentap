@@ -33,6 +33,9 @@ Uses a background browser daemon for fast (~500ms) command execution.
 ## Commands
 
 ```bash
+# Open the browser for QR scan and login
+greentap login
+
 # Identity of the currently logged-in WA account
 greentap whoami --json
 
@@ -99,7 +102,7 @@ greentap snapshot messages --chat "contact or group name"
 - **poll-results** navigates and reads the most recent WhatsApp native poll.
 - **fetch-images** writes JPEG/PNG/WebP files to `~/.greentap/downloads/<chat-slug>/<imageId>.<ext>` with mode 0o600. Returns absolute paths so the agent can `Read` them for multimodal understanding.
 - **whoami** returns `{ name, phone }` for the currently logged-in account. Either field can be `null` if WhatsApp Web doesn't expose it on this session.
-- **e2e** runs four ordered stages (preflight, text, image, link) against the sandbox group `greentap-sandbox` (must exist; only the maintainer is a member). Output is structural JSON — no message content logged.
+- **e2e** runs five ordered stages (modal, preflight, text, image, link) against the sandbox group `greentap-sandbox` (must exist; only the maintainer is a member). Output is structural JSON — no message content logged.
 - If multiple chats share the same name, commands error with a numbered list — re-run with `--index N` to pick one.
 - Chat matching is case-insensitive substring.
 - Locale-agnostic: works with any WhatsApp UI language.
