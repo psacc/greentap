@@ -1,5 +1,5 @@
 ## Strategic context
-Priority: medium — stable; v0.7.2 release candidate fixes safe dismissal of the known WhatsApp informational modal (#49); v0.7.1 shipped (emoji chat-name resolution)
+Priority: medium — stable; v0.7.2 release candidate adds safe modal dismissal and enforces the visible-only default `read` contract; v0.7.1 shipped (emoji chat-name resolution)
 Current phase: Phase 10 — read-fidelity hardening (v0.7.0 visual-QA follow-ups: edited-message time #42, initials-avatar sender #43, poll kind #44)
 Blocks: nothing
 Blocked by: nothing
