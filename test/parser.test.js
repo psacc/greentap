@@ -260,6 +260,16 @@ describe("parseMessages", () => {
     assert.equal(mine2.sender, "You",
       "continuation own message (no 'Tu:' prefix) must also be You");
 
+    const delivered = messages.find((m) =>
+      m.text.includes("Messaggio fittizio consegnato"),
+    );
+    assert.ok(delivered, "delivered-state own message should be found");
+    assert.equal(
+      delivered.sender,
+      "You",
+      "own message with wds-ic-delivered receipt must be attributed to You",
+    );
+
     const incoming = messages.find((m) => m.text.includes("Ciao come va"));
     assert.ok(incoming);
     assert.equal(incoming.sender, "Roberto Marini",
@@ -813,6 +823,30 @@ describe("parseMessages — image detection", () => {
     for (let i = 0; i < first.length; i++) {
       assert.equal(first[i].imageId, second[i].imageId, `image ${i} imageId should match across parses`);
     }
+  });
+
+  it("keeps imageId stable when only the delivery receipt changes", () => {
+    const snapshot = (status, icon) => `- document:
+  - banner:
+    - button "Fixture Group"
+  - 'row "Fixture photo 10:00 ${status}"':
+    - button "Fixture photo":
+      - img
+      - img
+    - button "10:00 ${status}":
+      - text: 10:00
+      - img "${icon}"
+  - contentinfo:
+    - textbox`;
+
+    const sent = parseMessages(snapshot("Sent", "wds-ic-check"));
+    const delivered = parseMessages(
+      snapshot("Delivered", "wds-ic-delivered"),
+    );
+
+    assert.equal(sent[0].kind, "image");
+    assert.equal(delivered[0].kind, "image");
+    assert.equal(sent[0].imageId, delivered[0].imageId);
   });
 
   it("imageIds are unique within a snapshot", () => {
