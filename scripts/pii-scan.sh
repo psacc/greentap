@@ -55,7 +55,7 @@ PHONE='\+[0-9][0-9()  .\-]{8,}[0-9]'
 # Absolute macOS home paths — none should ever appear in a public repo.
 USERPATH='/Users/[A-Za-z0-9._-]+/'
 # Task-tracker URLs / issue keys.
-TRACKER='(app\.todoist\.com|todoist\.com/(app|showTask|task)|linear\.app/|[a-z0-9-]+\.atlassian\.net|/browse/[A-Z][A-Z0-9]+-[0-9]+)'
+TRACKER='([A-Za-z0-9.-]+/(app/task|showTask|task)(/|[?])|linear\.app/|[a-z0-9-]+\.atlassian\.net|/browse/[A-Z][A-Z0-9]+-[0-9]+)'
 # Synthetic phone allowlist — these are NOT violations:
 #  - the documented doc numbers (CONTRIBUTING.md): +39 555…, +1 555…, +39 02 0000…
 #  - the established fixture convention: an all-zeros tail (>=3 "00" groups),

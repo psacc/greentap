@@ -19,7 +19,7 @@ freely; anything that publishes (PR merge, tag, push) is gated.
 ## Locked decisions (approved 2026-05-26)
 
 1. **Release scope → v0.6.0** = stability fixes + salvage daemon idle-death
-   fix (Todoist #9) + fetch-images `--limit` fix (Todoist #6). The two
+   fix + fetch-images `--limit` fix. The two
    salvaged fixes touch `lib/` → **E2E MANDATORY** before their PRs merge.
 2. **PII guard → automated** pre-commit hook + scan script (no new deps).
 3. **Cleanup → prune now**, local + remote stale merged branches + drop the
@@ -27,7 +27,7 @@ freely; anything that publishes (PR merge, tag, push) is gated.
 
 ## Current-state findings (evidence)
 
-- GitHub: 0 open PRs/issues. Backlog is local + Todoist (12 greentap tasks).
+- GitHub had 0 open PRs/issues when this design was written.
 - `main` is **red**: 2 failing tests in `test/navigate.test.js:322,345` — a
   PII-sanitization artifact (`GROUP_X` placeholder doesn't contain the query
   `"Foot"`, so it's correctly excluded from partial-match candidates, but the
@@ -110,14 +110,14 @@ A5. **Cleanup** — delete 17 stale merged remote branches + local copies;
 
 Rebase `fix/daemon-heartbeat-idle-reset` onto current `main` as a fresh
 branch. Touches `lib/daemon.js` + `lib/client.js` → **E2E daemon stage
-MANDATORY**. Maps to Todoist #9. Prepare PR; run E2E; **STOP before merge**.
+MANDATORY**. Prepare PR; run E2E; **STOP before merge**.
 
 ### PR C — Salvage fetch-images `--limit` fix (E2E-gated)
 
 Extract the `--limit` clamp + scroll from `fix/greentap-5-bugs-2026-04-25`
 onto a fresh branch off `main`. Touches `lib/commands.js` → **E2E image
-stage MANDATORY** (incl. multimodal `GREENTAP-E2E` legibility check). Maps
-to Todoist #6. Prepare PR; run E2E; **STOP before merge**.
+stage MANDATORY** (incl. multimodal `GREENTAP-E2E` legibility check).
+Prepare PR; run E2E; **STOP before merge**.
 
 ### QA pilot + fix cycle
 
@@ -125,7 +125,7 @@ Run the new `docs/QA.md` runbook against greentap as a **pilot**, using
 parallel subagents for the offline matrix. Collect findings into
 `qa-reports/`. Run a fix cycle for the **most relevant** findings (red
 tests already in A1; plus any contract/error-path defects surfaced). Parser
-quote-reply misattribution (Todoist #5/#8) is investigated and fixed **only
+quote-reply misattribution is investigated and fixed **only
 if** the pilot confirms a reproducible defect with an offline fixture —
 otherwise it's logged as a tracked follow-up (it touches `lib/parser.js` →
 its own E2E-gated PR, out of scope for this batch unless trivial).

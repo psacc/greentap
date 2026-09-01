@@ -2,6 +2,11 @@
 
 CLI driver for WhatsApp Web via Playwright aria snapshots.
 
+## Public repository policy
+
+- Use English for code, documentation, issues, pull requests, release notes, and commit messages.
+- Do not publish private task-tracker links or IDs, internal workflow details, private filesystem paths, chat content, or personally identifiable information.
+
 ## Tech stack
 
 - Node.js (ESM), Playwright (system Chrome via CDP)
