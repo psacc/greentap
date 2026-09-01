@@ -31,7 +31,7 @@
 import { chromium } from "playwright";
 import { join } from "path";
 import { homedir } from "os";
-import { readFileSync, mkdirSync, existsSync } from "fs";
+import { chmodSync, readFileSync, mkdirSync, existsSync } from "fs";
 import { execFileSync } from "child_process";
 
 function arg(name, fallback) {
@@ -56,7 +56,7 @@ const port = resolvePort();
 const scale = parseInt(arg("scale", "2"), 10);
 const bands = parseInt(arg("bands", "3"), 10);
 
-mkdirSync(outDir, { recursive: true });
+mkdirSync(outDir, { recursive: true, mode: 0o700 });
 
 const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`, { timeout: 5000 });
 const ctx = browser.contexts()[0];
@@ -71,53 +71,67 @@ if (!page) {
 }
 
 const client = await ctx.newCDPSession(page);
-await client.send("Emulation.setDeviceMetricsOverride", {
-  width: 1100,
-  height: 1300,
-  deviceScaleFactor: scale,
-  mobile: false,
-});
-await page.waitForTimeout(600);
-
+const viewport = await page.evaluate(() => ({
+  width: window.innerWidth,
+  height: window.innerHeight,
+}));
 const mainPath = join(outDir, "main-2x.png");
-const main = page.locator("#main");
-if (!(await main.count())) {
-  console.error(
-    "qa-visual: no #main conversation pane — is a chat open? " +
-      "Run `greentap read \"<chat>\" --json` first.",
-  );
+let captured = false;
+try {
+  await client.send("Emulation.setDeviceMetricsOverride", {
+    // Keep the same CSS viewport used by the preceding `read` command so the
+    // screenshot and visible-row JSON describe the exact same message set.
+    // Only increase device pixel density for legibility.
+    width: viewport.width,
+    height: viewport.height,
+    deviceScaleFactor: scale,
+    mobile: false,
+  });
+  await page.waitForTimeout(600);
+
+  const main = page.locator("#main");
+  if (!(await main.count())) {
+    console.error(
+      "qa-visual: no #main conversation pane — is a chat open? " +
+        "Run `greentap read \"<chat>\" --json` first.",
+    );
+  } else {
+    await main.first().screenshot({ path: mainPath });
+    chmodSync(mainPath, 0o600);
+    captured = true;
+    console.log(`wrote ${mainPath}`);
+  }
+
+  // Optional legibility slices via macOS `sips` (best-effort; skipped elsewhere).
+  if (captured && bands > 0) {
+    try {
+      const dims = execFileSync("sips", ["-g", "pixelWidth", "-g", "pixelHeight", mainPath], {
+        encoding: "utf8",
+      });
+      const w = parseInt(/pixelWidth: (\d+)/.exec(dims)?.[1], 10);
+      const h = parseInt(/pixelHeight: (\d+)/.exec(dims)?.[1], 10);
+      if (w && h) {
+        const bandH = Math.floor(h / bands) + 60;
+        for (let i = 0; i < bands; i++) {
+          const offset = Math.max(0, Math.floor((i * h) / bands) - 30);
+          const p = join(outDir, `band-${i + 1}.png`);
+          execFileSync("sips", [
+            "-c", String(Math.min(bandH, h - offset)), String(w),
+            mainPath, "--cropOffset", String(offset), "0", "--out", p,
+          ], { stdio: "ignore" });
+          chmodSync(p, 0o600);
+          console.log(`wrote ${p}`);
+        }
+      }
+    } catch {
+      console.log("qa-visual: band slicing skipped (sips unavailable — macOS only).");
+    }
+  }
+} finally {
   await client.send("Emulation.clearDeviceMetricsOverride").catch(() => {});
   await browser.close();
+}
+
+if (!captured || !existsSync(mainPath)) {
   process.exit(1);
 }
-await main.first().screenshot({ path: mainPath });
-console.log(`wrote ${mainPath}`);
-
-// Optional legibility slices via macOS `sips` (best-effort; skipped elsewhere).
-if (bands > 0) {
-  try {
-    const dims = execFileSync("sips", ["-g", "pixelWidth", "-g", "pixelHeight", mainPath], {
-      encoding: "utf8",
-    });
-    const w = parseInt(/pixelWidth: (\d+)/.exec(dims)?.[1], 10);
-    const h = parseInt(/pixelHeight: (\d+)/.exec(dims)?.[1], 10);
-    if (w && h) {
-      const bandH = Math.floor(h / bands) + 60;
-      for (let i = 0; i < bands; i++) {
-        const offset = Math.max(0, Math.floor((i * h) / bands) - 30);
-        const p = join(outDir, `band-${i + 1}.png`);
-        execFileSync("sips", [
-          "-c", String(Math.min(bandH, h - offset)), String(w),
-          mainPath, "--cropOffset", String(offset), "0", "--out", p,
-        ], { stdio: "ignore" });
-        console.log(`wrote ${p}`);
-      }
-    }
-  } catch {
-    console.log("qa-visual: band slicing skipped (sips unavailable — macOS only).");
-  }
-}
-
-await client.send("Emulation.clearDeviceMetricsOverride").catch(() => {});
-await browser.close();
-if (existsSync(mainPath)) process.exit(0);
