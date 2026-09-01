@@ -40,7 +40,7 @@ node greentap.js chats --json
 # List only unread chats
 node greentap.js unread --json
 
-# Read messages from a chat (substring match on name)
+# Read messages from a chat (exact normalized name match)
 # --json output includes a `links` array per message with full URLs
 # recovered from the DOM (not just the truncated preview text).
 node greentap.js read "Family" --json
@@ -97,7 +97,7 @@ lib/client.js        CDP connection, lazy start, lockfile, recovery
 ## Important notes
 
 - **`read` marks messages as read** in WhatsApp. This cannot be prevented.
-- **Chat matching** is case-insensitive substring. Use enough of the name to be unambiguous.
+- **Chat targeting** requires an exact normalized name. If no exact match exists, the error shows partial-name suggestions.
 - **`send` verifies** the correct chat opened and the message appeared after sending.
 - The daemon runs headless by default. Use `login` for the initial QR scan (headed mode).
 

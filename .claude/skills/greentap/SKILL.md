@@ -33,6 +33,9 @@ Uses a background browser daemon for fast (~500ms) command execution.
 ## Commands
 
 ```bash
+# Open the browser for QR scan and login
+greentap login
+
 # Identity of the currently logged-in WA account
 greentap whoami --json
 
@@ -42,9 +45,9 @@ greentap chats --json
 # List only chats with unread messages
 greentap unread --json
 
-# Read messages from a chat (substring match on name)
+# Read messages from a chat (exact normalized name match)
 # Each message includes: sender, time, text, body, quoted_sender, quoted_text,
-# links[], kind, imageId (when image), timestamp
+# kind, imageId (when image), timestamp; default reads also include links[]
 # Outbound messages: sender === "You" (no separate is_self flag)
 greentap read "contact or group name" --json
 
@@ -99,25 +102,27 @@ greentap snapshot messages --chat "contact or group name"
 - **poll-results** navigates and reads the most recent WhatsApp native poll.
 - **fetch-images** writes JPEG/PNG/WebP files to `~/.greentap/downloads/<chat-slug>/<imageId>.<ext>` with mode 0o600. Returns absolute paths so the agent can `Read` them for multimodal understanding.
 - **whoami** returns `{ name, phone }` for the currently logged-in account. Either field can be `null` if WhatsApp Web doesn't expose it on this session.
-- **e2e** runs four ordered stages (preflight, text, image, link) against the sandbox group `greentap-sandbox` (must exist; only the maintainer is a member). Output is structural JSON — no message content logged.
+- **e2e** runs five ordered stages (modal, preflight, text, image, link) against the sandbox group `greentap-sandbox` (must exist; only the maintainer is a member). Output is structural JSON — no message content logged.
 - If multiple chats share the same name, commands error with a numbered list — re-run with `--index N` to pick one.
-- Chat matching is case-insensitive substring.
+- Chat-targeting commands require an exact normalized name. If no exact match
+  exists, the error shows partial-name suggestions.
 - Locale-agnostic: works with any WhatsApp UI language.
 
 ## Read output schema
 
-Each message in `read --json` carries these fields (additive over time — older clients can ignore unknown fields):
+Each message in `read --json` carries these fields unless noted otherwise
+(additive over time — older clients can ignore unknown fields):
 
 | Field | Type | Notes |
 |-------|------|-------|
 | `sender` | string | Always populated. `"You"` for outbound; `"(unknown)"` if unattributable. Never empty string. |
-| `time` | string | `"HH:MM"` from the row label. |
+| `time` | string | `"HH:MM"` when detected; empty string when unavailable. |
 | `timestamp` | string \| null | `"YYYY-MM-DD HH:MM"` (space-separated) when WA shows a date separator; `null` otherwise. Stable across midnight (uses snapshot read-time, not parse-time). |
 | `text` | string | Full visible text, including any quoted-reply bleed (backward compat). |
-| `body` | string \| null | New: just the user's new text, with the quoted block removed. Equal to `text` when no quote. |
+| `body` | string | The message's own text with the quoted block removed. Equal to `text` when no quote. |
 | `quoted_sender` | string \| null | New: author of the quoted message when this is a reply-with-quote. |
 | `quoted_text` | string \| null | New: text of the quoted message. |
-| `links` | `[{href, text}]` | http(s) URLs recovered from the DOM (handles WhatsApp's truncated previews). |
+| `links` | `[{href, text}]` | http(s) URLs recovered from the DOM on default reads. Omitted with `--scroll`. |
 | `kind` | string | `"text"`, `"image"`, or `"video"` (more kinds may appear in future versions). |
 | `imageId` | string | Only on `kind: "image"`. Stable across reads of the same DOM. Use with `fetch-images` to materialize. |
 
