@@ -22,6 +22,11 @@
     - button "10:36 Letto":
       - text: 10:36
       - img "wds-ic-read"
+  - row "Messaggio fittizio consegnato 10:37 Consegnato":
+    - text: Messaggio fittizio consegnato
+    - button "10:37 Consegnato":
+      - text: 10:37
+      - img "wds-ic-delivered"
   - contentinfo:
     - button "Allega"
     - textbox "Digita un messaggio per il gruppo greentap-sandbox":
