@@ -5,6 +5,8 @@
  *
  * Commands:
  *   greentap login              — Open browser for QR scan
+ *   greentap login --headless --qr-png <path>
+ *                               — Link without a display: writes the live QR to <path>
  *   greentap logout             — Clear session data
  *   greentap chats [--json]     — List all chats
  *   greentap unread [--json]    — List unread chats
@@ -27,8 +29,13 @@ import { printChats, printMessages } from "./lib/parser.js";
 import * as commands from "./lib/commands.js";
 import { connect, stopDaemon, daemonStatus } from "./lib/client.js";
 import { runE2E } from "./lib/e2e.js";
+import { headlessLogin } from "./lib/browser.js";
 
-const USER_DATA_DIR = join(homedir(), ".greentap", "browser-data");
+// GREENTAP_DIR, as in lib/daemon.js and lib/client.js. login used to hardcode
+// the home directory, so on a box where the daemon was pointed elsewhere it
+// paired a profile the daemon never opened.
+const GREENTAP_DIR = process.env.GREENTAP_DIR || join(homedir(), ".greentap");
+const USER_DATA_DIR = join(GREENTAP_DIR, "browser-data");
 const WA_URL = "https://web.whatsapp.com";
 
 async function withDaemon(fn) {
@@ -40,7 +47,26 @@ async function withDaemon(fn) {
   }
 }
 
-async function cmdLogin() {
+async function cmdLogin(headless, qrPng) {
+  if (headless) {
+    if (!qrPng) {
+      console.error("Usage: greentap login --headless --qr-png <path>");
+      process.exit(1);
+    }
+    // Bypasses the daemon like the headed path does, and for the same
+    // reason: the profile is not linked yet, so there is nothing to serve.
+    const r = await headlessLogin({
+      userDataDir: USER_DATA_DIR,
+      qrPng,
+      log: (m) => console.log(`login: ${m}`),
+    });
+    if (!r.linked) {
+      console.error(`login: not linked within the timeout (${r.frames} QR frame(s) written)`);
+      process.exit(1);
+    }
+    console.log("Logged in.");
+    return;
+  }
   // Login bypasses daemon — launches headed browser directly
   const context = await chromium.launchPersistentContext(USER_DATA_DIR, {
     headless: false,
@@ -223,9 +249,11 @@ try {
   const command = args[0] || "snapshot";
 
   switch (command) {
-    case "login":
-      await cmdLogin();
+    case "login": {
+      const qrIdx = args.indexOf("--qr-png");
+      await cmdLogin(args.includes("--headless"), qrIdx >= 0 ? args[qrIdx + 1] : null);
       break;
+    }
     case "logout":
       await cmdLogout();
       break;
@@ -352,6 +380,7 @@ try {
 
 Commands:
   login                                        Open browser for QR scan
+  login --headless --qr-png <path>             Link without a display; writes the live QR to <path>
   logout                                       Clear session data
   chats [--json]                               List all chats
   unread [--json]                              List unread chats
