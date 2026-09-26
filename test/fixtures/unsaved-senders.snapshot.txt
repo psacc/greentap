@@ -14,11 +14,12 @@
       - text: 0:46
     - text: 16:20
     - button "Inoltra media"
-  - button "Apri dettagli chat di Forse Amanda ☀️ +1 555 123 4567": A
-  - row "Forse Amanda ☀️ +1 555 123 4567 Mamma Elena Ci pensiamo noi. 16:56":
-    - button "Forse Amanda ☀️":
+  - button "Apri dettagli chat di Forse Amanda ☀️🍒 +1 555 123 4567": A
+  - row "Forse Amanda ☀️🍒 +1 555 123 4567 Mamma Elena Ci pensiamo noi. 16:56":
+    - button "Forse Amanda ☀️🍒":
       - text: ~ Amanda
       - img "☀️"
+      - img "🍒"
     - text: +1 555 123 4567
     - button "Mamma Elena"
     - text: Ci pensiamo noi. 16:56
