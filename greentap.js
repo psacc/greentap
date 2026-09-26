@@ -27,7 +27,7 @@ import { homedir } from "os";
 import { rmSync } from "fs";
 import { printChats, printMessages } from "./lib/parser.js";
 import * as commands from "./lib/commands.js";
-import { connect, stopDaemon, daemonStatus } from "./lib/client.js";
+import { connect, stopDaemon, daemonStatus, remoteDaemonStatus } from "./lib/client.js";
 import { runE2E } from "./lib/e2e.js";
 import { headlessLogin } from "./lib/browser.js";
 
@@ -226,7 +226,16 @@ async function cmdWhoami(json) {
   }
 }
 
-function cmdStatus() {
+async function cmdStatus() {
+  const remote = await remoteDaemonStatus();
+  if (remote) {
+    if (!remote.reachable) {
+      console.log(`Remote daemon NOT reachable at ${remote.url}: ${remote.error}`);
+      process.exit(1);
+    }
+    console.log(`Remote daemon reachable at ${remote.url}`);
+    return;
+  }
   const status = daemonStatus();
   if (status.running) {
     console.log(`Daemon running. PID: ${status.pid}, CDP port: ${status.port}`);
@@ -366,7 +375,7 @@ try {
       await cmdWhoami(args.includes("--json"));
       break;
     case "status":
-      cmdStatus();
+      await cmdStatus();
       break;
     case "daemon":
       if (args[1] === "stop") {

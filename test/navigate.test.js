@@ -27,13 +27,14 @@ function makeFakePage({
 } = {}) {
   const started = Date.now();
   const gridIsVisible = () => Date.now() - started >= gridVisibleAfterMs;
-  const calls = { gridClick: 0, searchClick: 0 };
+  const calls = { gridClick: 0, searchClick: 0, log: [] };
 
   const gridRow = {
     filter: () => gridRow,
     first: () => gridRow,
     click: async () => {
       calls.gridClick++;
+      calls.log.push("click-row");
     },
     isVisible: async () => true,
     waitFor: async () => {
@@ -69,6 +70,9 @@ function makeFakePage({
   const searchTextbox = {
     click: async () => {
       calls.searchClick++;
+    },
+    fill: async (value) => {
+      calls.log.push(`fill:${value}`);
     },
     first: () => searchTextbox,
     waitFor: async () => {},
@@ -110,7 +114,9 @@ function makeFakePage({
       ariaSnapshot: async () => searchAria,
     }),
     keyboard: {
-      type: async () => {},
+      type: async (text) => {
+        calls.log.push(`type:${text}`);
+      },
       press: async () => {},
     },
     _calls: calls,
@@ -167,16 +173,6 @@ describe("navigateToChat: fast-path when chat is already open", () => {
     assert.equal(page._calls.searchClick, 0, "search should NOT be clicked");
   });
 
-  it("matches group-style header with locale-specific suffix", async () => {
-    const page = makeFakePage({
-      gridVisibleAfterMs: 10_000,
-      headerAria: '- banner:\n  - button "greentap-sandbox clicca qui per info gruppo"',
-    });
-    await commands.navigateToChat(page, "greentap-sandbox", null);
-    assert.equal(page._calls.gridClick, 0);
-    assert.equal(page._calls.searchClick, 0);
-  });
-
   it("falls through to normal navigation when chat header does not match", async () => {
     const page = makeFakePage({
       gridVisibleAfterMs: 0,
@@ -226,6 +222,27 @@ describe("navigateToChat: fast-path when chat is already open", () => {
       // visible + search aria doesn't contain Roberto → "not found".
       (err) => /not found/.test(err.message),
     );
+  });
+});
+
+describe("navigateToChat: search state does not leak between calls", () => {
+  it("empties the search box before typing and after opening the result", async () => {
+    const page = makeFakePage({
+      gridVisibleAfterMs: 10_000,
+      searchAria: TWO_FERRAGOSTO_AND_ELENA,
+    });
+    await commands.navigateToChat(page, "Elena Conti", null);
+    assert.deepEqual(page._calls.log, ["fill:", "type:Elena Conti", "click-row", "fill:"]);
+  });
+
+  it("does not take an open chat whose name only starts with the query for the query", async () => {
+    const page = makeFakePage({
+      gridVisibleAfterMs: 0,
+      gridAria: ROBERTO_GRID,
+      headerAria: '- banner:\n  - button "Roberto Marini Junior clicca qui per info gruppo"',
+    });
+    await commands.navigateToChat(page, "Roberto Marini", null);
+    assert.equal(page._calls.gridClick, 1, "the open chat is a different chat");
   });
 });
 
@@ -319,27 +336,21 @@ describe("navigateToChat: partial-match suggestions", () => {
     - textbox "Scrivi un messaggio"
 `;
 
-  it("lists partial matches in error message when chat name has no exact match in the grid", async () => {
-    // Neko's exact UX: passing the prefix "Foot" returns 0 exact matches
-    // but two chats start with "Foot". Pre-fix: opaque "Chat not found".
-    // Post-fix: error lists candidates with --index hint.
+  it("searches when the rendered chat list holds only partial matches", async () => {
     const page = makeFakePage({
-      gridVisibleAfterMs: 0, // grid path
+      gridVisibleAfterMs: 0,
       gridAria: TWO_FOOT_CHATS,
+      searchAria: `- grid "Risultati della ricerca.":
+    - 'row "Foot 09:00 Ciao"':
+      - 'gridcell "Foot 09:00 Ciao"':
+        - gridcell "Foot 09:00"
+        - text: Ciao
+  - contentinfo:
+    - textbox "Scrivi un messaggio"
+`,
     });
-    await assert.rejects(
-      () => commands.navigateToChat(page, "Foot", null),
-      (err) => {
-        assert.ok(
-          /Did you mean one of/.test(err.message),
-          `expected partial-match suggestion, got: ${err.message}`,
-        );
-        assert.ok(err.message.includes("Football"), "expected first candidate listed");
-        assert.ok(err.message.includes("Foot."), "expected second candidate listed");
-        assert.ok(err.message.includes("--index"), "expected --index hint");
-        return true;
-      },
-    );
+    await commands.navigateToChat(page, "Foot", null);
+    assert.equal(page._calls.searchClick, 1, "an off-screen exact match is found by search");
   });
 
   it("lists partial matches in error message when chat name has no exact match in search results", async () => {

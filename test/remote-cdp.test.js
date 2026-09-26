@@ -1,5 +1,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
+import { createServer } from "node:http";
+import { fileURLToPath } from "node:url";
 import { resolveCdpUrl } from "../lib/client.js";
 
 // GREENTAP_CDP_URL names a daemon this process does not own. Chromium's
@@ -29,5 +32,45 @@ describe("resolveCdpUrl", () => {
 
   it("fails loudly on a name that does not resolve", async () => {
     await assert.rejects(() => resolveCdpUrl("http://no-such-host.invalid:19223"));
+  });
+});
+
+function cli(cdpUrl, command = "status") {
+  const entry = fileURLToPath(new URL("../greentap.js", import.meta.url));
+  return new Promise((resolve) => {
+    execFile("node", [entry, command], { env: { ...process.env, GREENTAP_CDP_URL: cdpUrl } }, (err, stdout, stderr) =>
+      resolve({ code: err ? err.code : 0, out: stdout + stderr }),
+    );
+  });
+}
+
+describe("status with GREENTAP_CDP_URL", () => {
+  it("reports the remote daemon, not the absent local one", async () => {
+    const server = createServer((req, res) => res.end(req.url === "/json/version" ? '{"Browser":"Chrome"}' : ""));
+    await new Promise((r) => server.listen(0, "127.0.0.1", r));
+    const url = `http://127.0.0.1:${server.address().port}`;
+    try {
+      const { code, out } = await cli(url);
+      assert.equal(code, 0);
+      assert.match(out, new RegExp(`Remote daemon reachable at ${url}`));
+    } finally {
+      server.close();
+    }
+  });
+
+  it("exits non-zero when the remote daemon cannot be reached", async () => {
+    const { code, out } = await cli("http://no-such-host.invalid:19223");
+    assert.notEqual(code, 0);
+    assert.match(out, /Remote daemon NOT reachable at http:\/\/no-such-host\.invalid:19223/);
+  });
+});
+
+describe("a command with an unresolvable GREENTAP_CDP_URL", () => {
+  it("fails at once and names the host, instead of retrying for 30s", async () => {
+    const started = Date.now();
+    const { code, out } = await cli("http://no-such-host.invalid:19223", "whoami");
+    assert.notEqual(code, 0);
+    assert.match(out, /Cannot resolve no-such-host\.invalid: ENOTFOUND/);
+    assert.ok(Date.now() - started < 10000);
   });
 });
