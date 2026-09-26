@@ -1,0 +1,39 @@
+- document:
+  - banner:
+    - button "Dettagli profilo"
+    - button
+  - text: martedì
+  - button "Apri dettagli chat di Forse Flavia +39 555 010 2030":
+    - img
+  - row "Forse Flavia +39 555 010 2030 Modalità PiP 0:46 16:20 Inoltra media":
+    - button "Forse Flavia": ~ Flavia
+    - text: +39 555 010 2030
+    - button
+    - button "Modalità PiP 0:46":
+      - button "Modalità PiP"
+      - text: 0:46
+    - text: 16:20
+    - button "Inoltra media"
+  - button "Apri dettagli chat di Forse Amanda ☀️ +1 555 123 4567": A
+  - row "Forse Amanda ☀️ +1 555 123 4567 Mamma Elena Ci pensiamo noi. 16:56":
+    - button "Forse Amanda ☀️":
+      - text: ~ Amanda
+      - img "☀️"
+    - text: +1 555 123 4567
+    - button "Mamma Elena"
+    - text: Ci pensiamo noi. 16:56
+  - row "Roberto Marini ha aggiunto +39 02 0000 00000 .":
+    - link "Roberto Marini"
+    - text: ha aggiunto
+    - link "+39 02 0000 00000"
+    - text: .
+  - text: giovedì
+  - button "Apri dettagli chat di Forse Mattia +39 02 0000 00000":
+    - img
+  - row "Forse Mattia +39 02 0000 00000 Buongiorno a tutti 05:27":
+    - button "Forse Mattia": ~ Mattia
+    - text: +39 02 0000 00000 Buongiorno a tutti 05:27
+  - row "Grazie mille 05:41":
+    - text: Grazie mille 05:41
+  - contentinfo:
+    - textbox "Scrivi un messaggio"
