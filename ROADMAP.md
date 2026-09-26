@@ -139,9 +139,9 @@ Status: deferred. Single-agent usage works. Re-open if multiple parallel agents 
 - [ ] **Performance hygiene** — concrete proposals reviewed by 3 independent agents, accepted only if no functionality loss. Likely targets: replace hardcoded `setTimeout` waits with element-based `waitFor`, reduce review-agent prompt size for diffs <30 LOC, cheaper overlay-dismiss alternative to `page.reload()` between e2e stages.
 - [x] **`snapshot messages` stale selector** — scoped to the open chat; fails when no chat is open (v0.8.0)
 - [x] **Serial reads on one shared daemon** — chat-list parse, search-filter cleanup, unnamed-row visibility count, exact-only fast-path, most-recent poll (v0.8.0)
-- [ ] **Edited-message time** — preserve the send time when WhatsApp appends its localized edited marker (#42).
+- [x] **Edited-message time** — the send time survives a glued edited marker, which is dropped from the body (#42, v0.8.1)
 - [x] **Initials-avatar sender attribution** — initials avatars set the sender; the header phone number is kept out of the body; group notices are `kind: "system"` (#43, v0.8.0)
-- [ ] **Native poll classification** — emit native polls with a dedicated message kind instead of legacy text (#44).
+- [x] **Native poll classification** — `read` emits `kind: "poll"` with question and options (#44, v0.8.1)
 
 ### Phase 10 — Voice + documents (deferred, no spike yet)
 
