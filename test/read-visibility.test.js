@@ -227,3 +227,26 @@ describe("visible message snapshot", () => {
     await page.close();
   });
 });
+
+describe("snapshot messages", () => {
+  it("returns the open chat's message panel, not the page", async () => {
+    const page = await browser.newPage();
+    await page.setContent(`<!doctype html>
+      <div role="grid" aria-label="Chat list"><div role="row" aria-label="Roberto Marini 09:00"></div></div>
+      <div id="main"><div role="row" aria-label="Elena Conti Panel fake message 09:01">Panel fake message</div></div>`);
+
+    const aria = await commands.snapshot(page, "messages");
+
+    assert.match(aria, /Panel fake message/);
+    assert.doesNotMatch(aria, /grid/);
+    await page.close();
+  });
+
+  it("fails when no chat is open", async () => {
+    const page = await browser.newPage();
+    await page.setContent(`<!doctype html><div role="grid" aria-label="Chat list"></div>`);
+
+    await assert.rejects(() => commands.snapshot(page, "messages"), /No chat is open/);
+    await page.close();
+  });
+});

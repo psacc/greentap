@@ -13,6 +13,26 @@ function loadFixture(name) {
 }
 
 describe("parseChatList", () => {
+  it("parses a grid-scoped snapshot, where rows sit two spaces deep", () => {
+    const aria = `- grid "Lista delle chat":
+  - 'row "Roberto Marini 12:34 Ciao"':
+    - 'gridcell "Roberto Marini 12:34 Ciao"':
+      - gridcell "Roberto Marini 12:34"
+      - text: Ciao
+  - 'row "Famiglia Rossi 11:02 Elena Conti: A dopo"':
+    - 'gridcell "Famiglia Rossi 11:02 Elena Conti: A dopo"':
+      - gridcell "Famiglia Rossi 11:02"
+      - text: "Elena Conti: A dopo"`;
+
+    assert.deepEqual(
+      parseChatList(aria).map((c) => [c.name, c.time, c.lastMessage]),
+      [
+        ["Roberto Marini", "12:34", "Ciao"],
+        ["Famiglia Rossi", "11:02", '"Elena Conti: A dopo"'],
+      ],
+    );
+  });
+
   it("parses main fixture with chats", () => {
     const aria = loadFixture("main-aria.txt");
     const chats = parseChatList(aria);
