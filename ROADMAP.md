@@ -1,9 +1,9 @@
 ## Strategic context
-Priority: medium — stable; v0.7.2 release candidate adds safe modal dismissal and enforces the visible-only default `read` contract; v0.7.1 shipped (emoji chat-name resolution)
+Priority: medium — stable; v0.8.0 fixes serial reads against one shared daemon (wrong chat, leaked search filter, unstable viewport, stale polls) and ships headless login + remote daemon serving
 Current phase: Phase 9 — quality polish and read-fidelity hardening
 Blocks: nothing
 Blocked by: nothing
-Last updated: 2026-09-01
+Last updated: 2026-09-26
 → Full strategic context: psacc/docs/ROADMAP.md
 
 ---
@@ -137,9 +137,10 @@ Status: deferred. Single-agent usage works. Re-open if multiple parallel agents 
 - [ ] **Sticker visibility** — parser `kind: "sticker"` + `fetchStickers` download. Reuses fetchImages mechanics with a different DOM marker. Tracked in task tracker.
 - [ ] **Sender-inheritance hardening** — current orphan-row recovery blindly inherits previous-row sender. Tighten to require a "same-author" hint (e.g. `msg-dblcheck` for own, structural cue) and prefer `(unknown)` when ambiguous. Tracked in task tracker.
 - [ ] **Performance hygiene** — concrete proposals reviewed by 3 independent agents, accepted only if no functionality loss. Likely targets: replace hardcoded `setTimeout` waits with element-based `waitFor`, reduce review-agent prompt size for diffs <30 LOC, cheaper overlay-dismiss alternative to `page.reload()` between e2e stages.
-- [ ] **`snapshot messages` stale selector** (low priority; debug-only command) — the `messages` scope uses `page.getByRole("application")`, but WA Web's message panel has no `application`/`main`/`region`/`log` container role, so it always returns "Message panel not found" for ALL chats. Not emoji-related; `read` (the real path) is unaffected since it snapshots `:root`. Fix: fall back to `:root` or scope to the region after the chat-header banner. Discovered during the v0.7.1 emoji-chat-name QA.
+- [x] **`snapshot messages` stale selector** — scoped to the open chat; fails when no chat is open (v0.8.0)
+- [x] **Serial reads on one shared daemon** — chat-list parse, search-filter cleanup, unnamed-row visibility count, exact-only fast-path, most-recent poll (v0.8.0)
 - [ ] **Edited-message time** — preserve the send time when WhatsApp appends its localized edited marker (#42).
-- [ ] **Initials-avatar sender attribution** — detect senders whose avatar has no child image node (#43).
+- [x] **Initials-avatar sender attribution** — initials avatars set the sender; the header phone number is kept out of the body; group notices are `kind: "system"` (#43, v0.8.0)
 - [ ] **Native poll classification** — emit native polls with a dedicated message kind instead of legacy text (#44).
 
 ### Phase 10 — Voice + documents (deferred, no spike yet)

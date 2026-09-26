@@ -81,14 +81,14 @@ greentap fetch-images "contact or group name" --limit 5 --scroll --index 2 --jso
 # E2E roundtrip verification against the dedicated greentap-sandbox group
 GREENTAP_E2E=1 greentap e2e
 
-# Daemon management
+# Daemon management (with GREENTAP_CDP_URL set, status probes that remote daemon and exits 1 when it is unreachable)
 greentap status
 greentap daemon stop
 
 # Clear session data (forces re-login on next run)
 greentap logout
 
-# Debug: dump raw aria snapshot (full|chats|messages|compose)
+# Debug: dump raw aria snapshot (full|chats|messages|compose); messages needs an open chat
 greentap snapshot full
 greentap snapshot messages --chat "contact or group name"
 ```
