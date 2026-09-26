@@ -123,7 +123,7 @@ Each message in `read --json` carries these fields unless noted otherwise
 | `quoted_sender` | string \| null | New: author of the quoted message when this is a reply-with-quote. |
 | `quoted_text` | string \| null | New: text of the quoted message. |
 | `links` | `[{href, text}]` | http(s) URLs recovered from the DOM on default reads. Omitted with `--scroll`. |
-| `kind` | string | `"text"`, `"image"`, or `"video"` (more kinds may appear in future versions). |
+| `kind` | string | `"text"`, `"image"`, `"video"`, or `"system"` (group notices such as a member added; `sender` is `"(unknown)"`, `time` is empty, `text` is the notice). More kinds may appear in future versions. |
 | `imageId` | string | Only on `kind: "image"`. Stable across reads of the same DOM. Use with `fetch-images` to materialize. |
 
 Outbound messages are identified by `sender === "You"` — there is no separate boolean `is_self` field. Pair with `whoami` to map `"You"` to a real account.

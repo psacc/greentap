@@ -1321,3 +1321,35 @@ describe("parseMessages — video message classification", () => {
     assert.equal(txt.time, "13:02");
   });
 });
+
+describe("parseMessages: unsaved-contact senders", () => {
+  const messages = parseMessages(loadFixture("unsaved-senders.snapshot.txt"));
+
+  it("attributes each message to its own author, including initials avatars", () => {
+    assert.deepEqual(
+      messages.filter((m) => m.kind !== "system").map((m) => [m.time, m.sender]),
+      [
+        ["16:20", "Flavia"],
+        ["16:56", "Amanda ☀️🍒"],
+        ["05:27", "Mattia"],
+        ["05:41", "Mattia"],
+      ],
+    );
+  });
+
+  it("keeps the author's phone number out of the message body", () => {
+    const bodies = Object.fromEntries(messages.map((m) => [m.time, m.body]));
+    assert.equal(bodies["16:56"], "Ci pensiamo noi.");
+    assert.equal(bodies["05:27"], "Buongiorno a tutti");
+    for (const m of messages.filter((x) => x.kind === "text")) {
+      assert.doesNotMatch(m.text, /\+1 555|\+39 02|^~/, `text of ${m.time} keeps the author header`);
+    }
+  });
+
+  it("emits a timeless notice as a system event credited to nobody", () => {
+    const system = messages.filter((m) => m.kind === "system");
+    assert.deepEqual(system.map((m) => [m.sender, m.text, m.time]), [
+      ["(unknown)", "Roberto Marini ha aggiunto +39 02 0000 00000 .", ""],
+    ]);
+  });
+});
