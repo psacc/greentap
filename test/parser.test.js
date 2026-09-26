@@ -1333,6 +1333,7 @@ describe("parseMessages: unsaved-contact senders", () => {
         ["16:56", "Amanda ☀️🍒"],
         ["05:27", "Mattia"],
         ["05:41", "Mattia"],
+        ["06:12", "Elena"],
       ],
     );
   });
@@ -1341,6 +1342,7 @@ describe("parseMessages: unsaved-contact senders", () => {
     const bodies = Object.fromEntries(messages.map((m) => [m.time, m.body]));
     assert.equal(bodies["16:56"], "Ci pensiamo noi.");
     assert.equal(bodies["05:27"], "Buongiorno a tutti");
+    assert.equal(bodies["06:12"], "Promemoria: partita alle 21 •Roberto •Daniele Ci vediamo!");
     for (const m of messages.filter((x) => x.kind === "text")) {
       assert.doesNotMatch(m.text, /\+1 555|\+39 02|^~/, `text of ${m.time} keeps the author header`);
     }
