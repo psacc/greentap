@@ -36,5 +36,14 @@
     - text: +39 02 0000 00000 Buongiorno a tutti 05:27
   - row "Grazie mille 05:41":
     - text: Grazie mille 05:41
+  - button "Apri dettagli chat di Forse Elena +39 555 010 2030": E
+  - 'row "Forse Elena +39 555 010 2030Promemoria: partita alle 21 •Roberto •Daniele Ci vediamo! 06:12"':
+    - button "Forse Elena": ~ Elena
+    - text: "+39 555 010 2030Promemoria: partita alle 21"
+    - list:
+      - listitem: •Roberto
+      - listitem: •Daniele
+    - text: Ci vediamo!
+    - text: 06:12
   - contentinfo:
     - textbox "Scrivi un messaggio"

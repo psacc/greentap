@@ -1333,6 +1333,7 @@ describe("parseMessages: unsaved-contact senders", () => {
         ["16:56", "Amanda ☀️🍒"],
         ["05:27", "Mattia"],
         ["05:41", "Mattia"],
+        ["06:12", "Elena"],
       ],
     );
   });
@@ -1341,6 +1342,7 @@ describe("parseMessages: unsaved-contact senders", () => {
     const bodies = Object.fromEntries(messages.map((m) => [m.time, m.body]));
     assert.equal(bodies["16:56"], "Ci pensiamo noi.");
     assert.equal(bodies["05:27"], "Buongiorno a tutti");
+    assert.equal(bodies["06:12"], "Promemoria: partita alle 21 •Roberto •Daniele Ci vediamo!");
     for (const m of messages.filter((x) => x.kind === "text")) {
       assert.doesNotMatch(m.text, /\+1 555|\+39 02|^~/, `text of ${m.time} keeps the author header`);
     }
@@ -1350,6 +1352,49 @@ describe("parseMessages: unsaved-contact senders", () => {
     const system = messages.filter((m) => m.kind === "system");
     assert.deepEqual(system.map((m) => [m.sender, m.text, m.time]), [
       ["(unknown)", "Roberto Marini ha aggiunto +39 02 0000 00000 .", ""],
+    ]);
+  });
+});
+
+describe("parseMessages: edited messages and inline polls", () => {
+  const aria = `- document:
+  - banner:
+    - button "Dettagli profilo"
+  - row "Roberto Marini Ero stato ottimista 😁 Modificato15:32":
+    - text: Ero stato ottimista
+    - img "😁"
+    - text: Modificato15:32
+  - row "Elena Conti A dopo Edited 9:05":
+    - text: A dopo Edited9:05
+  - row "Sondaggio inviato da Roberto Marini 14:00 Partita mercoledì Opzioni più votate: Presente: 8, Assente: 2.":
+    - button "Roberto Marini":
+      - text: Roberto Marini
+    - text: Partita mercoledì Seleziona un'opzione
+    - checkbox "Presente 8 voti"
+    - text: Presente
+    - button "8"
+    - checkbox "Assente 2 voti"
+    - text: Assente
+    - button "2"
+    - text: 14:00
+    - button "Visualizza voti"`;
+  const messages = parseMessages(aria);
+
+  it("keeps the send time of an edited message and drops the glued marker", () => {
+    assert.deepEqual(messages.slice(0, 2).map((m) => [m.time, m.body]), [
+      ["15:32", "Ero stato ottimista 😁"],
+      ["9:05", "A dopo"],
+    ]);
+  });
+
+  it("emits a native poll as kind poll with its question and votes", () => {
+    const poll = messages[2];
+    assert.equal(poll.kind, "poll");
+    assert.equal(poll.time, "14:00");
+    assert.equal(poll.body, "Partita mercoledì");
+    assert.deepEqual(poll.options, [
+      { label: "Presente", votes: 8 },
+      { label: "Assente", votes: 2 },
     ]);
   });
 });
