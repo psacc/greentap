@@ -13,7 +13,7 @@ import { resolveCdpUrl } from "../lib/client.js";
 // local endpoint is rewritten into a broken one.
 describe("resolveCdpUrl", () => {
   it("leaves an IPv4 literal alone, port and all", async () => {
-    assert.equal(await resolveCdpUrl("http://10.89.0.9:19223"), "http://10.89.0.9:19223/");
+    assert.equal(await resolveCdpUrl("http://192.0.2.10:19223"), "http://192.0.2.10:19223/");
   });
 
   it("leaves localhost alone — Chromium accepts it by name", async () => {

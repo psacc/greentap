@@ -2,7 +2,7 @@
   - banner:
     - button "Dettagli profilo":
       - img
-    - button "Foot Test clicca qui per info gruppo"
+    - button "Chess Test clicca qui per info gruppo"
     - button "Videochiamata di gruppo": Chiama
     - button "Cerca"
     - button "Menu"
@@ -25,7 +25,7 @@
   - contentinfo:
     - button "Allega"
     - button "Emoji, GIF, Sticker"
-    - textbox "Scrivi al gruppo Foot Test":
+    - textbox "Scrivi al gruppo Chess Test":
       - paragraph
     - button "Messaggio vocale":
       - button "Messaggio vocale"

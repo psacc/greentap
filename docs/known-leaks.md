@@ -74,3 +74,29 @@ happened, its category and scope, and the remediation — not the leaked values.
   policy, and scrub in a future fixture refresh.
 - **Action:** routed to the QA pilot + code/security review for a judgment;
   no history rewrite without maintainer decision.
+
+---
+
+## 2026-09-27 — chat-derived fixture data and private-deployment references
+
+- **What:** A post-release audit of v0.8.0/v0.8.1 found test fixtures and
+  tests whose "fake" names, group names, message text and poll data were
+  close copies of real chats, including names that were on the fake-persona
+  allowlist but match real people. It also found references to the
+  maintainer's private deployment: a container-network IP in a test, an
+  agent-tool name in an error message, persona names in code comments, and
+  deployment details in PR bodies and comments.
+- **Category:** chat-derived content, private-setup references (exact values
+  not reproduced here).
+- **Scope:** tracked files in tags up to and including `v0.8.1` (introduced
+  in `56eff97`, `00ba507` and `9d962da`, plus older fixture content that
+  predates `v0.7.2`), the body of commit `5068a9a`, and the bodies/comments
+  of PRs #53 and #58 and issue #44.
+- **Remediation:** HEAD scrubbed. Fixtures and tests use synthetic data, the
+  allowlist entries that match real people were removed from
+  `CONTRIBUTING.md`, the test IP is a TEST-NET address, and the PR/issue text
+  was edited. Tagged history is not rewritten, per the rule above.
+- **Not scrubbed:** the `CLAUDE.md` block synced from the maintainer's
+  workspace conventions and the `ROADMAP.md` pointer to that workspace. They
+  name a private repository path, not people. They stay until the
+  maintainer decides.

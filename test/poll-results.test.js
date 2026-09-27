@@ -6,7 +6,7 @@ import * as commands from "../lib/commands.js";
 const fixture = (name) => readFileSync(new URL(`fixtures/${name}`, import.meta.url), "utf8");
 const NO_POLL = fixture("chat-aria.txt");
 const RECENT = fixture("poll-aria.txt");
-const OLDER = RECENT.replaceAll("Partita mercoledì 18/03", "Partita mercoledì 11/03");
+const OLDER = RECENT.replaceAll("Domanda di prova 18/03", "Domanda di prova 11/03");
 
 function pageWithHistory(screens) {
   let position = 0;
@@ -26,11 +26,11 @@ function pageWithHistory(screens) {
 describe("pollResults", () => {
   it("returns the most recent poll when older history holds another one", async () => {
     const poll = await commands.pollResults(pageWithHistory([RECENT, OLDER]), "Sport Club");
-    assert.equal(poll.question, "Partita mercoledì 18/03 21h-22h30");
+    assert.equal(poll.question, "Domanda di prova 18/03");
   });
 
   it("walks up one screen at a time, so the first poll above the bottom wins", async () => {
     const poll = await commands.pollResults(pageWithHistory([NO_POLL, RECENT, NO_POLL, OLDER]), "Sport Club");
-    assert.equal(poll.question, "Partita mercoledì 18/03 21h-22h30");
+    assert.equal(poll.question, "Domanda di prova 18/03");
   });
 });

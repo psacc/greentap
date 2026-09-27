@@ -9,17 +9,17 @@
   - text: Oggi
   - button "Apri dettagli chat di Roberto Marini":
     - img
-  - row "Roberto Marini Lavinia Vitale 14:25":
+  - row "Roberto Marini Chiara Neri 14:25":
     - text: Roberto Marini
-    - text: Lavinia Vitale
+    - text: Chiara Neri
     - text: 14:25
   - button "Apri dettagli chat di Daniele Bottazzini":
     - img
-  - row "Daniele Bottazzini Roberto Marini Lavinia Vitale Esatto, non prenderle 14:30":
+  - row "Daniele Bottazzini Roberto Marini Chiara Neri Esatto, non prenderle 14:30":
     - text: Daniele Bottazzini
     - generic:
       - text: Roberto Marini
-      - text: Lavinia Vitale
+      - text: Chiara Neri
     - text: Esatto, non prenderle
     - text: 14:30
   - row "Con Flavia ci occupiamo anche delle merende 14:31":

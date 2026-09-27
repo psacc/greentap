@@ -37,11 +37,11 @@
         - img "⚫"
         - text: ️
         - gridcell "Chat silenziata messaggio con menzione 61 messaggi non letti": "61"
-    - 'row "Football Team 16:58 +33 6 00 00 00 01 : Hello, Avec Camille on a une équipe complète, si ça vous dit on peut essayer de s''organiser un match contre vous sur un de ces créneaux où sur un autre 😊"':
-      - 'gridcell "Football Team 16:58 +33 6 00 00 00 01 : Hello, Avec Camille on a une équipe complète, si ça vous dit on peut essayer de s''organiser un match contre vous sur un de ces créneaux où sur un autre 😊"':
+    - 'row "Chess Team 16:58 +39 6 00 00 00 01 : Hello, Avec Camille on a une équipe complète, si ça vous dit on peut essayer de s''organiser un match contre vous sur un de ces créneaux où sur un autre 😊"':
+      - 'gridcell "Chess Team 16:58 +39 6 00 00 00 01 : Hello, Avec Camille on a une équipe complète, si ça vous dit on peut essayer de s''organiser un match contre vous sur un de ces créneaux où sur un autre 😊"':
         - img
-        - gridcell "Football Team 16:58"
-        - text: "+33 6 00 00 00 01 : Hello, Avec Camille on a une équipe complète, si ça vous dit on peut essayer de s'organiser un match contre vous sur un de ces créneaux où sur un autre"
+        - gridcell "Chess Team 16:58"
+        - text: "+39 6 00 00 00 01 : Hello, Avec Camille on a une équipe complète, si ça vous dit on peut essayer de s'organiser un match contre vous sur un de ces créneaux où sur un autre"
         - img "😊"
         - gridcell
     - 'row "Wine Tasting Group 16:36 Forse Andrea Longo : https://example.com/profile/123 Chat silenziata"':
@@ -97,24 +97,24 @@
           - text: Ieri
         - text: "Matteo P. : non si colpiscono più i pozzi di petrolio come una volta"
         - gridcell
-    - 'row "Football Teamball Restart giovedì Ahmad : Bon rétablissement 🙏 ❤️"':
-      - 'gridcell "Football Teamball Restart giovedì Ahmad : Bon rétablissement 🙏 ❤️"':
+    - 'row "Chess Club Restart giovedì Ahmad : Bon rétablissement 🙏 ❤️"':
+      - 'gridcell "Chess Club Restart giovedì Ahmad : Bon rétablissement 🙏 ❤️"':
         - img
-        - gridcell "Football Teamball Restart giovedì"
+        - gridcell "Chess Club Restart giovedì"
         - text: "Ahmad : Bon rétablissement"
         - img "🙏"
         - img "❤️"
         - gridcell
-    - 'row "Bus Stop Group giovedì Forse Carlos : Bus arrivé à Jean Macé !"':
-      - 'gridcell "Bus Stop Group giovedì Forse Carlos : Bus arrivé à Jean Macé !"':
-        - gridcell "Bus Stop Group giovedì"
-        - text: "~ Carlos : Bus arrivé à Jean Macé !"
+    - 'row "Book Stop Group giovedì Forse Carlos : Livre arrivé à la bibliothèque !"':
+      - 'gridcell "Book Stop Group giovedì Forse Carlos : Livre arrivé à la bibliothèque !"':
+        - gridcell "Book Stop Group giovedì"
+        - text: "~ Carlos : Livre arrivé à la bibliothèque !"
         - gridcell
-    - 'row "Bus Line 972 giovedì +33 7 00 00 00 02 : Bonjour le bus aura du retard à jean Macé ?"':
-      - 'gridcell "Bus Line 972 giovedì +33 7 00 00 00 02 : Bonjour le bus aura du retard à jean Macé ?"':
+    - 'row "Book Club North giovedì +39 7 00 00 00 02 : Bonjour la réunion aura du retard ?"':
+      - 'gridcell "Book Club North giovedì +39 7 00 00 00 02 : Bonjour la réunion aura du retard ?"':
         - img
-        - gridcell "Bus Line 972 giovedì"
-        - text: "+33 7 00 00 00 02 : Bonjour le bus aura du retard à jean Macé ?"
+        - gridcell "Book Club North giovedì"
+        - text: "+39 7 00 00 00 02 : Bonjour la réunion aura du retard ?"
         - gridcell
     - row "Giorgio Ruggeri mercoledì Scusa, ora non posso parlare":
       - gridcell "Giorgio Ruggeri mercoledì Scusa, ora non posso parlare":
@@ -147,11 +147,11 @@
         - gridcell "Carnival Committee lunedì"
         - text: "~ Federica G. : Insieme alle frappe (da noi si chiamano così) diamo qualche mandarino e diventiamo subito più salutari ;-)"
         - gridcell "Chat silenziata 67 messaggi non letti": "67"
-    - 'row "Birthday Matteo lunedì +33 6 00 00 00 03 : Les garçons étaient ravis . merci encore . Bonne semaine a tous"':
-      - 'gridcell "Birthday Matteo lunedì +33 6 00 00 00 03 : Les garçons étaient ravis . merci encore . Bonne semaine a tous"':
+    - 'row "Birthday Matteo lunedì +39 6 00 00 00 03 : Les garçons étaient ravis . merci encore . Bonne semaine a tous"':
+      - 'gridcell "Birthday Matteo lunedì +39 6 00 00 00 03 : Les garçons étaient ravis . merci encore . Bonne semaine a tous"':
         - img
         - gridcell "Birthday Matteo lunedì"
-        - text: "+33 6 00 00 00 03 : Les garçons étaient ravis . merci encore . Bonne semaine a tous"
+        - text: "+39 6 00 00 00 03 : Les garçons étaient ravis . merci encore . Bonne semaine a tous"
         - gridcell
     - 'row "Davide Ferrara domenica Hai reagito con 🙏 a: \" Ciao amico, io personalmente no, passavo ore e ore a guardarmi tutte le agenzie e gli annunci ma conosco una persona di fiducia che potrebbe consigliarmi…sento anche Sophie se conosce qualcuno di fiducia\""':
       - 'gridcell "Davide Ferrara domenica Hai reagito con 🙏 a: \" Ciao amico, io personalmente no, passavo ore e ore a guardarmi tutte le agenzie e gli annunci ma conosco una persona di fiducia che potrebbe consigliarmi…sento anche Sophie se conosce qualcuno di fiducia\""':
@@ -174,11 +174,11 @@
         - img "❤️"
         - text: "a: \" Ecco, tu qui ti divertiresti a fare foto\""
         - gridcell
-    - 'row "Weekend Trip 2025 25/02/2026 Forse Valentina R. : (basta smetto)"':
-      - 'gridcell "Weekend Trip 2025 25/02/2026 Forse Valentina R. : (basta smetto)"':
+    - 'row "Weekend Trip 2025 25/02/2026 Forse Giulia R. : (basta smetto)"':
+      - 'gridcell "Weekend Trip 2025 25/02/2026 Forse Giulia R. : (basta smetto)"':
         - img
         - gridcell "Weekend Trip 2025 25/02/2026"
-        - text: "~ Valentina R. : (basta smetto)"
+        - text: "~ Giulia R. : (basta smetto)"
         - gridcell
     - 'row "Summer Party 23/02/2026 Max : Si Chat silenziata"':
       - 'gridcell "Summer Party 23/02/2026 Max : Si Chat silenziata"':
@@ -186,16 +186,16 @@
         - gridcell "Summer Party 23/02/2026"
         - text: "Max : Si"
         - gridcell "Chat silenziata"
-    - row "All For Football Teamball 🤸 ⚽ 🏃 16/02/2026 +33 6 00 00 00 05 ha aggiunto +33 7 00 00 00 06 .":
-      - gridcell "All For Football Teamball 🤸 ⚽ 🏃 16/02/2026 +33 6 00 00 00 05 ha aggiunto +33 7 00 00 00 06 .":
+    - row "All For Chess Club 🤸 ⚽ 🏃 16/02/2026 +39 6 00 00 00 05 ha aggiunto +39 7 00 00 00 06 .":
+      - gridcell "All For Chess Club 🤸 ⚽ 🏃 16/02/2026 +39 6 00 00 00 05 ha aggiunto +39 7 00 00 00 06 .":
         - img
-        - gridcell "All For Football Teamball 🤸 ⚽ 🏃 16/02/2026":
-          - text: All For Football Teamball
+        - gridcell "All For Chess Club 🤸 ⚽ 🏃 16/02/2026":
+          - text: All For Chess Club
           - img "🤸"
           - img "⚽"
           - img "🏃"
           - text: 16/02/2026
-        - text: +33 6 00 00 00 05 ha aggiunto +33 7 00 00 00 06 .
+        - text: +39 6 00 00 00 05 ha aggiunto +39 7 00 00 00 06 .
         - gridcell
     - 'row "Uncles Group 03/02/2026 Lorenzo T. : O Simone..."':
       - 'gridcell "Uncles Group 03/02/2026 Lorenzo T. : O Simone..."':
@@ -269,11 +269,11 @@
         - img "❤️"
         - text: "a: \" Questo é il vostro cane Vostro!! Bellissimo\""
         - gridcell
-    - 'row "+33 6 00 00 00 04 13/12/2025 Bonjour, Nous avons créé un groupe WhatsApp et une cagnotte afin de remercier Karim, le chauffeur de bus qui accompagne nos enfants chaque jour à l’école 🚌 Depuis ces premiers mois, il fait preuve de patience, de professionnalisme et d’une grande bienveillance envers les enfants. Nous souhaitions marquer le coup et le remercier collectivement 🎁 👉 Lien pour rejoindre le groupe WhatsApp du cadeau : https://chat.whatsapp.com/REDACTED 👉 Lien pour participer à la cagnotte en ligne : https://example.com/fundraiser/REDACTED ⏰ Attention : participation possible jusqu’au mercredi 17 décembre, afin de pouvoir lui remettre la carte cadeau le vendredi 19 décembre, avec le nom de tous les enfants participants. Pensez bien à indiquer le prénom de votre enfant lors de votre participation. Merci beaucoup par avance pour lui."':
-      - 'gridcell "+33 6 00 00 00 04 13/12/2025 Bonjour, Nous avons créé un groupe WhatsApp et une cagnotte afin de remercier Karim, le chauffeur de bus qui accompagne nos enfants chaque jour à l’école 🚌 Depuis ces premiers mois, il fait preuve de patience, de professionnalisme et d’une grande bienveillance envers les enfants. Nous souhaitions marquer le coup et le remercier collectivement 🎁 👉 Lien pour rejoindre le groupe WhatsApp du cadeau : https://chat.whatsapp.com/REDACTED 👉 Lien pour participer à la cagnotte en ligne : https://example.com/fundraiser/REDACTED ⏰ Attention : participation possible jusqu’au mercredi 17 décembre, afin de pouvoir lui remettre la carte cadeau le vendredi 19 décembre, avec le nom de tous les enfants participants. Pensez bien à indiquer le prénom de votre enfant lors de votre participation. Merci beaucoup par avance pour lui."':
+    - 'row "+39 6 00 00 00 04 13/12/2025 Bonjour, voici le lien pour la réunion de jeudi."':
+      - 'gridcell "+39 6 00 00 00 04 13/12/2025 Bonjour, voici le lien pour la réunion de jeudi."':
         - img
-        - gridcell "+33 6 00 00 00 04 13/12/2025"
-        - text: Bonjour, Nous avons créé un groupe WhatsApp et une cagnotte afin de remercier Karim, le chauffeur de bus qui accompagne nos enfants chaque jour à l’école
+        - gridcell "+39 6 00 00 00 04 13/12/2025"
+        - text: Bonjour, voici le lien pour la réunion de jeudi.
         - img "🚌"
         - text: Depuis ces premiers mois, il fait preuve de patience, de professionnalisme et d’une grande bienveillance envers les enfants. Nous souhaitions marquer le coup et le remercier collectivement
         - img "🎁"
@@ -307,12 +307,12 @@
         - gridcell "Futsal Dates 25/09/2025"
         - text: "Alessandro C. : Foto"
         - gridcell
-    - row "⚽ Italian Football Teamball Tournament 🇮🇹 17:44 I membri del gruppo sono cambiati. Clicca per visualizzare.":
-      - gridcell "⚽ Italian Football Teamball Tournament 🇮🇹 17:44 I membri del gruppo sono cambiati. Clicca per visualizzare.":
+    - row "⚽ Italian Chess Club Tournament 🇮🇹 17:44 I membri del gruppo sono cambiati. Clicca per visualizzare.":
+      - gridcell "⚽ Italian Chess Club Tournament 🇮🇹 17:44 I membri del gruppo sono cambiati. Clicca per visualizzare.":
         - img
-        - gridcell "⚽ Italian Football Teamball Tournament 🇮🇹 17:44":
+        - gridcell "⚽ Italian Chess Club Tournament 🇮🇹 17:44":
           - img "⚽"
-          - text: Italian Football Teamball Tournament
+          - text: Italian Chess Club Tournament
           - img "🇮🇹"
           - text: 17:44
         - text: I membri del gruppo sono cambiati. Clicca per visualizzare.
@@ -385,7 +385,7 @@
       - img
       - img
     - text: Buongiorno
-    - img "☀️"
+    - img "⭐"
     - img "🐾"
     - img "🐾"
     - text: 06:41

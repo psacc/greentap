@@ -94,7 +94,7 @@ test("daemon source writes port file before launchPersistentContext", () => {
 });
 
 test("daemon idle reset is heartbeat-file based, not CDP-event based", () => {
-  // Regression guard for the bug Neko surfaced 2026-05-09: the original
+  // Regression guard for the bug surfaced 2026-05-09: the original
   // implementation listened on Target.attachedToTarget / detachedFromTarget on
   // a CDP session that only called Target.setDiscoverTargets. Those events
   // never fire for external connectOverCDP clients, so the idle timer never

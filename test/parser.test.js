@@ -95,7 +95,7 @@ describe("parseChatList", () => {
   it("does not drop chats whose name contains emoji", () => {
     const aria = loadFixture("emoji-chat-name.snapshot.txt");
     const chats = parseChatList(aria);
-    const emoji = chats.find((c) => c.name.startsWith("Calcetto del Giovedì"));
+    const emoji = chats.find((c) => c.name.startsWith("Scacchi del Martedì"));
     assert.ok(emoji, `emoji-named chat should be parsed, got: ${JSON.stringify(chats)}`);
     assert.equal(emoji.time, "20:56");
     assert.ok(emoji.name.includes("⚽"), "emoji should be preserved in the name");
@@ -177,14 +177,14 @@ describe("normalizeChatName", () => {
     // WhatsApp Web renders some emoji via a custom font that injects a PUA
     // code point (e.g. U+E000 after ⚽) into the accessible name. Users cannot
     // type it, so the raw name must be normalised before exact-matching.
-    const typed = "Calcetto del Giovedì 🤸 ⚽ 🏃";
+    const typed = "Scacchi del Martedì 🤸 ⚽ 🏃";
     const rendered = typed.replace("⚽", "⚽\u{E000}"); // WA injects a PUA char here
     assert.notEqual(rendered, typed, "raw strings differ (the bug)");
     assert.equal(normalizeChatName(rendered), normalizeChatName(typed));
   });
 
   it("is insensitive to emoji variation selectors", () => {
-    assert.equal(normalizeChatName("Foot ⚽️"), normalizeChatName("Foot ⚽"));
+    assert.equal(normalizeChatName("Chess ⚽️"), normalizeChatName("Chess ⚽"));
   });
 
   it("collapses non-breaking spaces and trims", () => {
@@ -192,7 +192,7 @@ describe("normalizeChatName", () => {
   });
 
   it("preserves distinct emoji so different names stay distinguishable", () => {
-    assert.notEqual(normalizeChatName("Foot ⚽"), normalizeChatName("Foot 🏀"));
+    assert.notEqual(normalizeChatName("Chess ⚽"), normalizeChatName("Chess 🏀"));
   });
 
   it("handles null/undefined safely", () => {
@@ -390,7 +390,7 @@ describe("parseMessages — quoted-reply parsing", () => {
     const reply = messages.find((m) => m.sender === "Daniele Bottazzini");
     assert.ok(reply, `should find Daniele's reply, got: ${JSON.stringify(messages, null, 2)}`);
     assert.equal(reply.quoted_sender, "Roberto Marini");
-    assert.equal(reply.quoted_text, "Lavinia Vitale");
+    assert.equal(reply.quoted_text, "Chiara Neri");
     assert.equal(reply.body, "Esatto, non prenderle");
   });
 
@@ -400,7 +400,7 @@ describe("parseMessages — quoted-reply parsing", () => {
     const reply = messages.find((m) => m.sender === "Daniele Bottazzini");
     assert.ok(reply.text.includes("Roberto Marini"),
       "text should still include quoted sender for backward compat");
-    assert.ok(reply.text.includes("Lavinia Vitale"),
+    assert.ok(reply.text.includes("Chiara Neri"),
       "text should still include quoted text for backward compat");
     assert.ok(reply.text.includes("Esatto, non prenderle"),
       "text should still include the reply body");
@@ -432,7 +432,7 @@ describe("parseMessages — quoted-reply parsing", () => {
 });
 
 describe("parseMessages — tilde sender prefix + button-wrapped quote", () => {
-  // Repro for Neko's 2026-04-27 bug report: in a French group ("GROUP_X")
+  // Repro for a 2026-04-27 bug report: in a French group ("GROUP_X")
   // a quote-reply by USER_B to a contact-not-saved sender ("~userc") was
   // attributed by greentap to "userc", and the quote-card itself was not
   // emitted as quoted_sender/quoted_text. Two root causes:
@@ -926,7 +926,7 @@ describe("parsePollMessages", () => {
     const poll = polls[0];
 
     assert.ok(poll.question.length > 0, "question should not be empty");
-    assert.ok(poll.question.includes("Partita"), "question should contain poll title");
+    assert.ok(poll.question.includes("Domanda"), "question should contain poll title");
   });
 
   it("extracts poll options with vote counts", () => {
@@ -984,7 +984,7 @@ describe("parseMessages — quoted-reply gridcell/button containers (Bug 1/2/3)"
     const roberto = messages.find((m) => m.sender === "Roberto Marini");
     assert.ok(roberto, `expected Roberto's row, got: ${JSON.stringify(messages, null, 2)}`);
     assert.equal(roberto.quoted_sender, "Roberto Marini");
-    assert.equal(roberto.quoted_text, "Lavinia Vitale");
+    assert.equal(roberto.quoted_text, "Chiara Neri");
   });
 
   it("extracts quote block from button-shaped container (Bug 2)", () => {
@@ -994,65 +994,65 @@ describe("parseMessages — quoted-reply gridcell/button containers (Bug 1/2/3)"
     const reply = messages.find((m) => m.sender === "Daniele Bottazzini");
     assert.ok(reply, `expected Daniele's reply, got: ${JSON.stringify(messages, null, 2)}`);
     assert.equal(reply.quoted_sender, "Roberto Marini");
-    assert.equal(reply.quoted_text, "Lavinia Vitale");
+    assert.equal(reply.quoted_text, "Chiara Neri");
     assert.equal(reply.body, "Esatto, non prenderle");
   });
 
   it("does NOT attribute a quote-reply to the quoted person (Bug 1)", () => {
-    // Estevan replies to Lavinia. The quote block contains Lavinia's name.
+    // Piero replies to Chiara. The quote block contains Chiara's name.
     // Pre-fix, a stale carry-over could cause the parser to attribute
-    // Estevan's bubble to Lavinia (since her name appears in the row body).
+    // Piero's bubble to Chiara (since her name appears in the row body).
     // With the fresh-sender rule + quote detection, attribution must stay
-    // on Estevan.
+    // on Piero.
     const aria = `- document:
   - banner:
     - button "Dettagli profilo":
       - img
   - text: Oggi
-  - button "Apri dettagli chat di Lavinia":
+  - button "Apri dettagli chat di Chiara":
     - img
-  - row "Lavinia Sì certo nessun problema 11:00":
-    - text: Lavinia Sì certo nessun problema 11:00
-  - button "Apri dettagli chat di Estevan":
+  - row "Chiara Sì certo nessun problema 11:00":
+    - text: Chiara Sì certo nessun problema 11:00
+  - button "Apri dettagli chat di Piero":
     - img
-  - row "Estevan Lavinia Sì certo nessun problema Perfetto, allora ci vediamo lì 11:08":
-    - text: Estevan
+  - row "Piero Chiara Sì certo nessun problema Perfetto, allora ci vediamo lì 11:08":
+    - text: Piero
     - gridcell:
-      - text: Lavinia
+      - text: Chiara
       - text: Sì certo nessun problema
     - text: Perfetto, allora ci vediamo lì
     - text: 11:08
   - contentinfo:
     - textbox "Scrivi"`;
     const messages = parseMessages(aria);
-    const estevanReply = messages.find((m) => m.text.includes("Perfetto"));
-    assert.ok(estevanReply, `expected Estevan's reply, got: ${JSON.stringify(messages, null, 2)}`);
-    assert.equal(estevanReply.sender, "Estevan",
+    const pieroReply = messages.find((m) => m.text.includes("Perfetto"));
+    assert.ok(pieroReply, `expected Piero's reply, got: ${JSON.stringify(messages, null, 2)}`);
+    assert.equal(pieroReply.sender, "Piero",
       "quote-reply must be attributed to the bubble's own sender, not the quoted person");
-    assert.equal(estevanReply.quoted_sender, "Lavinia");
-    assert.equal(estevanReply.quoted_text, "Sì certo nessun problema");
-    assert.equal(estevanReply.body, "Perfetto, allora ci vediamo lì");
+    assert.equal(pieroReply.quoted_sender, "Chiara");
+    assert.equal(pieroReply.quoted_text, "Sì certo nessun problema");
+    assert.equal(pieroReply.body, "Perfetto, allora ci vediamo lì");
   });
 
   it("emits (unknown) for a quote-reply whose sender button is missing AND label doesn't confirm (Bug 1 safe path)", () => {
-    // Worst case: Estevan's button got scrolled off, leaving currentSender
-    // stale (Lavinia from earlier). The row body still has the quote with
-    // Lavinia's name. Bug 3 hardening kicks in: row label doesn't start
-    // with "Lavinia" → fall to UNKNOWN_SENDER. The agent gets a clear
+    // Worst case: Piero's button got scrolled off, leaving currentSender
+    // stale (Chiara from earlier). The row body still has the quote with
+    // Chiara's name. Bug 3 hardening kicks in: row label doesn't start
+    // with "Chiara" → fall to UNKNOWN_SENDER. The agent gets a clear
     // "I don't know" instead of a confident wrong answer.
     const aria = `- document:
   - banner:
     - button "Dettagli profilo":
       - img
   - text: Oggi
-  - button "Apri dettagli chat di Lavinia":
+  - button "Apri dettagli chat di Chiara":
     - img
-  - row "Lavinia Sì certo 11:00":
-    - text: Lavinia Sì certo 11:00
-  - row "Estevan Lavinia Sì certo Perfetto 11:08":
-    - text: Estevan
+  - row "Chiara Sì certo 11:00":
+    - text: Chiara Sì certo 11:00
+  - row "Piero Chiara Sì certo Perfetto 11:08":
+    - text: Piero
     - gridcell:
-      - text: Lavinia
+      - text: Chiara
       - text: Sì certo
     - text: Perfetto
     - text: 11:08
@@ -1062,8 +1062,8 @@ describe("parseMessages — quoted-reply gridcell/button containers (Bug 1/2/3)"
     const reply = messages.find((m) => m.text.includes("Perfetto"));
     assert.ok(reply, `expected reply, got: ${JSON.stringify(messages, null, 2)}`);
     assert.equal(reply.sender, "(unknown)",
-      "missing-button quote-reply must NOT inherit Lavinia's sender — emit (unknown)");
-    assert.equal(reply.quoted_sender, "Lavinia");
+      "missing-button quote-reply must NOT inherit Chiara's sender — emit (unknown)");
+    assert.equal(reply.quoted_sender, "Chiara");
     assert.equal(reply.quoted_text, "Sì certo");
   });
 
@@ -1330,19 +1330,19 @@ describe("parseMessages: unsaved-contact senders", () => {
       messages.filter((m) => m.kind !== "system").map((m) => [m.time, m.sender]),
       [
         ["16:20", "Flavia"],
-        ["16:56", "Amanda ☀️🍒"],
-        ["05:27", "Mattia"],
-        ["05:41", "Mattia"],
-        ["06:12", "Elena"],
+        ["16:56", "Amanda ⭐🔵"],
+        ["05:27", "Giorgio"],
+        ["05:41", "Giorgio"],
+        ["10:00", "Elena"],
       ],
     );
   });
 
   it("keeps the author's phone number out of the message body", () => {
     const bodies = Object.fromEntries(messages.map((m) => [m.time, m.body]));
-    assert.equal(bodies["16:56"], "Ci pensiamo noi.");
+    assert.equal(bodies["16:56"], "Va bene.");
     assert.equal(bodies["05:27"], "Buongiorno a tutti");
-    assert.equal(bodies["06:12"], "Promemoria: partita alle 21 •Roberto •Daniele Ci vediamo!");
+    assert.equal(bodies["10:00"], "Nota: lista •Roberto •Daniele A dopo!");
     for (const m of messages.filter((x) => x.kind === "text")) {
       assert.doesNotMatch(m.text, /\+1 555|\+39 02|^~/, `text of ${m.time} keeps the author header`);
     }
@@ -1360,16 +1360,16 @@ describe("parseMessages: edited messages and inline polls", () => {
   const aria = `- document:
   - banner:
     - button "Dettagli profilo"
-  - row "Roberto Marini Ero stato ottimista 😁 Modificato15:32":
-    - text: Ero stato ottimista
+  - row "Roberto Marini Messaggio di prova 😁 Modificato15:32":
+    - text: Messaggio di prova
     - img "😁"
     - text: Modificato15:32
   - row "Elena Conti A dopo Edited 9:05":
     - text: A dopo Edited9:05
-  - row "Sondaggio inviato da Roberto Marini 14:00 Partita mercoledì Opzioni più votate: Presente: 8, Assente: 2.":
+  - row "Sondaggio inviato da Roberto Marini 14:00 Domanda di prova Opzioni più votate: Presente: 8, Assente: 2.":
     - button "Roberto Marini":
       - text: Roberto Marini
-    - text: Partita mercoledì Seleziona un'opzione
+    - text: Domanda di prova Seleziona un'opzione
     - checkbox "Presente 8 voti"
     - text: Presente
     - button "8"
@@ -1382,7 +1382,7 @@ describe("parseMessages: edited messages and inline polls", () => {
 
   it("keeps the send time of an edited message and drops the glued marker", () => {
     assert.deepEqual(messages.slice(0, 2).map((m) => [m.time, m.body]), [
-      ["15:32", "Ero stato ottimista 😁"],
+      ["15:32", "Messaggio di prova 😁"],
       ["9:05", "A dopo"],
     ]);
   });
@@ -1391,7 +1391,7 @@ describe("parseMessages: edited messages and inline polls", () => {
     const poll = messages[2];
     assert.equal(poll.kind, "poll");
     assert.equal(poll.time, "14:00");
-    assert.equal(poll.body, "Partita mercoledì");
+    assert.equal(poll.body, "Domanda di prova");
     assert.deepEqual(poll.options, [
       { label: "Presente", votes: 8 },
       { label: "Assente", votes: 2 },

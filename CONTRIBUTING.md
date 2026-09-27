@@ -51,8 +51,8 @@ Allowed exceptions:
   real identity. Considered out-of-scope for the content rules above
   because GitHub fingerprints commits this way regardless.
 - Fake personas: Roberto Marini, Daniele Bottazzini, Elena Conti,
-  Famiglia Rossi, Lavinia Vitale, Estevan Tioni, Flavia, Amanda,
-  Mattia, "Ferragosto" (Italian holiday).
+  Famiglia Rossi, Chiara Neri, Piero Galli, Flavia, Amanda,
+  Giorgio, "Ferragosto" (Italian holiday).
 - Synthetic phone numbers: `+39 02 0000 00000`, `+39 555 010 2030`,
   `+1 555 123 4567`. Document any new synthetic number in this list
   before using it.

@@ -49,10 +49,10 @@
       - img "👍"
       - text: "3"
   - button "Apri dettagli chat di Roberto Marini": R
-  - row "Sondaggio inviato da Roberto Marini 14:00 Partita mercoledì 18/03 21h-22h30 Opzioni più votate: Presente: 8, Assente: 2.":
+  - row "Sondaggio inviato da Roberto Marini 14:00 Domanda di prova 18/03 Opzioni più votate: Presente: 8, Assente: 2.":
     - button "Roberto Marini":
       - text: Roberto Marini
-    - text: Partita mercoledì 18/03 21h-22h30 Seleziona un'opzione
+    - text: Domanda di prova 18/03 Seleziona un'opzione
     - checkbox "Presente 8 voti"
     - text: Presente
     - button "8"

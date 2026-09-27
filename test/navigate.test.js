@@ -317,19 +317,19 @@ describe("navigateToChat: --index disambiguation in search fallback", () => {
 });
 
 describe("navigateToChat: partial-match suggestions", () => {
-  // Two chats whose names share a "Foot" prefix ("Football" + "Foot.") —
-  // Neko's partial-match repro pattern. Both contain the query "Foot".
+  // Two chats whose names share a "Chess" prefix ("Chessboard" + "Chess.") —
+  // A partial-match repro pattern. Both contain the query "Chess".
   const TWO_FOOT_CHATS = `- grid "Lista delle chat":
-    - 'row "Football 14:00 Bonjour"':
-      - 'gridcell "Football 14:00 Bonjour"':
+    - 'row "Chessboard 14:00 Bonjour"':
+      - 'gridcell "Chessboard 14:00 Bonjour"':
         - img
-        - gridcell "Football 14:00"
+        - gridcell "Chessboard 14:00"
         - text: Bonjour
         - gridcell
-    - 'row "Foot. 09:00 Salut"':
-      - 'gridcell "Foot. 09:00 Salut"':
+    - 'row "Chess. 09:00 Salut"':
+      - 'gridcell "Chess. 09:00 Salut"':
         - img
-        - gridcell "Foot. 09:00"
+        - gridcell "Chess. 09:00"
         - text: Salut
         - gridcell
   - contentinfo:
@@ -341,15 +341,15 @@ describe("navigateToChat: partial-match suggestions", () => {
       gridVisibleAfterMs: 0,
       gridAria: TWO_FOOT_CHATS,
       searchAria: `- grid "Risultati della ricerca.":
-    - 'row "Foot 09:00 Ciao"':
-      - 'gridcell "Foot 09:00 Ciao"':
-        - gridcell "Foot 09:00"
+    - 'row "Chess 09:00 Ciao"':
+      - 'gridcell "Chess 09:00 Ciao"':
+        - gridcell "Chess 09:00"
         - text: Ciao
   - contentinfo:
     - textbox "Scrivi un messaggio"
 `,
     });
-    await commands.navigateToChat(page, "Foot", null);
+    await commands.navigateToChat(page, "Chess", null);
     assert.equal(page._calls.searchClick, 1, "an off-screen exact match is found by search");
   });
 
@@ -359,14 +359,14 @@ describe("navigateToChat: partial-match suggestions", () => {
       searchAria: TWO_FOOT_CHATS,
     });
     await assert.rejects(
-      () => commands.navigateToChat(page, "Foot", null),
+      () => commands.navigateToChat(page, "Chess", null),
       (err) => {
         assert.ok(
           /Did you mean one of/.test(err.message),
           `expected partial-match suggestion, got: ${err.message}`,
         );
-        assert.ok(err.message.includes("Football"));
-        assert.ok(err.message.includes("Foot."));
+        assert.ok(err.message.includes("Chessboard"));
+        assert.ok(err.message.includes("Chess."));
         return true;
       },
     );

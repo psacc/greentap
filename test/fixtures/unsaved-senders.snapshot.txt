@@ -14,36 +14,36 @@
       - text: 0:46
     - text: 16:20
     - button "Inoltra media"
-  - button "Apri dettagli chat di Forse Amanda ☀️🍒 +1 555 123 4567": A
-  - row "Forse Amanda ☀️🍒 +1 555 123 4567 Mamma Elena Ci pensiamo noi. 16:56":
-    - button "Forse Amanda ☀️🍒":
+  - button "Apri dettagli chat di Forse Amanda ⭐🔵 +1 555 123 4567": A
+  - row "Forse Amanda ⭐🔵 +1 555 123 4567 Elena Conti Va bene. 16:56":
+    - button "Forse Amanda ⭐🔵":
       - text: ~ Amanda
-      - img "☀️"
-      - img "🍒"
+      - img "⭐"
+      - img "🔵"
     - text: +1 555 123 4567
-    - button "Mamma Elena"
-    - text: Ci pensiamo noi. 16:56
+    - button "Elena Conti"
+    - text: Va bene. 16:56
   - row "Roberto Marini ha aggiunto +39 02 0000 00000 .":
     - link "Roberto Marini"
     - text: ha aggiunto
     - link "+39 02 0000 00000"
     - text: .
   - text: giovedì
-  - button "Apri dettagli chat di Forse Mattia +39 02 0000 00000":
+  - button "Apri dettagli chat di Forse Giorgio +39 02 0000 00000":
     - img
-  - row "Forse Mattia +39 02 0000 00000 Buongiorno a tutti 05:27":
-    - button "Forse Mattia": ~ Mattia
+  - row "Forse Giorgio +39 02 0000 00000 Buongiorno a tutti 05:27":
+    - button "Forse Giorgio": ~ Giorgio
     - text: +39 02 0000 00000 Buongiorno a tutti 05:27
   - row "Grazie mille 05:41":
     - text: Grazie mille 05:41
   - button "Apri dettagli chat di Forse Elena +39 555 010 2030": E
-  - 'row "Forse Elena +39 555 010 2030Promemoria: partita alle 21 •Roberto •Daniele Ci vediamo! 06:12"':
+  - 'row "Forse Elena +39 555 010 2030Nota: lista •Roberto •Daniele A dopo! 10:00"':
     - button "Forse Elena": ~ Elena
-    - text: "+39 555 010 2030Promemoria: partita alle 21"
+    - text: "+39 555 010 2030Nota: lista"
     - list:
       - listitem: •Roberto
       - listitem: •Daniele
-    - text: Ci vediamo!
-    - text: 06:12
+    - text: A dopo!
+    - text: 10:00
   - contentinfo:
     - textbox "Scrivi un messaggio"

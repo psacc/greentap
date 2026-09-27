@@ -30,7 +30,7 @@ freely; anything that publishes (PR merge, tag, push) is gated.
 - GitHub had 0 open PRs/issues when this design was written.
 - `main` is **red**: 2 failing tests in `test/navigate.test.js:322,345` — a
   PII-sanitization artifact (`GROUP_X` placeholder doesn't contain the query
-  `"Foot"`, so it's correctly excluded from partial-match candidates, but the
+  `"Chess"`, so it's correctly excluded from partial-match candidates, but the
   assertions still expect it). v0.5.0 + v0.5.1 were tagged red.
 - 17 stale **remote** branches = squash-merged PRs (#15–#34); safe to prune.
   3 branches hold genuinely unmerged work:
@@ -51,7 +51,7 @@ E2E-gated lib salvage.
 ### PR A — Stabilization + release process (E2E-exempt: docs/tooling/test-only)
 
 A1. **Fix red tests** — `test/navigate.test.js`: rename the fixture chat so
-    it shares the `"Foot"` prefix (e.g. `Football`) OR relax the two
+    it shares the `"Chess"` prefix (e.g. `Chessboard`) OR relax the two
     assertions to expect only the genuine match. Target: `npm test` green.
     (Test file, not `test/fixtures/**` → E2E-exempt.)
 
