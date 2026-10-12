@@ -3,7 +3,7 @@ Priority: medium — stable; v0.8.0 fixes serial reads against one shared daemon
 Current phase: Phase 9 — quality polish and read-fidelity hardening
 Blocks: nothing
 Blocked by: nothing
-Last updated: 2026-09-26
+Last updated: 2026-10-10
 → Full strategic context: psacc/docs/ROADMAP.md
 
 ---

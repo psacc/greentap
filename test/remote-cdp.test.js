@@ -1,4 +1,6 @@
-import { describe, it } from "node:test";
+import { describe, it, mock } from "node:test";
+import dnsPromises from "node:dns/promises";
+import { syncBuiltinESMExports } from "node:module";
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { createServer } from "node:http";
@@ -21,13 +23,19 @@ describe("resolveCdpUrl", () => {
   });
 
   it("rewrites a hostname to its address and keeps the port", async () => {
-    // Any name is fine as long as it resolves; the point is that the HOST
-    // changed to something Chromium will accept and the port survived.
-    const out = await resolveCdpUrl("http://localhost.:19223");
-    const u = new URL(out);
-    assert.equal(u.port, "19223");
-    assert.notEqual(u.hostname, "localhost.");
-    assert.match(u.hostname, /^(\d+\.\d+\.\d+\.\d+|\[[0-9a-f:]+\])$/);
+    // Verify the rewrite without requiring the host running unit tests to
+    // have external DNS access. No actual CDP connection is made here.
+    const mockedLookup = mock.method(dnsPromises, "lookup", async (hostname) => {
+      assert.equal(hostname, "synthetic-daemon.test");
+      return { address: "127.0.0.1", family: 4 };
+    });
+    syncBuiltinESMExports();
+    try {
+      assert.equal(await resolveCdpUrl("http://synthetic-daemon.test:19223"), "http://127.0.0.1:19223/");
+    } finally {
+      mockedLookup.mock.restore();
+      syncBuiltinESMExports();
+    }
   });
 
   it("fails loudly on a name that does not resolve", async () => {
@@ -38,7 +46,7 @@ describe("resolveCdpUrl", () => {
 function cli(cdpUrl, command = "status") {
   const entry = fileURLToPath(new URL("../greentap.js", import.meta.url));
   return new Promise((resolve) => {
-    execFile("node", [entry, command], { env: { ...process.env, GREENTAP_CDP_URL: cdpUrl } }, (err, stdout, stderr) =>
+    execFile("node", [entry, command], { env: { ...process.env, GREENTAP_CDP_URL: cdpUrl, RES_OPTIONS: "attempts:1 timeout:1" } }, (err, stdout, stderr) =>
       resolve({ code: err ? err.code : 0, out: stdout + stderr }),
     );
   });
@@ -70,7 +78,7 @@ describe("a command with an unresolvable GREENTAP_CDP_URL", () => {
     const started = Date.now();
     const { code, out } = await cli("http://no-such-host.invalid:19223", "whoami");
     assert.notEqual(code, 0);
-    assert.match(out, /Cannot resolve no-such-host\.invalid: ENOTFOUND/);
+    assert.match(out, /Cannot resolve no-such-host\.invalid: (?:ENOTFOUND|EAI_AGAIN)/);
     assert.ok(Date.now() - started < 10000);
   });
 });
