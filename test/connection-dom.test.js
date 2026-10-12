@@ -24,7 +24,7 @@ before(async () => {
   }
   page = browser.contexts()[0].pages()[0];
 });
-after(async () => { await browser?.close(); if (child && child.exitCode === null) { const exited = new Promise(resolve => child.once('exit', resolve)); child.kill(); await exited; } if (profile) await rm(profile, { recursive: true, force: true }); });
+after(async () => { await browser?.close(); if (child && child.exitCode === null) { const exited = new Promise(resolve => child.once('exit', resolve)); child.kill(); await exited; } if (profile) await rm(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); });
 
 test('structural state detection handles loading, hidden markers, QR and ready media', async () => {
   for (const [html, expected] of [
