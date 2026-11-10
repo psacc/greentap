@@ -80,3 +80,21 @@ test('transport retries cold establishment and announces only once', async () =>
   assert.equal(notices.length, 1);
   await assert.rejects(waitForTransport(async () => { throw new Error('Synthetic failure'); }, { timeoutMs: 0 }), /startup\/reconnect.*Retry/);
 });
+
+test('send control selector matches exactly one Send icon in current and legacy footers', async () => {
+  const { SEND_BUTTON_XPATH } = await import('../lib/commands.js');
+  const svg = (title) => `<span aria-hidden="true"><svg viewBox="0 0 24 24"><title>${title}</title><path></path></svg></span>`;
+  const attach = `<button aria-label="Allega">${svg('ic-add')}</button>`;
+  const send = (label) => `<button aria-label="${label}">${svg('ic-send-filled')}</button>`;
+  for (const [footer, expected] of [
+    [`${attach}<div contenteditable="true"><p>Bozza</p></div>${send('Invia')}`, 1],
+    [`${attach}${send('Send')}`, 1],
+    [`${attach}<button aria-label="Send"><span data-icon="wds-ic-send-filled"></span></button>`, 1],
+    [`${attach}${send('Invia')}<button aria-label="Chiudi">${svg('ic-close')}</button>`, 1],
+    [`${attach}<button aria-label="Messaggio vocale">${svg('ic-mic-outlined')}</button>`, 0],
+    [`${attach}${send('Invia')}${send('Invia')}`, 2],
+  ]) {
+    await page.setContent(`<div id="main"><footer>${footer}</footer></div>`);
+    assert.equal(await page.getByRole('contentinfo').locator(SEND_BUTTON_XPATH).count(), expected, footer);
+  }
+});
