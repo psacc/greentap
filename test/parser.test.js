@@ -296,6 +296,33 @@ describe("parseMessages", () => {
       "incoming message must keep its real sender");
   });
 
+  it("keeps WhatsApp-formatted bold, italic, strike and code runs in message text", () => {
+    const aria = [
+      "- document:",
+      '  - row "Roberto Marini: grassetto corsivo barrato codice fine alle 10:30 10:30":',
+      "    - text: Roberto Marini",
+      "    - strong: grassetto",
+      "    - emphasis: corsivo",
+      "    - deletion: barrato",
+      "    - code: codice",
+      "    - text: fine",
+      "    - strong: alle 10:30",
+      "    - text: 10:30",
+      '  - \'row "Tu: grassetto Ciao 10:31 Consegnato"\':',
+      "    - strong: grassetto",
+      "    - text: Ciao",
+      '    - button "10:31 Consegnato":',
+      "      - text: 10:31",
+      '      - img "wds-ic-read"',
+    ].join("\n");
+    const [theirs, mine] = parseMessages(aria);
+    assert.equal(theirs.body, "grassetto corsivo barrato codice fine alle 10:30");
+    assert.equal(theirs.time, "10:30");
+    assert.equal(mine.sender, "You");
+    assert.equal(mine.text, "grassetto Ciao");
+    assert.equal(mine.body, "grassetto Ciao");
+  });
+
   it("attributes own messages with delivery icon (msg-dblcheck)", () => {
     const aria = loadFixture("chat-own-messages-aria.txt");
     const messages = parseMessages(aria);

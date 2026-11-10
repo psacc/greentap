@@ -313,6 +313,7 @@ describe("send: drafts, Send control and verification", () => {
     for (const [message, rendered] of [
       ["Ciao 🌞 amico", "Ciao 🌞 amico"],
       ["*Grassetto* qui", "Grassetto qui"],
+      ["_corsivo_ ~barrato~ `codice` *grassetto* fine", "corsivo barrato codice grassetto fine"],
     ]) {
       const page = makeSendFakePage("Elena Conti", rendered);
       await commands.send(page, "Elena Conti", message);
