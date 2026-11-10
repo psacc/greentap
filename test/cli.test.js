@@ -563,14 +563,22 @@ describe("whoami", () => {
    *   - `page.locator(":root").ariaSnapshot()` returns canned snapshots
    *     in sequence: first call = settings menu, second call = profile pane.
    */
-  function makeWhoamiPage({ profileBtnExists = true, ariaMenu, ariaProfile }) {
+  function makeWhoamiPage({ profileBtnExists = true, ariaMenu, ariaProfile, profileClickFails = false }) {
     let ariaCallIdx = 0;
     const ariaSnapshots = [ariaMenu, ariaProfile];
+    const clicked = [];
+    const escapes = [];
+    const navButton = (label) => ({ click: () => clicked.push(label) });
+    const navbar = profileBtnExists
+      ? [navButton("Chat"), navButton("Meta AI"), navButton("Media"), navButton("You")]
+      : [];
 
     const chainable = () => ({
       waitFor: async () => {},
       filter: () => chainable(),
-      click: async () => {},
+      click: async () => {
+        if (profileClickFails) throw new Error("locator.click: Timeout 3000ms exceeded.");
+      },
       first: () => chainable(),
       last: () => chainable(),
       count: async () => 1,
@@ -580,6 +588,8 @@ describe("whoami", () => {
     });
 
     return {
+      clicked,
+      escapes,
       locator: () => ({
         ariaSnapshot: async () => {
           const snap = ariaSnapshots[Math.min(ariaCallIdx, ariaSnapshots.length - 1)];
@@ -589,19 +599,21 @@ describe("whoami", () => {
       }),
       getByRole: () => chainable(),
       keyboard: {
-        press: async () => {},
+        press: async (key) => {
+          escapes.push(key);
+        },
         type: async () => {},
       },
-      // The whoami DOM probe runs `(() => { const buttons = ...; ... })()`.
-      // We can't run the real DOM, so we short-circuit: return `true` when
-      // a profile button is supposed to exist, `false` otherwise.
       evaluate: async (fn) => {
-        // Inspect the function source to decide the return shape.
-        const src = String(fn);
-        if (src.includes("button[aria-label]") && src.includes("whatsapp.net")) {
-          return profileBtnExists;
+        const saved = globalThis.document;
+        globalThis.document = {
+          querySelectorAll: (sel) => (sel === "button[data-navbar-item]" ? navbar : []),
+        };
+        try {
+          return fn();
+        } finally {
+          globalThis.document = saved;
         }
-        return null;
       },
     };
   }
@@ -685,6 +697,25 @@ describe("whoami", () => {
     const page = makeWhoamiPage({ ariaMenu: ariaMenuOnlyWordmark, ariaProfile: "" });
     const result = await commands.whoami(page);
     assert.equal(result.name, null, "name should be null, not 'WhatsApp'");
+  });
+
+  it("opens the last navbar item, not the first avatar button", async () => {
+    const page = makeWhoamiPage({ ariaMenu: ARIA_MENU_IT, ariaProfile: ARIA_PROFILE_IT });
+    await commands.whoami(page);
+    assert.deepEqual(page.clicked, ["You"]);
+  });
+
+  it("keeps the name and closes the menu when the profile pane does not open", async () => {
+    const page = makeWhoamiPage({ ariaMenu: ARIA_MENU_IT, ariaProfile: "", profileClickFails: true });
+    const result = await commands.whoami(page);
+    assert.deepEqual(result, { name: "Mario Rossi", phone: null });
+    assert.deepEqual(page.escapes, ["Escape"]);
+  });
+
+  it("closes both panes after a full lookup", async () => {
+    const page = makeWhoamiPage({ ariaMenu: ARIA_MENU_IT, ariaProfile: ARIA_PROFILE_IT });
+    await commands.whoami(page);
+    assert.deepEqual(page.escapes, ["Escape", "Escape"]);
   });
 
   it("JSON-stringifies cleanly to {name, phone}", async () => {
