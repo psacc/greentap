@@ -2,75 +2,58 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import * as commands from "../lib/commands.js";
 
-/**
- * Build a fake Playwright `page` for exercising `send()` end-to-end
- * without a real browser. The fake records every `keyboard.type` and
- * `keyboard.press` call in arrival order, so tests can assert on the
- * exact key-press pattern emitted for multi-line messages.
- *
- * The page is wired so that:
- *   - The chat header banner already shows the target chat (fast-path
- *     in navigateToChat returns immediately, no grid/search interaction).
- *   - The post-send aria check sees the message text, so the verification
- *     warning does not fire.
- *   - The compose `textContent()` returns "" after send, so the "still in
- *     compose box" failure does not fire.
- *
- * @param {string} chatName - Name displayed in the header banner.
- * @param {string} expectedAriaSnippet - Snippet to embed in the post-send
- *   aria so the snippet-match check passes (default: chatName).
- */
 function makeSendFakePage(
   chatName,
   expectedAriaSnippet = chatName,
-  { previewCloseAfterSend = false } = {},
+  {
+    previewCloseAfterSend = false,
+    draft = "",
+    draftMedia = 0,
+    sendButtonCount = 1,
+    delivers = true,
+    draftSurvivesClick = false,
+    existingOwn = false,
+    openTitles = [],
+  } = {},
 ) {
   const calls = [];
-  // The post-send aria must contain a snippet of the typed message so the
-  // snippet-match warning does not fire. Build a snapshot that contains
-  // both the chat header (matched by the header-button regex) and the
-  // typed text once the message is "delivered".
-  const ariaText =
-    `- banner:\n  - button "${chatName}"\n` +
-    `- contentinfo:\n  - textbox "Type a message"\n` +
-    `- text: "${expectedAriaSnippet}"\n`;
+  let typed = draft;
+  let clicked = false;
+  const header = `- document:\n  - banner:\n    - button "${chatName}"\n`;
+  const ownRow =
+    `  - row "${expectedAriaSnippet} 10:35":\n` +
+    `    - text: ${expectedAriaSnippet}\n` +
+    `    - button "10:35":\n` +
+    `      - text: 10:35\n` +
+    `      - img "wds-ic-read"\n`;
+  const ariaText = () =>
+    header + (existingOwn ? ownRow : "") + (clicked && delivers ? ownRow : "") + `  - contentinfo:\n    - textbox "Type a message"\n`;
 
   const composeTextbox = {
     waitFor: async () => {},
     click: async () => {},
-    textContent: async () => "",
-  };
-
-  const sendButton = {
-    click: async () => {
-      calls.push({ kind: "sendBtnClick" });
-    },
-  };
-
-  const previewCloseButton = {
-    click: async () => {
-      calls.push({ kind: "previewCloseClick" });
-    },
-  };
-
-  const contentinfoButtons = {
-    count: async () => previewCloseAfterSend ? 2 : 1,
-    last: () => previewCloseAfterSend ? previewCloseButton : sendButton,
-  };
-
-  const contentinfo = {
-    getByRole: (role) => {
-      if (role === "textbox") return composeTextbox;
-      if (role === "button") return contentinfoButtons;
-      return composeTextbox;
-    },
-    locator: () => ({
-      count: async () => 1,
-      click: sendButton.click,
+    evaluate: async () => ({
+      text: clicked && !draftSurvivesClick ? "" : typed,
+      media: clicked && !draftSurvivesClick ? 0 : draftMedia,
     }),
   };
 
-  // Fast-path returns immediately when this banner exposes the chat name.
+  const sendButton = {
+    count: async () => sendButtonCount,
+    click: async () => {
+      calls.push({ kind: "sendBtnClick" });
+      clicked = true;
+    },
+  };
+
+  const contentinfo = {
+    getByRole: () => composeTextbox,
+    locator: (selector) => {
+      calls.push({ kind: "sendSelector", selector, previewCloseAfterSend });
+      return sendButton;
+    },
+  };
+
   const bannerLocator = {
     first: () => bannerLocator,
     last: () => bannerLocator,
@@ -81,8 +64,6 @@ function makeSendFakePage(
     getByRole: (role) => {
       if (role === "contentinfo") return contentinfo;
       if (role === "banner") return bannerLocator;
-      // Other roles (grid, textbox, gridcell) shouldn't be touched once
-      // the fast-path fires, but provide stubs in case they are.
       return {
         first: () => ({
           waitFor: async () => {},
@@ -93,12 +74,14 @@ function makeSendFakePage(
         last: () => ({}),
       };
     },
-    locator: () => ({
-      ariaSnapshot: async () => ariaText,
-    }),
+    locator: (selector) =>
+      selector.includes("conversation-info-header-chat-title")
+        ? { count: async () => openTitles.length, evaluate: async () => openTitles[0] }
+        : { ariaSnapshot: async () => ariaText() },
     keyboard: {
       type: async (text, _opts) => {
         calls.push({ kind: "type", text });
+        typed += text;
       },
       press: async (key) => {
         calls.push({ kind: "press", key });
@@ -144,9 +127,9 @@ describe("send: multi-line newline handling", () => {
       page._calls.filter((call) => call.kind === "sendBtnClick").length,
       1,
     );
-    assert.equal(
-      page._calls.filter((call) => call.kind === "previewCloseClick").length,
-      0,
+    assert.match(
+      page._calls.find((call) => call.kind === "sendSelector").selector,
+      /ic-send-filled/,
     );
   });
 
@@ -229,20 +212,10 @@ describe("send: multi-line newline handling", () => {
     ]);
   });
 
-  it("empty message does not crash and types nothing", async () => {
-    // Empty message is a degenerate input — the function should not
-    // explode. The Send button click happens regardless; WhatsApp Web's
-    // own UI will no-op it, but we guard against a JS crash here.
-    const page = makeSendFakePage("Roberto Marini", "");
-    await assert.doesNotReject(() =>
-      commands.send(page, "Roberto Marini", "", null, undefined),
-    );
-    const types = page._calls.filter((c) => c.kind === "type");
-    const shiftEnters = page._calls.filter(
-      (c) => c.kind === "press" && c.key === "Shift+Enter",
-    );
-    assert.equal(types.length, 0, "no type call for empty input");
-    assert.equal(shiftEnters.length, 0, "no Shift+Enter for empty input");
+  it("rejects an empty message before navigating, typing or clicking", async () => {
+    const page = makeSendFakePage("Roberto Marini", "Ciao");
+    await assert.rejects(commands.send(page, "Roberto Marini", " \n "), /^Error: Not sent: the message is empty/);
+    assert.equal(page._calls.length, 0);
   });
 
   it("trailing newline does not emit a phantom empty type call", async () => {
@@ -260,5 +233,90 @@ describe("send: multi-line newline handling", () => {
       { kind: "type", text: "hi" },
       { kind: "press", key: "Shift+Enter" },
     ]);
+  });
+});
+
+describe("send: drafts, Send control and verification", () => {
+  const sends = (page) => page._calls.filter((c) => c.kind === "sendBtnClick").length;
+  const types = (page) => page._calls.filter((c) => c.kind === "type").length;
+
+  it("refuses a different existing draft without typing or clicking", async () => {
+    const page = makeSendFakePage("Elena Conti", "Ciao", { draft: "Bozza diversa" });
+    await assert.rejects(commands.send(page, "Elena Conti", "Ciao"), /^Error: Not sent: .*different draft/);
+    assert.equal(types(page), 0);
+    assert.equal(sends(page), 0);
+  });
+
+  it("refuses an emoji draft it cannot compare", async () => {
+    const page = makeSendFakePage("Elena Conti", "Ciao", { draft: "Ciao", draftMedia: 1 });
+    await assert.rejects(commands.send(page, "Elena Conti", "Ciao"), /different draft/);
+    assert.equal(sends(page), 0);
+  });
+
+  it("sends an identical leftover draft once without appending it again", async () => {
+    const page = makeSendFakePage("Elena Conti", "riga uno", { draft: "riga uno\nriga due" });
+    await commands.send(page, "Elena Conti", "riga uno\nriga due");
+    assert.equal(types(page), 0);
+    assert.equal(sends(page), 1);
+  });
+
+  for (const count of [0, 2]) {
+    it(`fails without clicking when ${count} Send controls match`, async () => {
+      const page = makeSendFakePage("Elena Conti", "Ciao", { sendButtonCount: count });
+      await assert.rejects(
+        commands.send(page, "Elena Conti", "Ciao"),
+        new RegExp(`Not sent: expected one structural Send button, found ${count}`),
+      );
+      assert.equal(sends(page), 0);
+    });
+  }
+
+  it("verifies an emoji message by its text part", async () => {
+    const page = makeSendFakePage("Elena Conti", "Buongiorno");
+    await commands.send(page, "Elena Conti", "Buongiorno 🌞");
+    assert.equal(sends(page), 1);
+  });
+
+  it("reports a draft that survived the click as not sent", async () => {
+    const page = makeSendFakePage("Elena Conti", "Ciao", { delivers: false, draftSurvivesClick: true });
+    await assert.rejects(commands.send(page, "Elena Conti", "Ciao"), /^Error: Not sent: Send was clicked but the text is still a draft/);
+    assert.equal(sends(page), 1);
+  });
+
+  it("reports a cleared compose without an outgoing row as unverified, clicking once", async () => {
+    const page = makeSendFakePage("Elena Conti", "Ciao", { delivers: false });
+    await assert.rejects(commands.send(page, "Elena Conti", "Ciao"), /^Error: Unverified: .*do not retry blindly/);
+    assert.equal(sends(page), 1);
+  });
+
+  it("does not count an older identical own message as the new send", async () => {
+    const page = makeSendFakePage("Elena Conti", "Ciao", { delivers: false, existingOwn: true });
+    await assert.rejects(commands.send(page, "Elena Conti", "Ciao"), /Unverified/);
+    const delivered = makeSendFakePage("Elena Conti", "Ciao", { existingOwn: true });
+    await commands.send(delivered, "Elena Conti", "Ciao");
+  });
+
+  it("checks the structural chat title when WhatsApp exposes it", async () => {
+    const ok = makeSendFakePage("Famiglia Rossi", "Ciao", { openTitles: ["Famiglia Rossi"] });
+    await commands.send(ok, "Famiglia Rossi", "Ciao");
+    assert.equal(sends(ok), 1);
+
+    for (const openTitles of [["Roberto Marini"], ["Famiglia Rossi", "Famiglia Rossi"]]) {
+      const wrong = makeSendFakePage("Famiglia Rossi", "Ciao", { openTitles });
+      await assert.rejects(commands.send(wrong, "Famiglia Rossi", "Ciao"), /Wrong chat opened/);
+      assert.equal(types(wrong), 0);
+      assert.equal(sends(wrong), 0);
+    }
+  });
+
+  it("verifies messages whose rendered row keeps mid-line emoji or drops formatting markers", async () => {
+    for (const [message, rendered] of [
+      ["Ciao 🌞 amico", "Ciao 🌞 amico"],
+      ["*Grassetto* qui", "Grassetto qui"],
+    ]) {
+      const page = makeSendFakePage("Elena Conti", rendered);
+      await commands.send(page, "Elena Conti", message);
+      assert.equal(sends(page), 1, message);
+    }
   });
 });

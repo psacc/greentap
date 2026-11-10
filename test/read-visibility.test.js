@@ -166,13 +166,16 @@ describe("visible message snapshot", () => {
     await page.close();
   });
 
-  it("clicks the exact structural media-preview send control", async () => {
+  for (const icon of [
+    '<span data-testid="wds-ic-send-filled"></span>',
+    '<span aria-hidden="true"><svg viewBox="0 0 24 24"><title>ic-send-filled</title></svg></span>',
+  ]) it(`clicks the exact structural media-preview send control: ${icon.slice(0, 30)}`, async () => {
     const page = await browser.newPage();
     await page.setContent(`
       <div data-testid="media-editor-canvas" style="width: 20px; height: 20px"></div>
       <div data-testid="media-caption-input-container" style="width: 20px; height: 20px"></div>
       <div role="button" id="media-send" style="width: 20px; height: 20px">
-        <span data-testid="wds-ic-send-filled"></span>
+        ${icon}
       </div>`);
     await page.locator("#media-send").evaluate((element) => {
       element.addEventListener("click", () => {
